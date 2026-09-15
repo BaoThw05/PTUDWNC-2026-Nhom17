@@ -9,10 +9,12 @@ export interface BackendUser {
   roles: string[];
 }
 
+export type AuthError = "RefreshAccessTokenError" | "GoogleLoginError";
+
 declare module "next-auth" {
   interface Session extends DefaultSession {
     accessToken?: string;
-    error?: "RefreshAccessTokenError";
+    error?: AuthError;
     user: BackendUser & DefaultSession["user"];
   }
 
@@ -28,7 +30,7 @@ declare module "next-auth/jwt" {
     accessToken?: string;
     refreshToken?: string;
     expiresAt?: number;
-    error?: "RefreshAccessTokenError";
+    error?: AuthError;
     user?: BackendUser;
   }
 }

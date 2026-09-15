@@ -18,7 +18,7 @@ interface UserProfileDto {
 }
 
 export default function ProfilePage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -28,8 +28,16 @@ export default function ProfilePage() {
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/login");
+      return;
     }
-  }, [status, router]);
+
+    // jwt() callback không đổi được Google ID token / refresh token lấy token
+    // hệ thống thành công (backend từ chối, mất mạng...) -> đăng xuất, không
+    // giữ session nửa vời.
+    if (session?.error) {
+      signOut({ callbackUrl: "/auth/login?error=GoogleLoginError" });
+    }
+  }, [status, session, router]);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["auth", "me"],

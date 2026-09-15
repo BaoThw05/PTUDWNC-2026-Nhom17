@@ -1,5 +1,6 @@
 import NextAuth, { type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5165";
 
@@ -31,12 +32,34 @@ async function refreshAccessToken(refreshToken: string) {
   return (await res.json()) as AuthResponseDto;
 }
 
+// FR-AUTH-003: đổi Google ID token lấy access/refresh token của hệ thống
+// mình (KHÔNG dùng thẳng session Google) — backend tự verify chữ ký/issuer/
+// audience/hạn dùng qua Google.Apis.Auth trước khi tạo/liên kết tài khoản.
+async function loginWithGoogle(idToken: string) {
+  const res = await fetch(`${API_URL}/api/v1/auth/google`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Google login rejected by backend");
+  }
+
+  return (await res.json()) as AuthResponseDto;
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
   },
   providers: [
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: { params: { scope: "openid email profile" } },
+    }),
     Credentials({
       name: "Credentials",
       credentials: {
@@ -74,8 +97,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      // Đăng nhập lần đầu: user chỉ có mặt ngay sau khi authorize() thành công.
+    async jwt({ token, user, account }) {
+      // Đăng nhập Google lần đầu: account.id_token là ID token Google vừa cấp.
+      if (account?.provider === "google") {
+        if (!account.id_token) {
+          token.error = "GoogleLoginError";
+          return token;
+        }
+
+        try {
+          const data = await loginWithGoogle(account.id_token);
+          token.accessToken = data.accessToken;
+          token.refreshToken = data.refreshToken;
+          token.expiresAt = new Date(data.expiresAt).getTime();
+          token.user = data.user;
+          token.error = undefined;
+        } catch {
+          token.error = "GoogleLoginError";
+        }
+
+        return token;
+      }
+
+      // Đăng nhập Credentials lần đầu: user chỉ có mặt ngay sau authorize() thành công.
       if (user) {
         token.accessToken = user.accessToken;
         token.refreshToken = user.refreshToken;
@@ -118,7 +162,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken as string | undefined;
-      session.error = token.error as "RefreshAccessTokenError" | undefined;
+      session.error = token.error as "RefreshAccessTokenError" | "GoogleLoginError" | undefined;
       const tokenUser = token.user as Session["user"] | undefined;
       if (tokenUser) {
         session.user = { ...session.user, ...tokenUser };
