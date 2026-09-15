@@ -41,6 +41,8 @@ public class GlobalExceptionMiddleware
             AppUnauthorizedException => (HttpStatusCode.Unauthorized, "Unauthorized"),
             AccountLockedException => (HttpStatusCode.Locked, "Account Locked"),
             ValidationException => (HttpStatusCode.UnprocessableEntity, "Validation Error"),
+            BadRequestException => (HttpStatusCode.BadRequest, "Bad Request"),
+            ExternalServiceException => (HttpStatusCode.BadGateway, "External Service Error"),
             _ => (HttpStatusCode.InternalServerError, "Server Error"),
         };
 

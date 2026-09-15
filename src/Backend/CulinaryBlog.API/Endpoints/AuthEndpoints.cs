@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using CulinaryBlog.Application.Auth.GetCurrentUser;
+using CulinaryBlog.Application.Auth.GoogleLogin;
 using CulinaryBlog.Application.Auth.Login;
 using CulinaryBlog.Application.Auth.Logout;
 using CulinaryBlog.Application.Auth.RefreshTokens;
@@ -11,6 +12,7 @@ namespace CulinaryBlog.API.Endpoints;
 
 public record RegisterRequest(string FullName, string Email, string UserName, string Password);
 public record LoginRequest(string Email, string Password);
+public record GoogleLoginRequest(string IdToken);
 public record RefreshTokenRequest(string RefreshToken);
 public record LogoutRequest(string RefreshToken);
 public record UpdateProfileRequest(string? FullName, string? AvatarUrl);
@@ -35,6 +37,13 @@ public static class AuthEndpoints
         {
             var ip = GetClientIp(http);
             var result = await sender.Send(new LoginCommand(request.Email, request.Password, ip), ct);
+            return Results.Ok(result);
+        });
+
+        group.MapPost("/google", async (GoogleLoginRequest request, ISender sender, HttpContext http, CancellationToken ct) =>
+        {
+            var ip = GetClientIp(http);
+            var result = await sender.Send(new GoogleLoginCommand(request.IdToken, ip), ct);
             return Results.Ok(result);
         });
 

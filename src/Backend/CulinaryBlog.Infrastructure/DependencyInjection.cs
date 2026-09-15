@@ -47,6 +47,9 @@ public static class DependencyInjection
 
         services.AddScoped<IWelcomeEmailJob, WelcomeEmailJob>();
 
+        services.Configure<GoogleSettings>(configuration.GetSection(GoogleSettings.SectionName));
+        services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+
         services.AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
