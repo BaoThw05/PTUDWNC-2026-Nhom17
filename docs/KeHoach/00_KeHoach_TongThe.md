@@ -1,6 +1,6 @@
 # Kế hoạch tổng thể — Culinary Blog (đồ án Phát triển Ứng dụng Web Nâng cao)
 
-> **Thời gian:** T5 17/09/2026 → **CN 01/11/2026 — hạn chốt ra ứng dụng hoàn thiện** — 46 ngày, khoảng 6,5 tuần.
+> **Thời gian:** T4 16/09/2026 → **CN 01/11/2026 — hạn chốt ra ứng dụng hoàn thiện** — 47 ngày, chia thành 7 tuần (xem mục 10).
 > **Căn cứ:** `SRS_Culinary_Blog_v1.0.0_GiaiPhap.md` (bản đã có ghi chú chốt của nhóm và câu trả lời của giảng viên), `SRS_Culinary_Blog_v1.0.0_DanhSachLoi.md`, `BangPhanCong.docx`.
 > **Kế hoạch chi tiết từng người:** `TV1_NguyenNgocTuan_Auth-Profile.md` · `TV2_BuiNgocToan_Recipe-Core.md` · `TV3_LuongDucSang_Category-File-Image.md` · `TV4_TranLeBaoThu_Search-SEO-Observability.md`.
 
@@ -63,30 +63,30 @@ gantt
     dateFormat YYYY-MM-DD
     axisFormat %d/%m
     section Toàn nhóm
-    G0 Chốt quyết định & quy ước      :g0, 2026-09-17, 4d
-    G1 Nền tảng                        :g1, 2026-09-21, 10d
+    G0 Chốt quyết định & quy ước      :g0, 2026-09-16, 7d
+    G1 Nền tảng                        :g1, 2026-09-23, 8d
     G2a Backend base                   :g2a, 2026-10-01, 11d
     G2b Frontend base                  :g2b, 2026-10-12, 7d
     G3 Tích hợp & base nâng cao        :g3, 2026-10-19, 7d
     G4 Kiểm thử, tài liệu, tổng duyệt  :g4, 2026-10-26, 6d
     Hạn chốt app hoàn thiện            :milestone, 2026-11-01, 0d
     section TV1 Tuấn
-    Spike Auth.js + Identity + JWT     :2026-09-21, 9d
+    Spike Auth.js + Identity + JWT     :2026-09-23, 8d
     API auth + email job               :2026-10-01, 11d
     FE login/register/profile          :2026-10-12, 7d
     Rate limit, dọn token, Google      :2026-10-19, 7d
     section TV2 Toàn
-    Khung solution + BaseEntity + Recipe :2026-09-21, 10d
+    Khung solution + BaseEntity + Recipe :2026-09-23, 8d
     API recipe + steps + thùng rác     :2026-10-01, 11d
     FE dashboard + chi tiết + wizard   :2026-10-12, 7d
     Cache tag + job dọn thùng rác      :2026-10-19, 7d
     section TV3 Sang
-    Docker + storage + Hangfire + Category entity :2026-09-21, 10d
+    Docker + storage + Hangfire + Category entity :2026-09-23, 8d
     API category + ảnh                 :2026-10-01, 11d
     FE upload + categories             :2026-10-12, 7d
     Resize job + Nginx + Tunnel        :2026-10-19, 7d
     section TV4 Thư
-    Next.js + CI + log + health        :2026-09-21, 10d
+    Next.js + CI + log + health        :2026-09-23, 8d
     API danh sách + tìm kiếm           :2026-10-01, 11d
     FE trang chủ/danh sách/tìm kiếm    :2026-10-12, 7d
     Cache + SEO + sitemap + E2E        :2026-10-19, 7d
@@ -94,8 +94,8 @@ gantt
 
 | Giai đoạn | Thời gian | Mục tiêu |
 |---|---|---|
-| **G0** | T5 17/09 → CN 20/09 | Chốt quyết định, viết ADR, dựng repo, thống nhất hợp đồng API |
-| **G1** | T2 21/09 → T4 30/09 | Nền tảng dùng chung: backend 4 tầng, Docker, JWT, khung Next.js, CI, log, entity chính |
+| **G0** | T4 16/09 → T3 22/09 (tuần 1) | Chốt quyết định, viết ADR, dựng repo, thống nhất hợp đồng API |
+| **G1** | T4 23/09 → T4 30/09 (tuần 2) | Nền tảng dùng chung: backend 4 tầng, Docker, JWT, khung Next.js, CI, log, entity chính |
 | **G2a** | T5 01/10 → CN 11/10 | Toàn bộ API base của 4 module |
 | **G2b** | T2 12/10 → CN 18/10 | Toàn bộ màn hình base, luồng đầu-cuối |
 | **G3** | T2 19/10 → CN 25/10 | Cache, SEO, sitemap, job nền, rate limit, Google login (Should), Nginx + Cloudflare Tunnel; **chốt tính năng** |
@@ -182,14 +182,16 @@ gantt
 
 ## 10. Bảng theo dõi tuần (mỗi người tự cập nhật)
 
-| Tuần | Khoảng ngày | Mốc | TV1 | TV2 | TV3 | TV4 | Ghi chú / quyết định cắt giảm |
-|---|---|---|---|---|---|---|---|
-| 1 | 17/09 – 20/09 | M0 | | | | | |
-| 2 | 21/09 – 27/09 | — | | | | | |
-| 3 | 28/09 – 04/10 | M1 (30/09) | | | | | |
-| 4 | 05/10 – 11/10 | M2 | | | | | |
-| 5 | 12/10 – 18/10 | M3 | | | | | |
-| 6 | 19/10 – 25/10 | M4 | | | | | |
-| 7 | 26/10 – 01/11 | M5, M6, hạn chốt app hoàn thiện | | | | | |
+Mỗi tuần 7 ngày, bắt đầu từ T4 16/09; riêng tuần 2 kéo đến T4 30/09 để trùng mốc M1. Mỗi ô ghi các việc có hạn trong tuần đó (theo file cá nhân).
 
-*Cách điền mỗi ô: % công việc đã Done theo file cá nhân + mã công việc đang trễ (nếu có).*
+| Tuần | Khoảng ngày | Mốc trong tuần | TV1 | TV2 | TV3 | TV4 | Tình hình |
+|---|---|---|---|---|---|---|---|
+| 1 | 16/09 – 22/09 | M0 (20/09) | 1.01 – 1.04 | 2.01 – 2.02 | 3.01 – 3.02 | 4.01 – 4.02 | |
+| 2 | 23/09 – 30/09 | M1 (30/09) | 1.05 – 1.08 | 2.03 – 2.07 | 3.03 – 3.07 | 4.03 – 4.06 | |
+| 3 | 01/10 – 07/10 | — | 1.09 – 1.11 | 2.08 – 2.11 | 3.08 – 3.10 | 4.07 – 4.08 | |
+| 4 | 08/10 – 14/10 | M2 (11/10) | 1.12 – 1.16 | 2.12 – 2.16 | 3.11 – 3.12 | 4.09 – 4.11 | |
+| 5 | 15/10 – 21/10 | M3 (18/10) | 1.17 – 1.19 | 2.17 – 2.19 | 3.13 – 3.15 | 4.12 – 4.14 | |
+| 6 | 22/10 – 28/10 | M4 (25/10) | 1.20 – 1.22 | 2.20 – 2.23 | 3.16 – 3.20 | 4.15 – 4.18 | |
+| 7 | 29/10 – 01/11 | M5 (29/10), M6 (31/10), hạn chốt app hoàn thiện (01/11) | 1.23 – 1.26 | 2.24 – 2.27 | 3.21 – 3.24 | 4.19 – 4.22 | |
+
+*Cột "Tình hình": % việc đã xong theo file cá nhân + mã việc đang trễ (nếu có).*

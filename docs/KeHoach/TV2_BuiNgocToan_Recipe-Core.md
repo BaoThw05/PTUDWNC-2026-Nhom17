@@ -44,14 +44,14 @@
 
 **Mức ưu tiên:** M = Must · S = Should (trễ thì chuyển sau 01/11).
 
-### G0 — Chốt quyết định (T5 17/09 → CN 20/09)
+### G0 — Chốt quyết định (T4 16/09 → T3 22/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 2.01 | ADR S-03 (xóa lai + thùng rác 30 ngày), S-04 (concurrency), S-11 (vòng đời, hiển thị, slug) | 3 file ADR ngắn trong `docs/adr/` | TV1 tạo mẫu ADR | CN 20/09 | M |
 | 2.02 | ADR S-10 (hợp đồng API) + **bảng mã lỗi chung** + bảng đặt tên; ADR S-13 (ranh giới kiến trúc, phiên bản/giấy phép MediatR) | Bảng mã lỗi có cột Mã / HTTP / Mô tả / Module để các thành viên tự thêm mã | — | CN 20/09 | M |
 
-### G1 — Nền tảng (T2 21/09 → T4 30/09)
+### G1 — Nền tảng (T4 23/09 → T4 30/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|

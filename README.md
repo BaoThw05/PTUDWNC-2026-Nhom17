@@ -59,7 +59,11 @@ dotnet run --project CulinaryBlog.API
 
 API chạy ở http://localhost:5000. Mở http://localhost:5000/health để kiểm tra (trả về `Healthy`), tài liệu API ở http://localhost:5000/scalar.
 
-Backend đọc connection string trong `appsettings.Development.json`, khớp sẵn với `.env.example`. Nếu máy bạn dùng cổng hoặc mật khẩu khác thì xem [mục 3.1](#31-máy-dùng-cổng-riêng).
+Backend đọc connection string trong `appsettings.Development.json`, khớp sẵn với `.env.example`. Nếu bạn đổi mật khẩu trong `.env`, báo cho backend bằng user-secrets (không commit):
+
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=culinary_blog;Username=culinary_admin;Password=<mật khẩu>" --project CulinaryBlog.API
+```
 
 **Frontend**
 
@@ -74,7 +78,7 @@ Mở http://localhost:3000. Nếu trang chủ hiện **Backend API: OK** thì fr
 
 ## 3. Cổng dịch vụ
 
-Cả nhóm dùng chung các cổng sau. Code mẫu, cấu hình mặc định và tài liệu đều viết theo bộ cổng này, nên đừng đổi khi chưa bàn với nhóm.
+Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trình khác chiếm cổng (ví dụ PostgreSQL cài sẵn), hãy tắt nó đi thay vì đổi cổng.
 
 | Dịch vụ | Cổng | Cấu hình ở đâu |
 |---|---|---|
@@ -84,27 +88,6 @@ Cả nhóm dùng chung các cổng sau. Code mẫu, cấu hình mặc định v�
 | Redis (có mật khẩu) | 6379 | `docker-compose.yml` |
 
 Khi thêm dịch vụ mới vào compose (storage, Mailpit, Seq…), nhớ bổ sung cổng vào bảng này trong cùng PR.
-
-### 3.1. Máy dùng cổng riêng
-
-Nếu cổng chung trên máy bạn đã bị chương trình khác chiếm thì mới đổi, và ghi tên mình vào bảng dưới để mọi người biết khi giúp nhau sửa lỗi.
-
-| Thành viên | Dịch vụ | Cổng | Lý do |
-|---|---|---|---|
-| TV1 — Nguyễn Ngọc Tuấn | PostgreSQL | 5433 | Máy đã cài sẵn PostgreSQL ở cổng 5432 |
-
-Cách đổi (chỉ trên máy mình, không commit):
-
-- **PostgreSQL:** sửa `POSTGRES_PORT` trong `.env` rồi chạy lại `docker compose up -d`. Vì .NET không đọc file `.env`, bạn cần báo cho backend biết bằng user-secrets:
-
-  ```bash
-  cd src/Backend
-  dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5433;Database=culinary_blog;Username=culinary_admin;Password=<POSTGRES_PASSWORD>" --project CulinaryBlog.API
-  ```
-
-- **Backend:** chạy `dotnet run --project CulinaryBlog.API -- --urls http://localhost:<cổng>` và đặt `API_INTERNAL_URL` trong `src/Frontend/.env.local` cho khớp.
-- **Frontend:** `npm run dev -- -p <cổng>`.
-- **Redis:** cổng đang cố định trong compose. Nếu bị trùng, nhắn TV3 thêm biến `REDIS_PORT` thay vì tự sửa compose.
 
 ## 4. Cấu trúc thư mục
 
@@ -249,19 +232,16 @@ Nhóm tự chủ động sắp xếp thời gian, không có lịch họp cố �
 
 Hạn chót là **Chủ nhật 01/11/2026**. Đến ngày này ứng dụng phải chạy trọn vẹn: đăng ký, đăng nhập, viết và quản lý công thức, duyệt danh mục, tìm kiếm, với giao diện hoàn chỉnh cho mọi trang. Sau 01/11 chỉ còn sửa lỗi nhỏ và làm phần mở rộng.
 
-Bảng dưới liệt kê các việc có hạn trong từng tuần; chi tiết nằm trong [kế hoạch của từng người](./docs/KeHoach/). Mỗi người tự cập nhật cột cuối (phần trăm đã xong, việc nào đang trễ).
+**Tuần này: 16/09 – 22/09** — chốt các quyết định, viết ADR và làm những việc nền đầu tiên của từng module.
 
-| Tuần | Ngày | Mốc | TV1 | TV2 | TV3 | TV4 | Tình hình |
-|---|---|---|---|---|---|---|---|
-| 1 | 17/09 – 20/09 | Chốt quyết định, viết ADR | 1.01–1.04 | 2.01–2.02 | 3.01–3.02 | 4.01–4.02 | |
-| 2 | 21/09 – 27/09 | Dựng nền tảng | 1.05–1.06 | 2.03–2.06 | 3.03–3.06 | 4.03–4.04 | |
-| 3 | 28/09 – 04/10 | Nền tảng chạy được (30/09) | 1.07–1.09 | 2.07–2.09 | 3.07–3.08 | 4.05–4.06 | |
-| 4 | 05/10 – 11/10 | Xong API của cả 4 module | 1.10–1.15 | 2.10–2.15 | 3.09–3.12 | 4.07–4.10 | |
-| 5 | 12/10 – 18/10 | Chạy được luồng đầy đủ trên giao diện | 1.16–1.18 | 2.16–2.19 | 3.13–3.15 | 4.11–4.13 | |
-| 6 | 19/10 – 25/10 | Giao diện hoàn thiện, chốt tính năng | 1.19–1.21 | 2.20–2.22 | 3.16–3.19 | 4.14–4.17 | |
-| 7 | 26/10 – 01/11 | Kiểm thử, tài liệu, **app hoàn thiện** | 1.22–1.26 | 2.23–2.27 | 3.20–3.24 | 4.18–4.22 | |
+| Thành viên | Việc có hạn trong tuần |
+|---|---|
+| TV1 | 1.01 – 1.04: xác nhận với giảng viên, SRS v1.1 + mẫu ADR, ADR xác thực, mã lỗi `AUTH_*` |
+| TV2 | 2.01 – 2.02: ADR xóa dữ liệu/concurrency/vòng đời công thức, bảng mã lỗi chung và bảng đặt tên |
+| TV3 | 3.01 – 3.02: thử image storage, ADR storage và ảnh |
+| TV4 | 4.01 – 4.02: bảo vệ nhánh `main`, template PR, bảng Kanban, ADR cache/tìm kiếm/sitemap/NFR |
 
-Những điểm bàn giao cần để ý vì trễ là kéo theo người khác: khung Next.js và API client (TV4, 25/09), compose đủ dịch vụ (TV3, 24/09), nền persistence (TV2, 25/09), entity Category (TV3, 26/09), entity Recipe (TV2, 27/09), CI (TV4, 27/09), đăng nhập và JWT (TV1, 29/09), Hangfire (TV3, 29/09), `ICacheInvalidator` (TV4, 30/09). Danh sách đầy đủ ở mục 6 của [kế hoạch tổng](./docs/KeHoach/00_KeHoach_TongThe.md).
+Các tuần sau được chia đều 7 ngày; lịch chi tiết nằm trong [kế hoạch tổng](./docs/KeHoach/00_KeHoach_TongThe.md) và [kế hoạch của từng người](./docs/KeHoach/). Mỗi người tự cập nhật tiến độ của mình.
 
 ## 9. Để nghiên cứu sau
 

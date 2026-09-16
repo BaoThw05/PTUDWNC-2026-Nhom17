@@ -45,14 +45,14 @@
 
 **Mức ưu tiên:** M = Must · S = Should · C = Could (trễ thì chuyển sau 01/11).
 
-### G0 — Chốt quyết định (T5 17/09 → CN 20/09)
+### G0 — Chốt quyết định (T4 16/09 → T3 22/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 3.01 | Thử kéo image MinIO cộng đồng (và bản dự phòng); ghi lại digest chạy được, hoặc chốt dùng `LocalFileStorage` cho dev | Ghi chú kết quả trong ADR storage | — | T7 19/09 | M |
 | 3.02 | ADR S-09 (storage trung lập S3 + `/media` qua Nginx + Cloudflare Tunnel cho demo) và ADR S-12 (định dạng, chữ ký file, key, biến thể ảnh) | 2 file ADR trong `docs/adr/` | 3.01 | CN 20/09 | M |
 
-### G1 — Nền tảng (T2 21/09 → T4 30/09)
+### G1 — Nền tảng (T4 23/09 → T4 30/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|

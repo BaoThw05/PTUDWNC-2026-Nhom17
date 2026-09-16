@@ -49,14 +49,14 @@
 
 **Mức ưu tiên:** M = Must · S = Should (trễ thì chuyển sau 01/11).
 
-### G0 — Chốt quyết định (T5 17/09 → CN 20/09)
+### G0 — Chốt quyết định (T4 16/09 → T3 22/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 4.01 | ADR S-07 (cache), S-08 (tìm kiếm trigram không dấu), S-14 (sitemap bằng Next.js + job dọn dẹp), S-16 (NFR base/mở rộng), S-18 (phiên bản, trình duyệt) | 5 file ADR ngắn trong `docs/adr/` | TV1 mẫu ADR | CN 20/09 | M |
 | 4.02 | Tạo repo/nhánh `main` được bảo vệ, template Pull Request, GitHub Projects (Kanban) với các mã công việc của 4 file kế hoạch | **Bàn giao cho nhóm:** cả nhóm clone được repo và thấy bảng công việc (TV1, TV2 cần repo để đưa ADR lên) | — | T6 18/09 | M |
 
-### G1 — Nền tảng (T2 21/09 → T4 30/09)
+### G1 — Nền tảng (T4 23/09 → T4 30/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|

@@ -42,7 +42,7 @@
 
 **Mức ưu tiên:** M = Must (bắt buộc trước 01/11) · S = Should (cố gắng trước 01/11, trễ thì chuyển sau).
 
-### G0 — Chốt quyết định (T5 17/09 → CN 20/09)
+### G0 — Chốt quyết định (T4 16/09 → T3 22/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
@@ -51,7 +51,7 @@
 | 1.03 | Viết ADR S-05 (kiến trúc xác thực) và S-06 (refresh token) | 2 file ADR, mỗi file ≤ 1 trang: bối cảnh, quyết định, hệ quả, phương án dự phòng | — | CN 20/09 | M |
 | 1.04 | Bổ sung nhóm mã lỗi `AUTH_*` vào bảng mã lỗi chung | Bảng mã lỗi có đủ mã ở mục 2 | TV2 tạo bảng | CN 20/09 | M |
 
-### G1 — Nền tảng (T2 21/09 → T4 30/09)
+### G1 — Nền tảng (T4 23/09 → T4 30/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|

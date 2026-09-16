@@ -12,7 +12,7 @@ Hướng dẫn cho Claude Code khi làm việc trong repo này.
 
 ## Quy tắc khi làm việc
 
-- Cách chạy, cổng dịch vụ, cách thêm module/endpoint/trang: `README.md` mục 2–5. Cổng chung 3000/5000/5432/6379; máy dùng cổng riêng phải ghi vào README mục 3.1.
+- Cách chạy, cổng dịch vụ, cách thêm module/endpoint/trang: `README.md` mục 2–5. Cả nhóm dùng chung cổng 3000/5000/5432/6379.
 - Quy tắc nhóm (nhánh, commit, migration, hợp đồng API, bảo mật, Definition of Done): `README.md` mục 6.
 - Clean code backend/frontend: `README.md` mục 7.
 - Chỉ sửa thư mục của người đang làm việc theo `docs/OWNERSHIP.md`; file dùng chung phải báo nhóm và làm PR riêng. Cần sửa phần của người khác → dừng và hỏi.
