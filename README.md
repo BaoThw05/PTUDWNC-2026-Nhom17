@@ -113,8 +113,9 @@ Hệ thống bao gồm **27 Yêu cầu Chức năng (FR)** thuộc 7 module chí
 ## Cấu trúc Dự án
 
 ```
-WebNC/
+PTUDWNC-2026-Nhom17/
 ├── .gitignore
+├── .gitattributes
 ├── docker-compose.yml           # Configuration cho local development (DB, Cache, Storage)
 ├── git
 ├── README.md
@@ -132,9 +133,22 @@ WebNC/
 │   │   └── CulinaryBlog.sln 
 │   │
 │   └── Frontend/                # Next.js Application
+│       ├── .next/
+│       ├── app/
 │       ├── node_modules/
+│       ├── public/
+│       ├── .gitignore
+│       ├── AGENTS.md
+│       ├── CLAUDE.md
+│       ├── eslint.config.mjs
+│       ├── next-env.d.ts
+│       ├── next.config.ts
 │       ├── package-lock.json
-│       └── package.json
+│       ├── package.json
+│       ├── postcss.config.mjs
+│       ├── README.md
+│       └── tsconfig.json
+
 ```
 ---
 
@@ -154,7 +168,7 @@ WebNC/
 ### **Bước 1: Clone Repository**
 ```bash
 git clone https://github.com/BaoThw05/PTUDWNC-2026-Nhom17.git
-cd WebNC
+cd PTUDWNC-2026-Nhom17
 ```
 ### **Bước 2: Khởi chạy Hạ tầng Môi trường (Docker Compose)**
 Khởi chạy PostgreSQL, Redis, MinIO, Seq và Mailhog:
