@@ -1,0 +1,11 @@
+# RecipeImages — Application
+
+- **Phụ trách:** TV3 — Lương Đức Sang
+- **FR:** FR-RCP-008, FR-FILE, FR-JOB-002
+- **Nhóm route:** `/api/v1/recipes/{recipeId:guid}/images`
+
+## Việc cần làm ở tầng này
+
+Use case upload/xóa/chọn ảnh chính; interface `IFileStorage`, `IBackgroundJobService` ở `Abstractions/` (3.05, 3.07, 3.11).
+
+Xem kế hoạch chi tiết trong `docs/KeHoach/` và quy tắc trong `README.md` gốc.
