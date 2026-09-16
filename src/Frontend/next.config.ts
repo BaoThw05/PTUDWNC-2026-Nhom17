@@ -5,11 +5,13 @@ const apiInternalUrl = process.env.API_INTERNAL_URL ?? "http://localhost:5000";
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    return [
+    return {
+      beforeFiles: [],
       // /health của backend nằm ngoài /api/v1 nên cần rewrite riêng.
-      { source: "/api/health", destination: `${apiInternalUrl}/health` },
-      { source: "/api/:path*", destination: `${apiInternalUrl}/api/:path*` },
-    ];
+      afterFiles: [{ source: "/api/health", destination: `${apiInternalUrl}/health` }],
+      // Để ở fallback: chỉ áp dụng khi không có route nào của Next.js khớp (ví dụ /api/auth/* của Auth.js).
+      fallback: [{ source: "/api/:path*", destination: `${apiInternalUrl}/api/:path*` }],
+    };
   },
 };
 

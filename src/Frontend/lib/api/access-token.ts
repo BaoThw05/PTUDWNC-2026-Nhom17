@@ -1,8 +1,14 @@
+import { getSession } from "next-auth/react";
+
 /**
- * Trả về access token của người dùng hiện tại để gắn vào header Authorization.
- * Khung gốc chưa có đăng nhập nên luôn trả về null.
+ * Access token của người dùng hiện tại trên trình duyệt (lấy từ phiên Auth.js).
+ * Phía server trả về null: code server lấy token bằng `getServerAccessToken()` rồi truyền vào `apiClient`.
  */
 export async function getAccessToken(): Promise<string | null> {
-  // TODO(TV1): lấy accessToken từ phiên Auth.js (việc 1.09).
-  return null;
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const session = await getSession();
+  return session && !session.error ? (session.accessToken ?? null) : null;
 }
