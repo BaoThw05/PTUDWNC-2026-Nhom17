@@ -1,3 +1,4 @@
+using CulinaryBlog.Infrastructure.Auth;
 using CulinaryBlog.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,10 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
+        services.AddHostedService<DatabaseInitializer>();
+
+        services.AddAuthInfrastructure(configuration);
 
         return services;
     }
