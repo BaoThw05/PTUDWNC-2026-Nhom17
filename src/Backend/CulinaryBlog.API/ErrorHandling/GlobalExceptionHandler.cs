@@ -1,5 +1,6 @@
 using CulinaryBlog.Application.Common.Errors;
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.Application.Features.Auth;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -57,7 +58,10 @@ internal sealed class GlobalExceptionHandler(
         ValidationException e => (StatusCodes.Status422UnprocessableEntity, e.Code),
         NotFoundException e => (StatusCodes.Status404NotFound, e.Code),
         ConflictException e => (StatusCodes.Status409Conflict, e.Code),
+        UnauthorizedException e => (StatusCodes.Status401Unauthorized, e.Code),
         ForbiddenException e => (StatusCodes.Status403Forbidden, e.Code),
+        AccountLockedException e => (StatusCodes.Status423Locked, e.Code),
+        ExternalServiceException e => (StatusCodes.Status502BadGateway, e.Code),
         AppException e => (StatusCodes.Status422UnprocessableEntity, e.Code),
         BadHttpRequestException e => (e.StatusCode, ErrorCodes.BadRequest),
         _ => (StatusCodes.Status500InternalServerError, ErrorCodes.InternalError),

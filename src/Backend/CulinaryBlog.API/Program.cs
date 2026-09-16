@@ -1,3 +1,4 @@
+using CulinaryBlog.API.Auth;
 using CulinaryBlog.API.Endpoints;
 using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
@@ -20,12 +21,14 @@ builder.Services.AddApiProblemDetails();
 builder.Services.AddApiOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointModules();
+builder.Services.AddAuthApi(builder.Configuration);
 
 var app = builder.Build();
 
+// Ghi log request ở ngoài cùng để log đúng status sau khi exception đã được đổi thành Problem Details.
+app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
-app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
 {
@@ -36,6 +39,8 @@ else
 {
     app.UseHttpsRedirection();
 }
+
+app.UseAuthApi();
 
 app.MapHealthChecks("/health");
 app.MapEndpointModules();
