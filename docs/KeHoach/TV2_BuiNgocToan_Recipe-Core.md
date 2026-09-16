@@ -2,7 +2,7 @@
 
 > **Module:** Công thức nấu ăn cốt lõi (FR-RCP-002 → 007, FR-RCP-009, FR-RCP-010)
 > **Vai trò chung:** nền backend — khung solution 4 tầng, BaseEntity, xử lý lỗi chung, hợp đồng API
-> **Hạn hoàn thiện:** CN 01/11/2026 · Xem mốc chung trong `00_KeHoach_TongThe.md`
+> **Hạn chốt:** CN 01/11/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
 
 ## 1. Phạm vi trách nhiệm
 
@@ -99,7 +99,7 @@
 | 2.24 | Architecture test xanh; build không warning; rà N+1 trên trang chi tiết và "bài của tôi" | Không còn truy vấn lặp theo từng dòng | — | T5 29/10 | M |
 | 2.25 | Gửi TV1 phần SRS v1.1: 3.3 (FR-RCP-002 → 007, 009, 010 viết lại theo quyết định), 7.1–7.4, 8.3, 8.5, 8.6, mã `RECIPE_*` ở Phụ lục B | Nội dung khớp OpenAPI thực tế | — | T5 29/10 | M |
 | 2.26 | Tổng duyệt demo (tạo, sửa, publish, xóa vào thùng rác, khôi phục) | Kịch bản chạy trơn tru | — | T7 31/10 | M |
-| 2.27 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0-base` | — | CN 01/11 | M |
+| 2.27 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0` | — | CN 01/11 | M |
 
 ## 5. Bàn giao và nhận
 

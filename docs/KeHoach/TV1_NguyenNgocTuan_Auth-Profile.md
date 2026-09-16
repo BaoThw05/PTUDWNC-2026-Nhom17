@@ -2,7 +2,7 @@
 
 > **Module:** Xác thực & Hồ sơ (FR-AUTH-001 → 007) · Email chào mừng (FR-JOB-001)
 > **Vai trò chung:** điều phối tài liệu (SRS v1.1, ADR, bảng Change Request)
-> **Hạn hoàn thiện:** CN 01/11/2026 · Xem mốc chung trong `00_KeHoach_TongThe.md`
+> **Hạn chốt:** CN 01/11/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
 
 ## 1. Phạm vi trách nhiệm
 
@@ -96,7 +96,7 @@
 | 1.23 | Rà soát bảo mật: không log token/mật khẩu, secret không commit, token chỉ lưu hash, lockout + rate limit hoạt động, CORS/cookie đúng cấu hình | Checklist ở mục 7 đánh dấu đủ | 1.19 | T5 29/10 | M |
 | 1.24 | Tổng hợp SRS v1.1: nhận phần của TV2–TV4 (hạn T5 29/10); tự viết lại 3.1, 8.1, phần `AUTH_*` của Phụ lục B; đóng các dòng Change Request | `docs/SRS_v1.1.md` hoàn chỉnh, không còn "hoặc" trong yêu cầu | TV2, TV3, TV4 | T6 30/10 | M |
 | 1.25 | Tổng duyệt demo toàn nhóm (phần đăng ký/đăng nhập/hồ sơ) | Kịch bản demo chạy trơn tru qua Cloudflare Tunnel | TV3 Tunnel | T7 31/10 | M |
-| 1.26 | Sửa lỗi cuối, gắn tag `v1.0-base` cùng nhóm | Tag trên `main` | — | CN 01/11 | M |
+| 1.26 | Sửa lỗi cuối, gắn tag `v1.0` cùng nhóm | Tag trên `main` | — | CN 01/11 | M |
 
 ## 5. Bàn giao và nhận
 
@@ -131,7 +131,7 @@
 |---|---|---|
 | Auth.js v5 (beta) khó refresh ổn định | 1.05 quá T4 23/09 chưa chạy | Chuyển sang cookie HttpOnly từ backend; API backend không phải đổi |
 | Bị đăng xuất ngẫu nhiên khi mở nhiều tab | Log "reuse detected" xuất hiện khi dùng bình thường | Kiểm tra lại thời gian ân hạn 30 giây, refresh sớm trước khi token hết hạn khoảng 1 phút |
-| Việc tổng hợp tài liệu lấn thời gian code | 1.24 chưa nhận đủ phần của nhóm vào T5 29/10 | Nhắc trong buổi họp CN 25/10; phần nào thiếu thì ghi CR "chưa cập nhật" thay vì tự viết hộ |
+| Việc tổng hợp tài liệu lấn thời gian code | 1.24 chưa nhận đủ phần của nhóm vào T5 29/10 | Nhắc nhóm trong kênh chung ngày CN 25/10; phần nào thiếu thì ghi CR "chưa cập nhật" thay vì tự viết hộ |
 | Google Cloud Console cấu hình mất thời gian | 1.21 chưa xong T6 23/10 | Chuyển 1.21 sang sau 01/11 (mục đầu tiên trong danh sách cắt giảm) |
 
 **Checklist tự kiểm tra trước CN 01/11:**

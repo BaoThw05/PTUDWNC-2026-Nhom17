@@ -2,7 +2,7 @@
 
 > **Module:** Danh sách công thức (FR-RCP-001) · Tìm kiếm, lọc, sắp xếp, phân trang (FR-SRCH-001 → 004) · SEO (NFR-SEO) · Sitemap (thay FR-JOB-003) · Observability (FR-OBS-001, 002)
 > **Vai trò chung:** nền frontend (khung Next.js, API client), CI, dữ liệu seed, đo kiểm NFR base
-> **Hạn hoàn thiện:** CN 01/11/2026 · Xem mốc chung trong `00_KeHoach_TongThe.md`
+> **Hạn chốt:** CN 01/11/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
 
 ## 1. Phạm vi trách nhiệm
 
@@ -99,7 +99,7 @@
 | 4.19 | Tối ưu theo số đo (index, cache, kích thước ảnh, bundle JS) và đo lại nếu chưa đạt | Ghi kết quả trước/sau vào báo cáo | 4.18 | T5 29/10 | M |
 | 4.20 | Gửi TV1 phần SRS v1.1: FR-RCP-001, 3.4 (viết lại theo trigram), 3.7 (OBS base, OTel chuyển mở rộng), Chương 4 (NFR base/mở rộng, sửa 99,5% ≈ 43,8 giờ/năm), 2.4.3 + 5.4 (bảng trình duyệt), 6.1–6.3 phần cache/log, 8.7 | Nội dung khớp thực tế | — | T5 29/10 | M |
 | 4.21 | Tổng duyệt demo + trình bày số đo NFR | Kịch bản chạy trơn tru | — | T7 31/10 | M |
-| 4.22 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0-base` | — | CN 01/11 | M |
+| 4.22 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0` | — | CN 01/11 | M |
 
 ## 5. Bàn giao và nhận
 

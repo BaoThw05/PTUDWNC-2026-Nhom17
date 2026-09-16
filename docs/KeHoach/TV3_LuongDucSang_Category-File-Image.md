@@ -2,7 +2,7 @@
 
 > **Module:** Danh mục (FR-CAT-001 → 005) · Lưu trữ file (FR-FILE-001/002) · Ảnh công thức (FR-RCP-008) · Job resize ảnh (FR-JOB-002)
 > **Vai trò chung:** hạ tầng — Docker Compose, Hangfire, Nginx, Cloudflare Tunnel cho bản demo
-> **Hạn hoàn thiện:** CN 01/11/2026 · Xem mốc chung trong `00_KeHoach_TongThe.md`
+> **Hạn chốt:** CN 01/11/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
 
 ## 1. Phạm vi trách nhiệm
 
@@ -59,7 +59,7 @@
 | 3.03 | `docker-compose.yml` dev: PostgreSQL 16 (ghim), Redis 7 (`requirepass`), storage (ghim digest) + tạo bucket tự động, Mailpit, Seq (EULA + mật khẩu); volume; `.env.example`; README "chạy trong 5 phút" | **Bàn giao cho nhóm:** một người mới clone repo chạy `docker compose up -d` thành công | 3.01 | T5 24/09 | M |
 | 3.04 | Entity Category (`Name`, `Slug`, `Description`, `ImageUrl` để trống, `OrderIndex`) + unique index không phân biệt hoa/thường + migration + seed khoảng 8 danh mục | **Bàn giao cho TV2:** bảng `Categories` có dữ liệu để Recipe tham chiếu | TV2 `BaseEntity` (25/09) | T7 26/09 | M |
 | 3.05 | `IFileStorage` ở Application (`UploadAsync(Stream, key, contentType)`, `DeleteAsync(key)`, `DeleteByPrefixAsync(prefix)`, `GetPublicUrl(key)`) + `S3FileStorage` + `LocalFileStorage`; chọn bằng cấu hình | **Bàn giao cho TV2:** test upload/xóa theo prefix chạy với container storage | 3.03 | CN 27/09 | M |
-| 3.06 | Báo cáo nghiên cứu Cloudflare Tunnel (1–2 trang): quick tunnel và named tunnel khác nhau thế nào, có cần domain trên Cloudflare không, chạy `cloudflared` trong Docker Compose, giới hạn khi demo, lưu ý bảo mật | File `docs/research/cloudflare-tunnel.md`; trình bày nhanh ở buổi họp CN 27/09 | — | CN 27/09 | M |
+| 3.06 | Báo cáo nghiên cứu Cloudflare Tunnel (1–2 trang): quick tunnel và named tunnel khác nhau thế nào, có cần domain trên Cloudflare không, chạy `cloudflared` trong Docker Compose, giới hạn khi demo, lưu ý bảo mật | File `docs/research/cloudflare-tunnel.md`; gửi nhóm đọc trước CN 27/09 | — | CN 27/09 | M |
 | 3.07 | Hangfire: Hangfire.PostgreSql (schema riêng), `AutomaticRetry` toàn cục, `IBackgroundJobService` ở Application, dashboard chỉ bật ở Development | **Bàn giao cho TV1, TV2:** enqueue một job mẫu và thấy chạy trong dashboard | 3.03, TV2 khung solution (23/09) | T3 29/09 | M |
 
 ### G2a — Backend base (T5 01/10 → CN 11/10)
@@ -97,7 +97,7 @@
 | 3.21 | Script backup base: `pg_dump` + nén volume storage; hướng dẫn khôi phục | Chạy thử khôi phục thành công trên máy khác | 3.03 | T5 29/10 | M |
 | 3.22 | Gửi TV1 phần SRS v1.1: 3.2, 3.5, FR-JOB-002, 5.3 (storage, Hangfire, Tunnel), 6.5, 7.5, 7.6, 8.2, 8.4, mã lỗi `CATEGORY_*`/`FILE_*`/`IMAGE_*` | Nội dung khớp OpenAPI thực tế | — | T5 29/10 | M |
 | 3.23 | Tổng duyệt demo **qua Cloudflare Tunnel** (máy chạy demo, mạng, kịch bản dự phòng khi Tunnel lỗi: demo trên `localhost`) | Cả nhóm truy cập được link demo trong buổi tổng duyệt | 3.18 | T7 31/10 | M |
-| 3.24 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0-base` | — | CN 01/11 | M |
+| 3.24 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0` | — | CN 01/11 | M |
 
 ## 5. Bàn giao và nhận
 
@@ -138,7 +138,7 @@
 | Cloudflare Tunnel cần domain hoặc tài khoản mà nhóm chưa có | 3.06 kết luận named tunnel cần domain | Dùng quick tunnel (URL ngẫu nhiên) cho buổi demo; ghi rõ giới hạn trong README |
 | Thư viện ảnh khó chạy trong container Linux | 3.16 lỗi thiếu thư viện native | Đổi sang thư viện khác; nếu vẫn trễ → chuyển 3.16 sau 01/11, tạm hiển thị ảnh gốc |
 | Component upload trễ làm chậm wizard TV2 | T3 13/10 chưa upload được từ giao diện | Giao trước bản tối giản (chọn file + upload + hiển thị), kéo thả và sắp xếp bổ sung sau |
-| Khối lượng hạ tầng lấn phần module | CN 27/09 chưa xong 3.03–3.05 | Nhờ TV4 hỗ trợ README/`.env.example`; báo trong buổi họp CN 27/09 |
+| Khối lượng hạ tầng lấn phần module | CN 27/09 chưa xong 3.03–3.05 | Nhờ TV4 hỗ trợ README/`.env.example`; báo nhóm trong kênh chung ngày CN 27/09 |
 
 **Checklist tự kiểm tra trước CN 01/11:**
 - [ ] `docker compose up -d` chạy từ repo sạch, mọi image đã ghim phiên bản

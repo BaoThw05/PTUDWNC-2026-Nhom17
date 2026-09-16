@@ -1,6 +1,6 @@
 # Kế hoạch tổng thể — Culinary Blog (đồ án Phát triển Ứng dụng Web Nâng cao)
 
-> **Thời gian:** T5 17/09/2026 → **CN 01/11/2026** (hạn hoàn thiện trước mắt) — 46 ngày, khoảng 6,5 tuần.
+> **Thời gian:** T5 17/09/2026 → **CN 01/11/2026 — hạn chốt ra ứng dụng hoàn thiện** — 46 ngày, khoảng 6,5 tuần.
 > **Căn cứ:** `SRS_Culinary_Blog_v1.0.0_GiaiPhap.md` (bản đã có ghi chú chốt của nhóm và câu trả lời của giảng viên), `SRS_Culinary_Blog_v1.0.0_DanhSachLoi.md`, `BangPhanCong.docx`.
 > **Kế hoạch chi tiết từng người:** `TV1_NguyenNgocTuan_Auth-Profile.md` · `TV2_BuiNgocToan_Recipe-Core.md` · `TV3_LuongDucSang_Category-File-Image.md` · `TV4_TranLeBaoThu_Search-SEO-Observability.md`.
 
@@ -17,7 +17,7 @@
 
 1. Hiện tại nhóm **chưa có code nghiệp vụ**; môi trường dev trên từng máy đã cài hoặc sẽ cài trong giai đoạn 0.
 2. Mỗi người dành khoảng **15–20 giờ/tuần** (hạn 01/11 khá gấp). Có dùng Claude Code hỗ trợ.
-3. Mục tiêu đến 01/11 là **bản base hoàn chỉnh**: toàn bộ chức năng Must chạy được từ đầu đến cuối, kiểm thử các luồng chính, NFR mức base, SRS v1.1. Phần mở rộng làm **sau 01/11** (theo trả lời của giảng viên: "làm base trước, hoàn thiện làm mở rộng sau").
+3. **01/11 là hạn chốt để có một ứng dụng hoàn thiện**, dùng được như sản phẩm thật: đăng nhập/đăng ký chạy thật, giao diện đầy đủ và chỉn chu cho mọi trang, web gần như hoàn chỉnh từ đầu đến cuối; kèm kiểm thử các luồng chính, NFR đo được trên máy demo và SRS v1.1. Sau 01/11 chỉ còn sửa lỗi nhỏ và làm các hạng mục mở rộng ở mục 9.
 4. Deadline trong các file là **cuối ngày** (23:59) và tính là "đã merge vào nhánh `main`", không phải "đang làm dở".
 
 ## 3. Các quyết định đã chốt (đầu vào của kế hoạch)
@@ -50,10 +50,10 @@
 | **M1 — Nền tảng chạy** | T4 30/09 | `docker compose up` đủ service; backend 4 tầng build được, architecture test và CI xanh; migration Users/Recipes/Categories chạy; đăng nhập lấy JWT test được qua Scalar; Next.js gọi được API; Hangfire và storage hoạt động |
 | **M2 — Backend base xong** | CN 11/10 | Mọi API Must của 4 module chạy qua Scalar, có test cho các nhánh chính |
 | **M3 — Frontend base xong** | CN 18/10 | Luồng đầu-cuối chạy trên giao diện: đăng ký → đăng nhập → tạo recipe có ảnh → publish → hiện ở trang chủ/danh sách/danh mục/tìm kiếm → sửa → xóa vào thùng rác → khôi phục |
-| **M4 — Tích hợp & chốt tính năng** | CN 25/10 | Cache, SEO base, sitemap, job resize ảnh, các job dọn dẹp, rate limit chạy; bản demo truy cập được qua Cloudflare Tunnel. **Sau mốc này không thêm tính năng** |
+| **M4 — Tích hợp & chốt tính năng** | CN 25/10 | Giao diện hoàn thiện cho mọi trang (không còn placeholder, có trạng thái loading/lỗi/rỗng, dùng tốt trên điện thoại); cache, SEO base, sitemap, job resize ảnh, các job dọn dẹp, rate limit chạy; bản demo truy cập được qua Cloudflare Tunnel. **Sau mốc này không thêm tính năng** |
 | **M5 — Kiểm thử & đo xong** | T5 29/10 | Integration test + E2E các luồng chính xanh; báo cáo k6/Lighthouse base; không còn lỗi mức nghiêm trọng |
 | **M6 — Tài liệu & tổng duyệt** | T7 31/10 | SRS v1.1 hoàn chỉnh (TV1 tổng hợp xong T6 30/10); README; tổng duyệt demo toàn nhóm |
-| **Hạn hoàn thiện** | **CN 01/11** | Sửa lỗi cuối, gắn tag `v1.0-base`, nộp/báo cáo |
+| **Hạn chốt — app hoàn thiện** | **CN 01/11** | Ứng dụng chạy trọn vẹn: đăng nhập, giao diện hoàn chỉnh mọi trang, dữ liệu demo; sửa lỗi cuối, gắn tag `v1.0`, nộp/báo cáo |
 
 ## 5. Lịch theo giai đoạn
 
@@ -69,7 +69,7 @@ gantt
     G2b Frontend base                  :g2b, 2026-10-12, 7d
     G3 Tích hợp & base nâng cao        :g3, 2026-10-19, 7d
     G4 Kiểm thử, tài liệu, tổng duyệt  :g4, 2026-10-26, 6d
-    Hạn hoàn thiện                     :milestone, 2026-11-01, 0d
+    Hạn chốt app hoàn thiện            :milestone, 2026-11-01, 0d
     section TV1 Tuấn
     Spike Auth.js + Identity + JWT     :2026-09-21, 9d
     API auth + email job               :2026-10-01, 11d
@@ -131,9 +131,7 @@ gantt
 
 ## 7. Cách làm việc chung
 
-**Họp:**
-- **Chủ nhật 20:30** (30 phút): chốt mốc tuần, xem bảng công việc, quyết định cắt giảm nếu trễ.
-- **Thứ tư 21:00** (15 phút, online): mỗi người trả lời 3 câu — đã xong gì, sắp làm gì, đang bị chặn bởi ai.
+**Phối hợp:** nhóm tự chủ động, không có lịch họp cố định. Mỗi người tự cập nhật tiến độ trên bảng công việc; bị chặn hoặc sắp trễ một điểm bàn giao thì báo ngay trong kênh chung của nhóm.
 
 **Quản lý công việc:** mỗi dòng trong file kế hoạch cá nhân là một thẻ trên GitHub Projects (Kanban: Todo → Doing → Review → Done), giữ nguyên mã công việc (ví dụ `1.09`).
 
@@ -162,7 +160,7 @@ gantt
 | Tìm kiếm không dấu cho kết quả kém | Test tiếng Việt fail nhiều | TV4 ưu tiên khớp Title, tăng ngưỡng similarity |
 | Trễ tiến độ chung | CN 18/10 chưa đạt M3 | Áp dụng thứ tự cắt giảm |
 
-**Thứ tự cắt giảm khi thiếu thời gian** (cắt từ trên xuống, chuyển sang "sau 01/11"):
+**Thứ tự cắt giảm khi thiếu thời gian** — chỉ dùng khi thật sự trễ, vì 01/11 phải ra app hoàn thiện (cắt từ trên xuống, chuyển sang "sau 01/11"):
 1. Đăng nhập Google (FR-AUTH-003 — mức Should).
 2. Kéo thả sắp xếp lại các bước.
 3. Job dọn file mồ côi.
@@ -170,7 +168,7 @@ gantt
 5. Output Cache (hệ thống vẫn đúng, chỉ chậm hơn).
 6. Sitemap.
 
-**Không được cắt:** đăng ký/đăng nhập/refresh/logout; CRUD + publish + thùng rác recipe; steps/ingredients; categories; upload ảnh; danh sách + tìm kiếm; trang chi tiết; test các luồng chính; SRS v1.1.
+**Không được cắt:** đăng ký/đăng nhập/refresh/logout và màn hình hồ sơ; giao diện hoàn chỉnh cho mọi trang (không còn trang placeholder, có trạng thái loading/lỗi/rỗng, dùng tốt trên điện thoại); CRUD + publish + thùng rác recipe; steps/ingredients; categories; upload ảnh; danh sách + tìm kiếm; trang chi tiết; test các luồng chính; SRS v1.1.
 
 ## 9. Hướng phát triển sau 01/11 (mức mở rộng)
 
@@ -182,7 +180,7 @@ gantt
 | Tìm kiếm & vận hành | OpenTelemetry tracing + metrics (FR-OBS-003), kết hợp full-text `tsvector` để xếp hạng tốt hơn, tìm theo nguyên liệu, revalidate ISR theo sự kiện, CI Lighthouse | TV4 |
 | NFR mở rộng | Coverage cao hơn, StyleCop/Sonar, k6 kịch bản dài, scale ngang (chỉ khi GV yêu cầu) | Cả nhóm |
 
-## 10. Bảng theo dõi tuần (điền trong buổi họp Chủ nhật)
+## 10. Bảng theo dõi tuần (mỗi người tự cập nhật)
 
 | Tuần | Khoảng ngày | Mốc | TV1 | TV2 | TV3 | TV4 | Ghi chú / quyết định cắt giảm |
 |---|---|---|---|---|---|---|---|
@@ -192,6 +190,6 @@ gantt
 | 4 | 05/10 – 11/10 | M2 | | | | | |
 | 5 | 12/10 – 18/10 | M3 | | | | | |
 | 6 | 19/10 – 25/10 | M4 | | | | | |
-| 7 | 26/10 – 01/11 | M5, M6, Hạn | | | | | |
+| 7 | 26/10 – 01/11 | M5, M6, hạn chốt app hoàn thiện | | | | | |
 
 *Cách điền mỗi ô: % công việc đã Done theo file cá nhân + mã công việc đang trễ (nếu có).*
