@@ -52,11 +52,7 @@ dotnet run --project CulinaryBlog.API   # http://localhost:5000
 ```
 
 - Kiểm tra: `http://localhost:5000/health` trả `Healthy`; tài liệu API ở `http://localhost:5000/scalar`.
-- Connection string mặc định (trong `appsettings.Development.json`) khớp giá trị mặc định của `.env.example`. Nếu bạn đổi cổng hoặc mật khẩu trong `.env`, ghi đè bằng user-secrets (không commit):
-
-```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5433;Database=culinary_blog;Username=culinary_admin;Password=..." --project CulinaryBlog.API
-```
+- Connection string mặc định (trong `appsettings.Development.json`) dùng **cổng chung 5432** và mật khẩu mặc định của `.env.example`. Máy nào dùng cổng riêng hoặc mật khẩu khác thì làm theo [mục 3.1](#31-máy-dùng-cổng-riêng).
 
 **Bước 3 — Frontend**
 
@@ -71,14 +67,39 @@ Trang chủ có khối **Backend API: OK** khi frontend gọi được backend q
 
 ## 3. Cổng dịch vụ
 
-| Dịch vụ | Địa chỉ | Ghi chú |
-|---|---|---|
-| Frontend (Next.js) | http://localhost:3000 | `/api/*` được rewrite sang backend |
-| Backend API | http://localhost:5000 | `/api/v1/*`, `/health`, `/scalar` (Dev) |
-| PostgreSQL | localhost:`POSTGRES_PORT` (mặc định 5432) | Đổi trong `.env` nếu 5432 đã bị chiếm |
-| Redis | localhost:6379 | Có mật khẩu `REDIS_PASSWORD` |
+**Cả nhóm dùng chung bộ cổng dưới đây.** Tài liệu, code mẫu và cấu hình mặc định trong repo đều viết theo các cổng này; không đổi cổng chung khi chưa thống nhất với nhóm.
 
-TV3 sẽ bổ sung storage, Mailpit, Seq vào compose (việc 3.03).
+| Dịch vụ | Cổng chung | Địa chỉ | Cấu hình ở | Ghi chú |
+|---|---|---|---|---|
+| Frontend (Next.js) | **3000** | http://localhost:3000 | mặc định của `next dev` | `/api/*` được rewrite sang backend |
+| Backend API | **5000** | http://localhost:5000 | `CulinaryBlog.API/Properties/launchSettings.json` | `/api/v1/*`, `/health`, `/scalar` (Dev) |
+| PostgreSQL | **5432** | localhost:5432 | `POSTGRES_PORT` trong `.env` | DB `culinary_blog`, user `culinary_admin` |
+| Redis | **6379** | localhost:6379 | cố định trong `docker-compose.yml` | Có mật khẩu `REDIS_PASSWORD` |
+
+TV3 sẽ bổ sung storage, Mailpit, Seq vào compose (việc 3.03); khi thêm dịch vụ mới, bổ sung cổng vào bảng này trong cùng PR.
+
+### 3.1. Máy dùng cổng riêng
+
+Chỉ dùng cổng khác khi cổng chung trên máy đã bị chương trình khác chiếm. **Ai dùng cổng riêng phải ghi vào bảng dưới** (PR sửa README) để cả nhóm biết khi hỗ trợ nhau.
+
+| Thành viên | Dịch vụ | Cổng riêng | Lý do |
+|---|---|---|---|
+| TV1 — Nguyễn Ngọc Tuấn | PostgreSQL | **5433** | Cổng 5432 đã bị PostgreSQL cài sẵn trên máy chiếm |
+
+Cách cấu hình (chỉ trên máy của mình, **không commit**):
+
+1. **PostgreSQL** — trong `.env` ở gốc repo đặt `POSTGRES_PORT=5433` (hoặc cổng khác), rồi `docker compose up -d`. .NET không đọc file `.env`, nên ghi đè connection string cho API bằng user-secrets:
+
+   ```bash
+   cd src/Backend
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5433;Database=culinary_blog;Username=culinary_admin;Password=<POSTGRES_PASSWORD>" --project CulinaryBlog.API
+   ```
+
+2. **Backend API** — không sửa `launchSettings.json`; chạy `dotnet run --project CulinaryBlog.API -- --urls http://localhost:<cổng>` và đặt `API_INTERNAL_URL=http://localhost:<cổng>` trong `src/Frontend/.env.local`.
+3. **Frontend** — `npm run dev -- -p <cổng>`.
+4. **Redis** — cổng 6379 đang cố định trong compose; nếu bị chiếm, báo TV3 để thêm biến `REDIS_PORT` thay vì sửa compose trên máy mình.
+
+Kiểm tra lại: `docker compose ps` (cột PORTS), `http://localhost:<cổng API>/health`, khối **Backend API: OK** trên trang chủ.
 
 ## 4. Cấu trúc thư mục
 
