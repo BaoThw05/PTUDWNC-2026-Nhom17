@@ -1,8 +1,6 @@
+using CulinaryBlog.Application.Common.Errors;
+
 namespace CulinaryBlog.Application.Common.Exceptions;
 
-public class NotFoundException : Exception
-{
-    public NotFoundException(string message) : base(message)
-    {
-    }
-}
+public sealed class NotFoundException(string message, string code = ErrorCodes.NotFound)
+    : AppException(code, message);
