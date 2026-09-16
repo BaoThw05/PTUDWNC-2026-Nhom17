@@ -38,7 +38,17 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
-| | | | Auth |
+| `AUTH_EMAIL_EXISTS` | 409 | Email đã được đăng ký (so sánh không phân biệt hoa/thường) | Auth |
+| `AUTH_INVALID_CREDENTIALS` | 401 | Email không tồn tại hoặc sai mật khẩu — dùng chung một mã để không lộ email đã đăng ký | Auth |
+| `AUTH_ACCOUNT_LOCKED` | 423 | Tài khoản bị khóa 15 phút sau 5 lần nhập sai mật khẩu | Auth |
+| `AUTH_ACCOUNT_DISABLED` | 403 | Tài khoản bị vô hiệu hóa (`IsActive = false`); chỉ báo khi mật khẩu đúng | Auth |
+| `AUTH_REFRESH_TOKEN_INVALID` | 401 | Refresh token không tồn tại | Auth |
+| `AUTH_REFRESH_TOKEN_EXPIRED` | 401 | Refresh token đã hết hạn (7 ngày) | Auth |
+| `AUTH_REFRESH_TOKEN_REVOKED` | 401 | Refresh token đã bị thu hồi (đăng xuất, hoặc bị dùng lại sau 30 giây → thu hồi cả family) | Auth |
+| `AUTH_USER_NOT_FOUND` | 404 | Người dùng trong access token không còn tồn tại | Auth |
+| `AUTH_GOOGLE_TOKEN_INVALID` | 401 | `idToken` Google sai chữ ký, sai audience hoặc hết hạn | Auth |
+| `AUTH_GOOGLE_EMAIL_UNVERIFIED` | 401 | Email của tài khoản Google chưa được Google xác minh | Auth |
+| `AUTH_GOOGLE_UNAVAILABLE` | 502 | Không xác minh được với Google, hoặc backend chưa cấu hình Google Client ID | Auth |
 
 ## Recipes — TV2
 
