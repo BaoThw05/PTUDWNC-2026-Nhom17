@@ -23,8 +23,8 @@ Tài liệu đặc tả: [`docs/SRS_Culinary_Blog_v1.0.0.md`](./docs/SRS_Culinar
 
 | Công cụ | Phiên bản |
 |---|---|
-| .NET SDK | 10.0.x |
-| Node.js | ≥ 20.9 (khuyến nghị 22 LTS trở lên) |
+| .NET SDK | 10.0.x (ghim bằng `global.json`) |
+| Node.js | ≥ 20.9 (khuyến nghị 22 LTS, xem `src/Frontend/.nvmrc`) |
 | npm | ≥ 10 |
 | Docker Desktop | bản mới, có Docker Compose v2 (Windows: bật WSL2 và **mở Docker Desktop trước khi chạy compose**) |
 | Git | ≥ 2.40 |
@@ -105,6 +105,8 @@ Kiểm tra lại: `docker compose ps` (cột PORTS), `http://localhost:<cổng A
 
 ```
 .
+├── CLAUDE.md                     # hướng dẫn cho Claude Code
+├── global.json                   # ghim .NET SDK 10
 ├── docker-compose.yml            # PostgreSQL + Redis
 ├── .env.example
 ├── docs/
