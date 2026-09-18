@@ -67,6 +67,15 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ⬜ |
 | CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ⬜ |
 
+## Diễn giải câu trả lời của giảng viên (nhóm chốt 18/09/2026)
+
+Giảng viên đã trả lời 8 câu hỏi ở mục 5.6 của `SRS_Culinary_Blog_v1.0.0_GiaiPhap.md`. Hai câu trả lời ngắn dưới đây được nhóm diễn giải như sau và **áp dụng theo diễn giải của nhóm**; nếu giảng viên muốn khác, chi phí đổi đã ghi ở cột cuối.
+
+| Câu | Giảng viên trả lời | Nhóm hiểu là | CR | Nếu muốn khác |
+|---|---|---|---|---|
+| 3 — Điều kiện publish | "Không bắt buộc, cho phép bổ sung sau" | "Không bắt buộc" áp dụng cho **nguyên liệu và ảnh**; vẫn giữ điều kiện tối thiểu **≥ 1 bước** của FR-RCP-005 để bài đăng không rỗng | CR-12 | Bỏ một điều kiện trong validator của Recipe — không ảnh hưởng kế hoạch |
+| 4 — MinIO đã ngừng bản cộng đồng | "Nghiên cứu Cloudflare Tunnel" | Cloudflare Tunnel dùng để **đưa bản demo từ máy nhóm ra Internet** (không cần VPS hay IP tĩnh); nó **không thay thế kho lưu ảnh**. Ảnh vẫn nằm trong dịch vụ lưu trữ tương thích S3 chạy bằng Docker, được Nginx phục vụ qua đường dẫn `/media` nên đi chung qua Tunnel | CR-14 | Đổi bằng cấu hình: DB chỉ lưu object key, `ServiceURL`/`PublicBaseUrl` tách riêng (S-09, S-12) — không phải sửa code |
+
 <!-- Hết Bảng Change Request -->
 
 # MỤC LỤC
