@@ -482,12 +482,10 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
-n o d e _ m o d u l e s / 
- 
- . n e x t / 
- 
- . e n v * . l o c a l 
- 
- . e n v 
- 
- 
+
+# Next.js (Frontend)
+.next/
+out/
+next-env.d.ts
+.vercel
+.env*.local

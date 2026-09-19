@@ -1,216 +1,259 @@
-# Culinary Blog – Blog Ẩm thực và Nấu ăn
+# Culinary Blog
 
-> **Culinary Blog** là nền tảng ứng dụng web hiện đại cho phép người dùng khám phá, chia sẻ và quản lý các công thức nấu ăn phong phú. Hệ thống được phát triển theo mô hình **API-Driven Architecture**, phân tách độc lập giữa Backend (.NET 10 Clean Architecture) và Frontend (Next.js App Router), đáp ứng các tiêu chuẩn cao về hiệu năng, bảo mật và tối ưu SEO.
+Blog chia sẻ công thức nấu ăn — đồ án môn Phát triển Ứng dụng Web Nâng cao của Nhóm 17.
 
----
+Người dùng có thể đăng ký, viết và xuất bản công thức (kèm ảnh, nguyên liệu, các bước làm), duyệt theo danh mục và tìm kiếm tiếng Việt không dấu. Backend viết bằng .NET 10 (Minimal API, Clean Architecture, MediatR), frontend dùng Next.js 16, dữ liệu nằm trong PostgreSQL 16 và Redis 7.
+
+**Mục tiêu của nhóm: đến Chủ nhật 01/11/2026 có một ứng dụng hoàn thiện** — đăng nhập chạy thật, giao diện đầy đủ cho mọi trang, web gần như hoàn chỉnh từ đầu đến cuối.
+
+Tài liệu nằm trong `docs/`:
+
+- [SRS v1.0.0](./docs/SRS_Culinary_Blog_v1.0.0.md) và [các quyết định đã chốt](./docs/SRS_Culinary_Blog_v1.0.0_GiaiPhap.md) (khi hai file nói khác nhau thì theo file quyết định)
+- [Kế hoạch tổng và kế hoạch từng người](./docs/KeHoach/)
+- [Ai phụ trách thư mục nào](./docs/OWNERSHIP.md)
+- [Bảng mã lỗi API](./docs/api/error-codes.md)
 
 ## Mục lục
 
-- [Giới thiệu Kiến trúc](#giới-thiệu-kiến-trúc)
-- [Công nghệ Sử dụng](#công-nghệ-sử-dụng)
-- [Tính năng Nổi bật](#tính-năng-nổi-bật)
-- [Tài liệu Đặc tả SRS](#tài-liệu-đặc-tả-srs)
-- [Cấu trúc Dự án](#cấu-trúc-dự-án)
-- [Yêu cầu Hệ thống](#yêu-cầu-hệ-thống)
-- [Hướng dẫn Cài đặt & Chạy Local](#hướng-dẫn-cài-đặt--chạy-local)
-- [Thành viên phát triển dự án](#thành-viên-phát-triển-dự-án)
+1. [Cài đặt](#1-cài-đặt)
+2. [Chạy dự án](#2-chạy-dự-án)
+3. [Cổng dịch vụ](#3-cổng-dịch-vụ)
+4. [Cấu trúc thư mục](#4-cấu-trúc-thư-mục)
+5. [Thêm tính năng mới](#5-thêm-tính-năng-mới)
+6. [Làm việc nhóm](#6-làm-việc-nhóm)
+7. [Quy ước viết code](#7-quy-ước-viết-code)
+8. [Tiến độ](#8-tiến-độ)
+9. [Để nghiên cứu sau](#9-để-nghiên-cứu-sau)
+10. [Thành viên](#thành-viên)
 
----
+## 1. Cài đặt
 
-## Giới thiệu Kiến trúc
+Bạn cần có:
 
-Hệ thống tuân thủ kiến trúc phân tầng độc lập (**API-Driven Architecture**):
+- .NET SDK 10 (repo đã ghim bằng `global.json`)
+- Node.js 20.9 trở lên, khuyến nghị bản 22 (`src/Frontend/.nvmrc`) và npm 10
+- Docker Desktop có Compose v2. Trên Windows nhớ bật WSL2 và mở Docker Desktop trước khi chạy compose.
+- Git
+- `dotnet-ef` nếu cần tạo migration: `dotnet tool install --global dotnet-ef`
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    CULINARY BLOG SYSTEM                         │
-│                                                                 │
-│   ┌──────────────────┐        ┌───────────────────────────────┐ │
-│   │  NEXT.JS FRONTEND│◄──────►│    .NET 10 BACKEND API        │ │
-│   │  (App Router)    │  REST  │    (Minimal APIs + Clean Arch)│ │
-│   │  Port: 3000      │  JSON  │    Port: 5000                 │ │
-│   └──────────────────┘        └──────────────┬────────────────┘ │
-│                                              │                  │
-│   ┌──────┐ ┌────────┐  ┌────────┐  ┌────────┐ ┌───────────┐     │
-│   │ Pgsql│ │ Redis  │  │ MinIO  │  │Hangfire│ │Google Auth│     │
-│   │:5432 │ │:6379   │  │:9000   │  │ Jobs   │ │ OAuth2.0  │     │
-│   └──────┘ └────────┘  └────────┘  └────────┘ └───────────┘     │
-└─────────────────────────────────────────────────────────────────┘
-```
+## 2. Chạy dự án
 
-- **Backend (.NET 10 Minimal APIs)**: Áp dụng **Clean Architecture** (Domain, Application, Infrastructure, Presentation) kết hợp **CQRS pattern** qua MediatR Pipeline.
-- **Frontend (Next.js App Router)**: Sử dụng TypeScript, Tailwind CSS, TanStack Query và Auth.js v5. Tối ưu trải nghiệm người dùng kết hợp Server-Side Rendering (SSR) và Incremental Static Regeneration (ISR).
-- **Cơ sở dữ liệu & Storage**: PostgreSQL 16 (Full-Text Search), Redis 7 (Distributed Cache), MinIO (Object Storage tương thích S3).
+Các lệnh dưới đây chạy từ thư mục gốc repo, dùng được cả trên PowerShell lẫn bash.
 
----
+**Cơ sở dữ liệu và Redis**
 
-## Công nghệ Sử dụng
-
-### **Backend Stack**
-- **Framework**: .NET 10 Minimal APIs (C#)
-- **Architecture**: Clean Architecture, CQRS (MediatR), Domain-Driven Design concepts
-- **ORM & Database**: Entity Framework Core 10, PostgreSQL 16
-- **Caching**: Redis 7, Native Output Caching & `IMemoryCache`
-- **Security & Authentication**: ASP.NET Core Identity, JWT Stateless (Access Token 15 phút, Refresh Token Rotation 7 ngày), Google OAuth 2.0 (PKCE)
-- **Background Jobs**: Hangfire (PostgreSQL Storage)
-- **Validation**: FluentValidation + MediatR Pipeline Behavior
-- **Observability**: Serilog (Structured Logging), OpenTelemetry (Tracing & Metrics), Health Checks
-
-### **Frontend Stack**
-- **Framework**: Next.js 14+ / 15 (App Router), React 19 / TypeScript
-- **Styling**: Tailwind CSS
-- **State & Data Fetching**: TanStack Query (React Query)
-- **Auth**: Auth.js v5 (NextAuth)
-- **SEO**: JSON-LD Schema.org Recipe Markup, Open Graph, Dynamic Meta tags
-
-### **Infrastructure & DevOps**
-- **Containerization**: Docker, Docker Compose
-- **Reverse Proxy**: Nginx Alpine
-- **Storage**: MinIO S3-Compatible
-
----
-## Tính năng Nổi bật
-
-Hệ thống bao gồm **27 Yêu cầu Chức năng (FR)** thuộc 7 module chính:
-
-1. **Xác thực & Người dùng (`FR-AUTH`)**:
-   - Đăng ký, Đăng nhập Email/Mật khẩu (Auto-login sau đăng ký).
-   - Đăng nhập qua Google OAuth 2.0 PKCE.
-   - Cơ chế Token Refresh Rotation & Reuse Detection tự động vô hiệu hóa token khi có dấu hiệu tấn công.
-   - Quản lý hồ sơ cá nhân (Me Profile).
-2. **Quản lý Công thức (`FR-RCP`)**:
-   - Tạo, cập nhật, lưu trữ (Archive), xuất bản (Publish) và xóa vĩnh viễn công thức.
-   - Quản lý bộ sưu tập hình ảnh (Max 5MB/file, kiểm tra Magic Bytes, chọn Primary Image).
-   - Quản lý danh sách nguyên liệu (`RecipeIngredient`) và các bước thực hiện (`RecipeStep` - tự động đánh lại số bước).
-   - Xử lý xung đột cập nhật đồng thời bằng `RowVersion` (Optimistic Concurrency).
-3. **Quản lý Danh mục (`FR-CAT`)**:
-   - CRUD danh mục công thức (Dành riêng cho Admin).
-   - Tự động sinh SEO Slug, tích hợp `IMemoryCache` (TTL 60 phút).
-4. **Tìm kiếm & Phân trang (`FR-SRCH`)**:
-   - Full-Text Search tiếng Việt không dấu sử dụng PostgreSQL `tsvector`/`tsquery` kết hợp extension `unaccent`.
-   - Phân trang Offset-based, hỗ trợ lọc theo Category, Độ khó (Difficulty), Thời gian nấu và Sắp xếp linh hoạt.
-5. **Quản lý Tệp tin (`FR-FILE`)**:
-   - Tầng trừu tượng `IFileStorageService` quản lý Upload/Delete file ảnh công thức trên MinIO S3.
-6. **Background Jobs (`FR-JOB`)**:
-   - Gửi Email chào mừng người dùng mới (Fire-and-forget qua Hangfire).
-   - Tự động tạo Thumbnail (300x300) và Medium (800x600) cho ảnh công thức.
-   - Chạy lịch tự động sinh `sitemap.xml` hàng ngày lúc 02:00 AM UTC.
-7. **Quan sát Hệ thống (`FR-OBS`)**:
-   - Cung cấp 3 Health Check endpoints (`/health`, `/health/live`, `/health/ready`).
-   - Structured Logging (Serilog) kèm `CorrelationId` và OpenTelemetry Distributed Tracing.
-
----
-## Tài liệu Đặc tả SRS
-
-- **Tên tài liệu**: *Culinary Blog Software Requirements Specification v1.0.0*
-- **Đường dẫn tệp tài liệu**: [`docs/SRS_Culinary_Blog_v1.0.0.pdf`](./docs/SRS_Culinary_Blog_v1.0.0.pdf)
-- **Nội dung chính trong SRS**:
-  - Đặc tả chi tiết 27 Yêu cầu Chức năng (Functional Requirements - FR).
-  - Yêu cầu Phi chức năng (NFRs): Hiệu năng (p95 ≤ 500ms), Bảo mật OWASP, Tối ưu SEO.
-  - Sơ đồ Cơ sở Dữ liệu (Data Model / ERD) & Đặc tả REST API (~30 Endpoints).
-
----
-## Cấu trúc Dự án
-
-```
-PTUDWNC-2026-Nhom17/
-├── .gitignore
-├── .gitattributes
-├── docker-compose.yml           # Configuration cho local development (DB, Cache, Storage)
-├── git
-├── README.md
-│
-├── docs/                        # Tài liệu dự án
-│   └── SRS_Culinary_Blog_v1.0.0.pdf  # Tài liệu Đặc tả Yêu cầu Phần mềm (SRS)
-│   └── BangPhanCong.docx  # Tài liệu phân công công việc
-│
-├── src/
-│   ├── Backend/                 # Clean Architecture Solution
-│   │   ├── CulinaryBlog.Domain/         # Core Domain Entities, Interfaces, Enums
-│   │   ├── CulinaryBlog.Application/    # Commands, Queries, Handlers, DTOs, Validators
-│   │   ├── CulinaryBlog.Infrastructure/ # EF Core, MinIO, Redis, Identity, Hangfire
-│   │   ├── CulinaryBlog.API/            # Minimal API Endpoints, Middlewares, Program.cs
-│   │   └── CulinaryBlog.sln 
-│   │
-│   └── Frontend/                # Next.js Application
-│       ├── .next/
-│       ├── app/
-│       ├── node_modules/
-│       ├── public/
-│       ├── .gitignore
-│       ├── AGENTS.md
-│       ├── CLAUDE.md
-│       ├── eslint.config.mjs
-│       ├── next-env.d.ts
-│       ├── next.config.ts
-│       ├── package-lock.json
-│       ├── package.json
-│       ├── postcss.config.mjs
-│       ├── README.md
-│       └── tsconfig.json
-
-```
----
-
-## Yêu cầu Hệ thống
-
-Để khởi chạy dự án ở môi trường phát triển (Development), máy tính của bạn cần cài đặt:
-
-- **.NET 10 SDK** (v10.0.x)
-- **Node.js** (v20+ LTS) & **npm** (v10+)
-- **Docker Desktop** (v4.x+) hoặc Docker Engine
-- **Git** (v2.40+)
-
----
-
-## Hướng dẫn Cài đặt & Chạy Local
-
-### **Bước 1: Clone Repository**
 ```bash
-git clone https://github.com/BaoThw05/PTUDWNC-2026-Nhom17.git
-cd PTUDWNC-2026-Nhom17
-```
-### **Bước 2: Khởi chạy Hạ tầng Môi trường (Docker Compose)**
-Khởi chạy PostgreSQL, Redis, MinIO, Seq và Mailhog:
-```bash
+cp .env.example .env          # PowerShell: Copy-Item .env.example .env
 docker compose up -d
+docker compose ps             # đợi cả hai service báo (healthy)
 ```
 
-### **Bước 3: Khởi chạy Backend API (.NET 10)**
-1. Chuyển vào thư mục Backend API:
-   ```bash
-   cd src/Backend/CulinaryBlog.API
-   ```
-2. Khôi phục packages và cập nhật CSDL PostgreSQL:
-   ```bash
-   dotnet restore
-   dotnet ef database update --project ../CulinaryBlog.Infrastructure
-   ```
-3. Chạy ứng dụng Backend:
-   ```bash
-   dotnet run
-   ```
-   > Backend API sẽ chạy tại: `http://localhost:5000` (Giao diện tài liệu API Scalar tại `http://localhost:5000/scalar`).
+**Backend**
 
-### **Bước 4: Khởi chạy Frontend (Next.js)**
-1. Mở terminal mới, chuyển vào thư mục Frontend:
-   ```bash
-   cd src/Frontend
-   ```
-2. Cài đặt phụ thuộc và khởi chạy dev server:
-   ```bash
-   npm install
-   npm run dev
-   ```
-   > Frontend Web sẽ chạy tại: `http://localhost:3000`.
----
-## Thành viên phát triển dự án
+```bash
+cd src/Backend
+dotnet build
+dotnet test
+dotnet run --project CulinaryBlog.API
+```
 
-| MSSV | Họ và Tên | Vai trò & Mô-đun phụ trách | Hồ sơ Git |
+API chạy ở http://localhost:5000. Mở http://localhost:5000/health để kiểm tra (trả về `Healthy`), tài liệu API ở http://localhost:5000/scalar.
+
+Backend đọc connection string trong `appsettings.Development.json`, khớp sẵn với `.env.example`. Nếu bạn đổi mật khẩu trong `.env`, báo cho backend bằng user-secrets (không commit):
+
+```bash
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=culinary_blog;Username=culinary_admin;Password=<mật khẩu>" --project CulinaryBlog.API
+```
+
+**Frontend**
+
+```bash
+cd src/Frontend
+cp .env.example .env.local    # PowerShell: Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+Mở http://localhost:3000. Nếu trang chủ hiện **Backend API: OK** thì frontend đã nói chuyện được với backend.
+
+## 3. Cổng dịch vụ
+
+Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trình khác chiếm cổng (ví dụ PostgreSQL cài sẵn), hãy tắt nó đi thay vì đổi cổng.
+
+| Dịch vụ | Cổng | Cấu hình ở đâu |
+|---|---|---|
+| Frontend | 3000 | mặc định của `next dev` |
+| Backend API | 5000 | `CulinaryBlog.API/Properties/launchSettings.json` |
+| PostgreSQL | 5432 | `POSTGRES_PORT` trong `.env` |
+| Redis (có mật khẩu) | 6379 | `docker-compose.yml` |
+
+Khi thêm dịch vụ mới vào compose (storage, Mailpit, Seq…), nhớ bổ sung cổng vào bảng này trong cùng PR.
+
+## 4. Cấu trúc thư mục
+
+```
+.
+├── docker-compose.yml        PostgreSQL + Redis
+├── .env.example
+├── global.json               ghim .NET SDK
+├── CLAUDE.md                 hướng dẫn cho Claude Code
+├── docs/                     SRS, kế hoạch, OWNERSHIP, bảng mã lỗi
+└── src/
+    ├── Backend/
+    │   ├── CulinaryBlog.Domain/          entity, không dùng thư viện ngoài
+    │   ├── CulinaryBlog.Application/     use case (Features/<Module>), phần dùng chung (Common)
+    │   ├── CulinaryBlog.Infrastructure/  EF Core (AppDbContext), cài đặt các interface
+    │   ├── CulinaryBlog.API/             Program.cs, xử lý lỗi, OpenAPI, Endpoints/<Module>
+    │   └── tests/                        unit, integration, architecture
+    └── Frontend/
+        ├── app/                          các trang
+        ├── components/                   component dùng chung
+        ├── features/<module>/            code riêng của từng module
+        └── lib/api/client.ts             nơi duy nhất gọi backend
+```
+
+Mỗi thư mục module đều có README ghi người phụ trách và việc cần làm.
+
+| Module | Phụ trách | Yêu cầu | Route |
+|---|---|---|---|
+| Auth | TV1 | FR-AUTH-001→007, FR-JOB-001 | `/api/v1/auth` |
+| Recipes | TV2 | FR-RCP-002→007, 009, 010 | `/api/v1/recipes`, `/api/v1/me` |
+| Categories | TV3 | FR-CAT-001→005 | `/api/v1/categories` |
+| RecipeImages | TV3 | FR-RCP-008, FR-FILE, FR-JOB-002 | `/api/v1/recipes/{recipeId}/images` |
+| RecipeSearch | TV4 | FR-RCP-001, FR-SRCH-001→004 | `/api/v1/recipes` (danh sách, `/search`) |
+| Observability | TV4 | FR-OBS-001, 002 | `/health*` |
+
+## 5. Thêm tính năng mới
+
+**Một use case ở backend** gồm command/query, handler, validator và DTO, để chung trong một thư mục:
+
+```
+CulinaryBlog.Application/Features/Recipes/CreateRecipe/
+├── CreateRecipeCommand.cs
+├── CreateRecipeHandler.cs
+├── CreateRecipeValidator.cs
+└── RecipeDto.cs
+```
+
+Handler và validator được đăng ký tự động. Validator chạy trước handler; dữ liệu sai sẽ trả về lỗi 422.
+
+**Endpoint** viết trong file `Endpoints/<Module>/<Module>Endpoints.cs` đã có sẵn. Không cần sửa `Program.cs`, vì các module được tự tìm thấy khi chạy:
+
+```csharp
+var recipes = api.MapGroup("/recipes").WithTags(Tag);
+recipes.MapPost("/", async (CreateRecipeCommand command, ISender sender, CancellationToken ct) =>
+{
+    var recipe = await sender.Send(command, ct);
+    return TypedResults.Created($"/api/v1/recipes/{recipe.Id}", recipe);
+});
+```
+
+**Báo lỗi nghiệp vụ** bằng `NotFoundException`, `ConflictException`, `ForbiddenException` hoặc `ValidationException`, kèm mã lỗi có tiền tố module (ví dụ `RECIPE_SLUG_EXISTS`). Mã mới thì thêm vào [bảng mã lỗi](./docs/api/error-codes.md).
+
+**Entity và migration:** entity kế thừa `BaseEntity` (đã có `Id`, `CreatedAt`, `UpdatedAt`, `Version`). Cấu hình EF đặt trong `CulinaryBlog.Infrastructure/<Module>/`, còn `DbSet` thêm vào `AppDbContext`. Tạo migration bằng:
+
+```bash
+cd src/Backend
+dotnet ef migrations add Recipes_Init --project CulinaryBlog.Infrastructure --startup-project CulinaryBlog.API --output-dir Persistence/Migrations
+dotnet ef database update --project CulinaryBlog.Infrastructure --startup-project CulinaryBlog.API
+```
+
+**Trang frontend:** các trang trong `app/` hiện là trang tạm ghi "Đang phát triển". Thay nội dung đó bằng component trong `features/<module>/`. Gọi API qua `apiClient`; khi lỗi, dựa vào `error.code` để hiện thông báo.
+
+## 6. Làm việc nhóm
+
+Nhóm tự chủ động sắp xếp thời gian, không có lịch họp cố định. Mỗi người tự cập nhật tiến độ trên bảng công việc. Nếu bị chặn hoặc thấy sắp trễ một mốc bàn giao, hãy báo ngay trong nhóm chat.
+
+**Nhánh và commit**
+
+- Không commit thẳng lên `main`. Mọi thay đổi đi qua Pull Request và cần một người khác review, cố gắng trong vòng 24 giờ (review chéo: TV1 ↔ TV2, TV3 ↔ TV4).
+- Đặt tên nhánh theo dạng `tv<số>/<mã-việc>-<mô-tả>`, ví dụ `tv2/2.08-create-recipe`.
+- Commit viết tiếng Anh theo Conventional Commits, scope là tên module: `feat(recipes): add publish endpoint`.
+- Mỗi PR nên nhỏ (khoảng 400 dòng trở xuống) và chỉ làm một việc; mô tả ghi mã việc và mã FR.
+- Mỗi ngày làm việc nên kéo `main` về nhánh mình một lần để tránh xung đột dồn lại.
+
+**Sửa code của ai**
+
+- Chỉ sửa trong phần của mình, theo [OWNERSHIP.md](./docs/OWNERSHIP.md).
+- Các file dùng chung như `Program.cs`, `DependencyInjection.cs`, `Directory.Packages.props`, `AppDbContext`, `app/layout.tsx`, `next.config.ts`, `docker-compose.yml`, bảng mã lỗi: báo nhóm trước và tách PR riêng.
+- Thêm thư viện thì ghim phiên bản (trong `Directory.Packages.props` hoặc `package.json`) và ghi rõ trong PR.
+
+**Migration**
+
+- Mỗi PR tối đa một migration, tên có tiền tố module: `Auth_Init`, `Recipes_Init`…
+- Kéo `main` mới nhất ngay trước khi tạo migration. Không sửa migration đã merge. Nếu bị trùng snapshot, xóa migration của mình rồi tạo lại.
+
+**API**
+
+- Mọi endpoint nằm dưới `/api/v1`. Response trả thẳng dữ liệu, không bọc thêm lớp nào. Danh sách trả về `PagedResult` (`page` bắt đầu từ 1, `pageSize` mặc định 12, tối đa 50, sắp xếp kiểu `sort=-createdAt`).
+- Lỗi trả theo chuẩn Problem Details, có thêm `code`: 400 khi request sai định dạng, 422 khi dữ liệu không hợp lệ hoặc vi phạm quy tắc, 409 khi trùng hoặc xung đột phiên bản.
+- Tên trường JSON dùng camelCase, trùng với tên thuộc tính C#. Chỗ nào làm khác SRS v1.0 thì ghi vào bảng Change Request của SRS v1.1.
+
+**Bảo mật**
+
+- Không commit `.env`, mật khẩu, token. Secret đi qua biến môi trường hoặc `dotnet user-secrets`.
+- Không ghi log mật khẩu, token hay dữ liệu nhạy cảm.
+
+**Một việc được coi là xong khi:** đã merge và CI xanh; có test cho trường hợp thành công và ít nhất một trường hợp lỗi; lỗi trả đúng định dạng kèm `code`; API hiện đúng trên Scalar và màn hình chạy được với dữ liệu mẫu; chỗ nào khác SRS thì đã ghi lại.
+
+## 7. Quy ước viết code
+
+**Backend**
+
+- Phụ thuộc đi một chiều: API → Infrastructure → Application → Domain. Application chỉ biết interface, không biết EF Core, Identity hay Hangfire. Architecture test sẽ báo nếu vi phạm.
+- Endpoint chỉ nhận request, gửi qua MediatR rồi trả kết quả. Không đặt logic hay validation trong endpoint, và không dùng Controller.
+- Validation viết bằng FluentValidation.
+- Lỗi nghiệp vụ dùng exception có `code`. Không `throw new Exception(...)`, không nuốt lỗi, không viết thông báo tiếng Việt trong exception (frontend lo phần hiển thị).
+- Mọi thao tác I/O đều `async`, nhận và truyền tiếp `CancellationToken`.
+- Truy vấn chỉ đọc thì dùng `AsNoTracking()` và select thẳng ra DTO, chú ý tránh N+1.
+- DTO là `record`; class không cần kế thừa thì để `sealed`; ưu tiên primary constructor. Map dữ liệu bằng tay, không dùng AutoMapper.
+- Không để số hay chuỗi "thần kỳ" trong code: dùng hằng hoặc `IOptions<T>`.
+- Build phải sạch warning. Chạy `dotnet format` trước khi commit.
+- Tên test theo dạng `Method_Scenario_ExpectedResult`. Mỗi endpoint có ít nhất một test thành công và một test lỗi.
+
+**Frontend**
+
+- TypeScript strict, không dùng `any`.
+- Mặc định là Server Component; chỉ thêm `"use client"` khi thật sự cần state hoặc sự kiện.
+- Chỉ gọi API qua `lib/api/client.ts`.
+- Code của module để trong `features/<module>/`; `components/` chỉ chứa phần dùng chung.
+- Hiển thị lỗi theo `code`, không dựa vào chuỗi `detail`.
+- Chỉ biến `NEXT_PUBLIC_*` mới dùng được ở trình duyệt; đừng đưa secret xuống client.
+- Next.js 16 thay đổi khá nhiều so với bản cũ. Đọc `src/Frontend/AGENTS.md` và tài liệu trong `node_modules/next/dist/docs/` trước khi code.
+- Chạy `npm run lint` và `npm run build` trước khi commit. Style bằng Tailwind.
+
+**Chung**
+
+- Hàm ngắn, làm một việc, tên nói rõ ý định. Xóa code chết thay vì comment lại.
+- Comment để giải thích *vì sao*, không lặp lại code đang làm gì. Tên biến, hàm bằng tiếng Anh; comment và tài liệu có thể viết tiếng Việt.
+- TODO phải ghi rõ người nhận: `TODO(TV2): ...`.
+
+## 8. Tiến độ
+
+Hạn chót là **Chủ nhật 01/11/2026**. Đến ngày này ứng dụng phải chạy trọn vẹn: đăng ký, đăng nhập, viết và quản lý công thức, duyệt danh mục, tìm kiếm, với giao diện hoàn chỉnh cho mọi trang. Sau 01/11 chỉ còn sửa lỗi nhỏ và làm phần mở rộng.
+
+**Tuần này: 16/09 – 22/09** — chốt các quyết định, viết ADR và làm những việc nền đầu tiên của từng module.
+
+| Thành viên | Việc có hạn trong tuần |
+|---|---|
+| TV1 | 1.01 – 1.04: xác nhận với giảng viên, SRS v1.1 + mẫu ADR, ADR xác thực, mã lỗi `AUTH_*` |
+| TV2 | 2.01 – 2.02: ADR xóa dữ liệu/concurrency/vòng đời công thức, bảng mã lỗi chung và bảng đặt tên |
+| TV3 | 3.01 – 3.02: thử image storage, ADR storage và ảnh |
+| TV4 | 4.01 – 4.02: bảo vệ nhánh `main`, template PR, bảng Kanban, ADR cache/tìm kiếm/sitemap/NFR |
+
+Các tuần sau được chia đều 7 ngày; lịch chi tiết nằm trong [kế hoạch tổng](./docs/KeHoach/00_KeHoach_TongThe.md) và [kế hoạch của từng người](./docs/KeHoach/). Mỗi người tự cập nhật tiến độ của mình.
+
+## 9. Để nghiên cứu sau
+
+- Cloudflare Tunnel để đưa bản demo từ máy nhóm ra Internet (TV3, việc 3.06).
+
+## Thành viên
+
+| MSSV | Họ và tên | Phụ trách | GitHub |
 | :---: | :--- | :--- | :---: |
-| 2312763 | <nobr>**Trần Lê Bảo Thư**</nobr> | Full-Stack: Module Tìm kiếm Full-Text, SEO, Sitemap & Observability (`FR-SRCH`, `FR-OBS`, `FR-JOB-003`) | [![Git Profile](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/BaoThw05) |
-| 2312793 | <nobr>**Nguyễn Ngọc Tuấn**</nobr> | Full-Stack: Module Xác thực, Người dùng & Welcome Email (`FR-AUTH`, `FR-JOB-001`) | [![Git Profile](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/Liu-548) |
-| 2312776 | <nobr>**Bùi Ngọc Toàn**</nobr> | Full-Stack: Module Công thức Nấu ăn Cốt lõi, Bước & Nguyên liệu (`FR-RCP`) | [![Git Profile](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/2312776-beep) |
-| 2312735 | <nobr>**Lương Đức Sang**</nobr> | Full-Stack: Module Danh mục, Quản lý Tệp tin & Job Resize Ảnh (`FR-CAT`, `FR-FILE`, `FR-JOB-002`) | [![Git Profile](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/zoronoa188) |
+| 2312763 | <nobr>**Trần Lê Bảo Thư**</nobr> | Tìm kiếm, SEO, sitemap, observability (`FR-SRCH`, `FR-OBS`, `FR-JOB-003`) | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/BaoThw05) |
+| 2312793 | <nobr>**Nguyễn Ngọc Tuấn**</nobr> | Xác thực, người dùng, email chào mừng (`FR-AUTH`, `FR-JOB-001`) | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/Liu-548) |
+| 2312776 | <nobr>**Bùi Ngọc Toàn**</nobr> | Công thức, các bước, nguyên liệu (`FR-RCP`) | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/2312776-beep) |
+| 2312735 | <nobr>**Lương Đức Sang**</nobr> | Danh mục, lưu trữ file, xử lý ảnh (`FR-CAT`, `FR-FILE`, `FR-JOB-002`) | [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github)](https://github.com/zoronoa188) |
 
-- **Đường dẫn tệp tài liệu phân công công việc**: [`docs/BangPhanCong.docx`](./docs/BangPhanCong.docx)
+Bảng phân công gốc: [`docs/BangPhanCong.docx`](./docs/BangPhanCong.docx) · SRS bản PDF: [`docs/SRS_Culinary_Blog_v1.0.0.pdf`](./docs/SRS_Culinary_Blog_v1.0.0.pdf)
