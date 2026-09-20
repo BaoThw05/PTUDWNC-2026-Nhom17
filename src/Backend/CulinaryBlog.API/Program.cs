@@ -1,48 +1,46 @@
+﻿using CulinaryBlog.Application.Common.Interfaces;
+using CulinaryBlog.Application.Recipes.Commands.CreateRecipe;
 using CulinaryBlog.Infrastructure.Data;
+using FluentValidation;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<CulinaryBlogDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+// Đăng ký DbContext qua interface (Application layer chỉ biết tới interface, không biết EF Core)
+builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<CulinaryBlogDbContext>());
+
+// Đăng ký MediatR - quét toàn bộ Command/Query Handler trong Application layer
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(CreateRecipeCommand).Assembly));
+
+// Đăng ký FluentValidation - quét toàn bộ Validator trong Application layer
+builder.Services.AddValidatorsFromAssembly(typeof(CreateRecipeCommand).Assembly);
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(); // route mặc định: /scalar/v1
 }
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
+// Endpoint tạm để test CreateRecipeCommand
+app.MapPost("/api/v1/recipes", async (CreateRecipeCommand command, IMediator mediator) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    var id = await mediator.Send(command);
+    return Results.Created($"/api/v1/recipes/{id}", new { id });
 })
-.WithName("GetWeatherForecast");
+.WithName("CreateRecipe");
 
 app.UseMiddleware<CulinaryBlog.API.Middlewares.GlobalExceptionMiddleware>();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
