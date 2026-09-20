@@ -1,11 +1,12 @@
 using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Domain.Entities;
+using CulinaryBlog.Infrastructure.Interceptors;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace CulinaryBlog.Infrastructure.Data;
 
-public class CulinaryBlogDbContext : IdentityDbContext, IApplicationDbContext
+public class CulinaryBlogDbContext : IdentityDbContext, IApplicationDbContext, IUnitOfWork
 {
     public CulinaryBlogDbContext(DbContextOptions<CulinaryBlogDbContext> options)
         : base(options)

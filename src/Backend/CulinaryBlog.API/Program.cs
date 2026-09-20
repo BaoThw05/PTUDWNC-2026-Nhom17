@@ -1,6 +1,7 @@
 ﻿using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Application.Recipes.Commands.CreateRecipe;
 using CulinaryBlog.Infrastructure.Data;
+using CulinaryBlog.Infrastructure.Interceptors;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,15 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<CulinaryBlogDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSingleton<AuditInterceptor>();
+
+builder.Services.AddDbContext<CulinaryBlogDbContext>((sp, options) =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(sp.GetRequiredService<AuditInterceptor>()));
 
 // Đăng ký DbContext qua interface (Application layer chỉ biết tới interface, không biết EF Core)
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<CulinaryBlogDbContext>());
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CulinaryBlogDbContext>());
 
 // Đăng ký MediatR - quét toàn bộ Command/Query Handler trong Application layer
 builder.Services.AddMediatR(cfg =>
