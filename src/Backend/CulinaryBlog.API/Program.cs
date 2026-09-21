@@ -1,4 +1,6 @@
-﻿using CulinaryBlog.Application.Common.Interfaces;
+﻿using CulinaryBlog.API.Middlewares;
+using CulinaryBlog.Application.Common.Behaviors;
+using CulinaryBlog.Application.Common.Interfaces;
 using CulinaryBlog.Application.Recipes.Commands.CreateRecipe;
 using CulinaryBlog.Infrastructure.Data;
 using CulinaryBlog.Infrastructure.Interceptors;
@@ -19,16 +21,23 @@ builder.Services.AddDbContext<CulinaryBlogDbContext>((sp, options) =>
 builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<CulinaryBlogDbContext>());
 builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<CulinaryBlogDbContext>());
 
-// Đăng ký MediatR - quét toàn bộ Command/Query Handler trong Application layer
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(CreateRecipeCommand).Assembly));
+{
+    cfg.RegisterServicesFromAssembly(typeof(CreateRecipeCommand).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+});
 
 // Đăng ký FluentValidation - quét toàn bộ Validator trong Application layer
 builder.Services.AddValidatorsFromAssembly(typeof(CreateRecipeCommand).Assembly);
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
@@ -38,7 +47,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Endpoint tạm để test CreateRecipeCommand
 app.MapPost("/api/v1/recipes", async (CreateRecipeCommand command, IMediator mediator) =>
 {
     var id = await mediator.Send(command);
@@ -46,6 +54,5 @@ app.MapPost("/api/v1/recipes", async (CreateRecipeCommand command, IMediator med
 })
 .WithName("CreateRecipe");
 
-app.UseMiddleware<CulinaryBlog.API.Middlewares.GlobalExceptionMiddleware>();
 
 app.Run();
