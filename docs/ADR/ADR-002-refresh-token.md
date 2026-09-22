@@ -1,4 +1,4 @@
-# 0002 · S-06 · Refresh token: xoay vòng và phát hiện dùng lại
+# ADR-002 · S-06 · Refresh token: xoay vòng và phát hiện dùng lại
 
 - **Trạng thái:** Đã chốt
 - **Ngày:** 17/09/2026

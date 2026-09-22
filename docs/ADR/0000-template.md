@@ -1,6 +1,6 @@
-# NNNN · S-xx · Tên quyết định
+# ADR-NNN · S-xx · Tên quyết định
 
-- **Trạng thái:** Đề xuất | Đã chốt | Bị thay thế bởi NNNN
+- **Trạng thái:** Đề xuất | Đã chốt | Bị thay thế bởi ADR-NNN
 - **Ngày:** DD/MM/YYYY
 - **Người viết:** TVx
 - **Liên quan:** mã lỗi SRS (ví dụ D-07), mục SRS bị ảnh hưởng, dòng CR trong `docs/SRS_v1.1.md`
