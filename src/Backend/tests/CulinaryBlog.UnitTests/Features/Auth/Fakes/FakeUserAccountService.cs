@@ -1,4 +1,5 @@
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.Application.Features.Auth;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Domain.Auth;
 
@@ -12,11 +13,12 @@ internal sealed class FakeUserAccountService : IUserAccountService
 
     public HashSet<Guid> LockedOut { get; } = [];
 
-    public UserAccount Add(string email, string password, bool isActive = true)
+    public UserAccount Add(string email, string password, bool isActive = true, string userName = "testuser")
     {
         var user = new UserAccount(
             Guid.NewGuid(),
             email,
+            userName,
             "Test User",
             AvatarUrl: null,
             isActive,
@@ -43,10 +45,16 @@ internal sealed class FakeUserAccountService : IUserAccountService
 
     public Task<UserAccount> CreateAsync(NewUserAccount account, CancellationToken cancellationToken)
     {
+        if (_users.Values.Any(user => string.Equals(user.UserName, account.UserName, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new ConflictException("The username is already taken.", AuthErrorCodes.UserNameExists);
+        }
+
         var user = new UserAccount(
             Guid.NewGuid(),
             account.Email,
-            account.DisplayName,
+            account.UserName,
+            account.FullName,
             account.AvatarUrl,
             IsActive: true,
             DateTimeOffset.UnixEpoch,
@@ -68,9 +76,9 @@ internal sealed class FakeUserAccountService : IUserAccountService
             : PasswordCheckResult.InvalidPassword);
     }
 
-    public Task<UserAccount> UpdateDisplayNameAsync(Guid userId, string displayName, CancellationToken cancellationToken)
+    public Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken)
     {
-        var user = GetRequired(userId) with { DisplayName = displayName };
+        var user = GetRequired(userId) with { FullName = fullName };
         _users[userId] = user;
         return Task.FromResult(user);
     }

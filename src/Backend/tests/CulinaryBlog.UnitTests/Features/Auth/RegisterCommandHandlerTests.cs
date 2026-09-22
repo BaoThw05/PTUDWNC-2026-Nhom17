@@ -20,11 +20,12 @@ public sealed class RegisterCommandHandlerTests
     public async Task Handle_NewEmail_CreatesAuthorAndSignsIn()
     {
         var response = await _handler.Handle(
-            new RegisterCommand(" new@example.com ", "Author@12345", "  Tuấn "),
+            new RegisterCommand("  Tuấn ", " new@example.com ", " tuan99 ", "Author@12345"),
             CancellationToken.None);
 
         Assert.Equal("new@example.com", response.User.Email);
-        Assert.Equal("Tuấn", response.User.DisplayName);
+        Assert.Equal("tuan99", response.User.UserName);
+        Assert.Equal("Tuấn", response.User.FullName);
         Assert.Contains(Roles.Author, response.User.Roles);
         Assert.Single(_context.RefreshTokens.Tokens);
     }
@@ -35,9 +36,21 @@ public sealed class RegisterCommandHandlerTests
         _context.Users.Add("taken@example.com", "Author@12345");
 
         var exception = await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(
-            new RegisterCommand("TAKEN@example.com", "Author@12345", "Someone"),
+            new RegisterCommand("Someone", "TAKEN@example.com", "someoneelse", "Author@12345"),
             CancellationToken.None));
 
         Assert.Equal(AuthErrorCodes.EmailExists, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_ExistingUserName_ThrowsUserNameExists()
+    {
+        _context.Users.Add("taken@example.com", "Author@12345", userName: "tuan99");
+
+        var exception = await Assert.ThrowsAsync<ConflictException>(() => _handler.Handle(
+            new RegisterCommand("Someone", "new@example.com", "TUAN99", "Author@12345"),
+            CancellationToken.None));
+
+        Assert.Equal(AuthErrorCodes.UserNameExists, exception.Code);
     }
 }

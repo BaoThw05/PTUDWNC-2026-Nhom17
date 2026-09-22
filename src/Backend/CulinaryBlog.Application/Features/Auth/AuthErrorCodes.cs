@@ -4,6 +4,7 @@ namespace CulinaryBlog.Application.Features.Auth;
 public static class AuthErrorCodes
 {
     public const string EmailExists = "AUTH_EMAIL_EXISTS";
+    public const string UserNameExists = "AUTH_USERNAME_EXISTS";
     public const string InvalidCredentials = "AUTH_INVALID_CREDENTIALS";
     public const string AccountLocked = "AUTH_ACCOUNT_LOCKED";
     public const string AccountDisabled = "AUTH_ACCOUNT_DISABLED";

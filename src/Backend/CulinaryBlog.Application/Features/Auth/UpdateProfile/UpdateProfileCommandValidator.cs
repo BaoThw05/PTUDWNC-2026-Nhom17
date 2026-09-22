@@ -7,6 +7,6 @@ public sealed class UpdateProfileCommandValidator : AbstractValidator<UpdateProf
 {
     public UpdateProfileCommandValidator()
     {
-        RuleFor(command => command.DisplayName).ValidDisplayName();
+        RuleFor(command => command.FullName).ValidFullName();
     }
 }

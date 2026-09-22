@@ -18,7 +18,7 @@ public sealed class RegisterCommandHandler(IUserAccountService users, AuthSessio
         }
 
         var user = await users.CreateAsync(
-            new NewUserAccount(email, request.DisplayName.Trim(), request.Password),
+            new NewUserAccount(email, request.FullName.Trim(), request.UserName.Trim(), request.Password),
             cancellationToken);
 
         // TODO(TV1): đưa WelcomeEmailJob vào hàng đợi khi TV3 bàn giao IBackgroundJobService (việc 1.15).

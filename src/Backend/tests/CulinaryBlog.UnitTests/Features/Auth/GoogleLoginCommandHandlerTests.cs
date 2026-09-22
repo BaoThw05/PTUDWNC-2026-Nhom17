@@ -19,7 +19,8 @@ public sealed class GoogleLoginCommandHandlerTests
 
         var response = await HandleAsync(identity);
 
-        Assert.Equal("Ngọc Tuấn", response.User.DisplayName);
+        Assert.Equal("Ngọc Tuấn", response.User.FullName);
+        Assert.Equal("new", response.User.UserName);
         Assert.Equal(Picture, response.User.AvatarUrl);
         Assert.True(_context.Users.HasLogin(new ExternalLogin(GoogleLoginCommandHandler.ProviderName, "google-sub")));
     }
@@ -55,7 +56,7 @@ public sealed class GoogleLoginCommandHandlerTests
 
         var response = await HandleAsync(identity);
 
-        Assert.Equal("tuan", response.User.DisplayName);
+        Assert.Equal("tuan", response.User.FullName);
     }
 
     private Task<Application.Features.Auth.Common.AuthResponse> HandleAsync(GoogleIdentity identity)

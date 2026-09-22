@@ -39,6 +39,7 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
 | `AUTH_EMAIL_EXISTS` | 409 | Email đã được đăng ký (so sánh không phân biệt hoa/thường) | Auth |
+| `AUTH_USERNAME_EXISTS` | 409 | Tên đăng nhập (`userName`) đã được dùng (so sánh không phân biệt hoa/thường) | Auth |
 | `AUTH_INVALID_CREDENTIALS` | 401 | Email không tồn tại hoặc sai mật khẩu — dùng chung một mã để không lộ email đã đăng ký | Auth |
 | `AUTH_ACCOUNT_LOCKED` | 423 | Tài khoản bị khóa 15 phút sau 5 lần nhập sai mật khẩu | Auth |
 | `AUTH_ACCOUNT_DISABLED` | 403 | Tài khoản bị vô hiệu hóa (`IsActive = false`); chỉ báo khi mật khẩu đúng | Auth |
