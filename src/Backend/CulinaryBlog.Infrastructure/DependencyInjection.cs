@@ -1,4 +1,6 @@
 using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +15,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
+        services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
 
         return services;
     }

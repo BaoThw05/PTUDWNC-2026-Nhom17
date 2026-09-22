@@ -3,6 +3,7 @@ using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
 using CulinaryBlog.Application;
 using CulinaryBlog.Infrastructure;
+using CulinaryBlog.API.Observability;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -25,6 +26,7 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseSerilogRequestLogging();
 
 if (app.Environment.IsDevelopment())
@@ -38,6 +40,8 @@ else
 }
 
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live");
+app.MapHealthChecks("/health/ready");
 app.MapEndpointModules();
 
 app.Run();

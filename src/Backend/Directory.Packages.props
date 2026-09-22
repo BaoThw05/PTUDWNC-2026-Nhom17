@@ -7,6 +7,7 @@
     <!-- 12.5.0 là bản cuối cùng dùng giấy phép MIT, không cần license key (S-13). -->
     <PackageVersion Include="MediatR" Version="12.5.0" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup Label="Infrastructure">
