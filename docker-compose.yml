@@ -1,41 +1,88 @@
-# Hạ tầng dev tối thiểu. TV3 bổ sung storage, Mailpit, Seq (việc 3.03).
-# Biến đọc từ file .env cạnh file này; giá trị mặc định trùng .env.example.
-name: culinaryblog
-
 services:
+  # 1. Database PostgreSQL 16
   postgres:
-    image: postgres:16.15-alpine
-    restart: unless-stopped
+    image: postgres:16-alpine
+    container_name: culinary_postgres
+    restart: always
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-culinary_blog}
-      POSTGRES_USER: ${POSTGRES_USER:-culinary_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_dev_password}
+      POSTGRES_DB: CulinaryBlogDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d CulinaryBlogDb"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
 
+  # 2. Redis Cache 7
   redis:
-    image: redis:7.4.11-alpine
-    restart: unless-stopped
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-change_me_dev_password}
-    command: ["sh", "-c", "exec redis-server --appendonly yes --requirepass \"$${REDIS_PASSWORD}\""]
+    image: redis:7-alpine
+    container_name: culinary_redis
+    restart: always
+    command: redis-server --appendonly yes
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
+      - redisdata:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 5
+
+  # 3. Object Storage MinIO
+  # Ghim theo digest đã xác nhận kéo được ngày 19/09/2026 (xem docs/adr/ADR-003-object-storage.md)
+  # KHÔNG đổi lại thành ":latest" — mục đích ghim là để tránh image đổi ngầm/biến mất (xem lỗi F-01).
+  minio:
+    image: quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    container_name: culinary_minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. Structured Logging (Seq)
+  seq:
+    image: datalust/seq:latest
+    container_name: culinary_seq
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80"
+    volumes:
+      - seqdata:/data
+
+  # 5. Email Testing Server (Mailhog)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: culinary_mailhog
+    restart: always
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
-  postgres-data:
-  redis-data:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
+  miniodata:
+    driver: local
+  seqdata:
+    driver: local

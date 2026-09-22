@@ -8,7 +8,7 @@ Người dùng có thể đăng ký, viết và xuất bản công thức (kèm 
 
 Tài liệu nằm trong `docs/`:
 
-- [SRS v1.0.0](./docs/SRS_Culinary_Blog_v1.0.0.md) và [các quyết định đã chốt](./docs/SRS_Culinary_Blog_v1.0.0_GiaiPhap.md) (khi hai file nói khác nhau thì theo file quyết định)
+- [SRS v1.0.1](./docs/SRS_Culinary_Blog_v1.0.1.md) và [các quyết định đã chốt](./docs/SRS_Culinary_Blog_v1.0.0_GiaiPhap.md)
 - [Kế hoạch tổng và kế hoạch từng người](./docs/KeHoach/)
 - [Ai phụ trách thư mục nào](./docs/OWNERSHIP.md)
 - [Bảng mã lỗi API](./docs/api/error-codes.md)
@@ -162,12 +162,10 @@ dotnet ef database update --project CulinaryBlog.Infrastructure --startup-projec
 
 ## 6. Làm việc nhóm
 
-Nhóm tự chủ động sắp xếp thời gian, không có lịch họp cố định. Mỗi người tự cập nhật tiến độ trên bảng công việc. Nếu bị chặn hoặc thấy sắp trễ một mốc bàn giao, hãy báo ngay trong nhóm chat.
-
 **Nhánh và commit**
 
 - Không commit thẳng lên `main`. Mọi thay đổi đi qua Pull Request và cần một người khác review, cố gắng trong vòng 24 giờ (review chéo: TV1 ↔ TV2, TV3 ↔ TV4).
-- Đặt tên nhánh theo dạng `tv<số>/<mã-việc>-<mô-tả>`, ví dụ `tv2/2.08-create-recipe`.
+- Đặt tên nhánh theo dạng `mssv/<mã-việc>-<mô-tả>`, ví dụ `2312000/2.08-create-recipe`.
 - Commit viết tiếng Anh theo Conventional Commits, scope là tên module: `feat(recipes): add publish endpoint`.
 - Mỗi PR nên nhỏ (khoảng 400 dòng trở xuống) và chỉ làm một việc; mô tả ghi mã việc và mã FR.
 - Mỗi ngày làm việc nên kéo `main` về nhánh mình một lần để tránh xung đột dồn lại.
