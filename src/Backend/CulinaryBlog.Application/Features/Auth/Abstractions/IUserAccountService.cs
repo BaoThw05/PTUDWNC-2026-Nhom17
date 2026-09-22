@@ -17,7 +17,7 @@ public interface IUserAccountService
     /// <summary>Kiểm tra mật khẩu, tự đếm số lần sai và khóa tài khoản theo cấu hình lockout.</summary>
     Task<PasswordCheckResult> CheckPasswordAsync(Guid userId, string password, CancellationToken cancellationToken);
 
-    Task<UserAccount> UpdateDisplayNameAsync(Guid userId, string displayName, CancellationToken cancellationToken);
+    Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken);
 
     /// <summary>Liên kết đăng nhập ngoài; ảnh đại diện chỉ được gán khi tài khoản chưa có (S-17).</summary>
     Task<UserAccount> LinkExternalLoginAsync(

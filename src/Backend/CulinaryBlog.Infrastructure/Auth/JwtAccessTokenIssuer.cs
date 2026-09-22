@@ -27,7 +27,7 @@ internal sealed class JwtAccessTokenIssuer(IOptions<JwtOptions> options, TimePro
                 [JwtRegisteredClaimNames.Sub] = user.Id.ToString(),
                 [JwtRegisteredClaimNames.Email] = user.Email,
                 [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString(),
-                [JwtOptions.NameClaimType] = user.DisplayName,
+                [JwtOptions.NameClaimType] = user.FullName,
                 [JwtOptions.RoleClaimType] = user.Roles.ToArray(),
             },
             SigningCredentials = new SigningCredentials(jwt.CreateSigningKey(), SecurityAlgorithms.HmacSha256),

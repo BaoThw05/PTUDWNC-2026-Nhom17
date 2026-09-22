@@ -13,7 +13,7 @@
 | POST | `/api/v1/auth/refresh` | Xoay vòng refresh token | 30/phút/IP |
 | POST | `/api/v1/auth/logout` | Thu hồi refresh token, luôn trả 204 | chung |
 | GET | `/api/v1/auth/me` | Hồ sơ người đang đăng nhập | chung |
-| PATCH | `/api/v1/auth/me` | Đổi `displayName` (2–100 ký tự) | chung |
+| PATCH | `/api/v1/auth/me` | Đổi `fullName` (2–100 ký tự) | chung |
 
 Mọi request khác bị giới hạn 100/phút theo người dùng (hoặc IP nếu chưa đăng nhập); vượt hạn mức trả 429 kèm `Retry-After`. Mã lỗi: `docs/api/error-codes.md`.
 

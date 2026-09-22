@@ -5,7 +5,7 @@
 
 ## Đã có
 
-- `ApplicationUser : IdentityUser<Guid>` (`DisplayName`, `AvatarUrl`, `IsActive`, `CreatedAt`) — nằm ở đây để Domain không phụ thuộc Identity.
+- `ApplicationUser : IdentityUser<Guid>` (`FullName`, `AvatarUrl`, `IsActive`, `CreatedAt`; `UserName` kế thừa từ Identity, người dùng tự chọn khi đăng ký) — nằm ở đây để Domain không phụ thuộc Identity.
 - Bảng `Users`, `Roles`, `UserRoles`, `UserLogins`… (đổi tên từ `AspNet*`) và `RefreshTokens` (chỉ lưu SHA-256, có `FamilyId`, `RevokedReason`); migration `Auth_Init`.
 - `IdentityUserAccountService` (mật khẩu, lockout 5 lần/15 phút, liên kết Google), `RefreshTokenRepository`, `JwtAccessTokenIssuer` (HS256), `GoogleIdTokenValidator`.
 - `AuthDataSeeder`: tạo role Admin/Author và tài khoản mẫu khi bật `Database:SeedOnStartup`.

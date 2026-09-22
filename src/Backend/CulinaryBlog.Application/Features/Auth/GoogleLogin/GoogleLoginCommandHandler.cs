@@ -48,23 +48,35 @@ public sealed class GoogleLoginCommandHandler(
         }
 
         var created = await users.CreateAsync(
-            new NewUserAccount(identity.Email, DisplayNameOf(identity), Password: null, identity.PictureUrl),
+            new NewUserAccount(identity.Email, FullNameOf(identity), GenerateUserNameFrom(identity.Email), Password: null, identity.PictureUrl),
             cancellationToken);
 
         // TODO(TV1): gửi email chào mừng cho tài khoản mới tạo từ Google (việc 1.15).
         return await users.LinkExternalLoginAsync(created.Id, login, avatarUrl: null, cancellationToken);
     }
 
-    private static string DisplayNameOf(GoogleIdentity identity)
+    private static string FullNameOf(GoogleIdentity identity)
     {
         var name = identity.Name?.Trim();
-        if (name is { Length: >= AuthValidationRules.DisplayNameMinLength })
+        if (name is { Length: >= AuthValidationRules.FullNameMinLength })
         {
-            return name.Length > AuthValidationRules.DisplayNameMaxLength
-                ? name[..AuthValidationRules.DisplayNameMaxLength]
+            return name.Length > AuthValidationRules.FullNameMaxLength
+                ? name[..AuthValidationRules.FullNameMaxLength]
                 : name;
         }
 
-        return identity.Email.Split('@')[0].PadRight(AuthValidationRules.DisplayNameMinLength, '_');
+        return identity.Email.Split('@')[0].PadRight(AuthValidationRules.FullNameMinLength, '_');
+    }
+
+    // S-05: "sinh UserName tự động" cho tài khoản tạo từ Google.
+    // ponytail: không kiểm tra trùng trước khi tạo; nếu username sinh ra đã tồn tại,
+    // CreateAsync ném AUTH_USERNAME_EXISTS và người dùng phải thử lại đăng nhập Google —
+    // thêm hậu tố ngẫu nhiên khi tần suất trùng thực tế đáng kể.
+    private static string GenerateUserNameFrom(string email)
+    {
+        var local = new string([.. email.Split('@')[0].Where(char.IsLetterOrDigit)]);
+        return local.Length >= AuthValidationRules.UserNameMinLength
+            ? local
+            : local.PadRight(AuthValidationRules.UserNameMinLength, '0');
     }
 }

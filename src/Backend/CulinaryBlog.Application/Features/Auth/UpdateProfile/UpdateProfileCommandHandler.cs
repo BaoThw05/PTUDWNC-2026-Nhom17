@@ -13,7 +13,7 @@ public sealed class UpdateProfileCommandHandler(ICurrentUser currentUser, IUserA
     {
         var userId = currentUser.UserId ?? throw new UnauthorizedException("Authentication is required.");
 
-        var user = await users.UpdateDisplayNameAsync(userId, request.DisplayName.Trim(), cancellationToken);
+        var user = await users.UpdateFullNameAsync(userId, request.FullName.Trim(), cancellationToken);
 
         return UserProfileResponse.From(user);
     }

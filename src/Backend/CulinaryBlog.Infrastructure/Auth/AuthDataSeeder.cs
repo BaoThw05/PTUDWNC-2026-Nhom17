@@ -46,7 +46,7 @@ internal sealed class AuthDataSeeder(
         }
     }
 
-    private async Task EnsureUserAsync(string email, string displayName, string password, string[] roles)
+    private async Task EnsureUserAsync(string email, string fullName, string password, string[] roles)
     {
         if (await userManager.FindByEmailAsync(email) is not null)
         {
@@ -59,7 +59,7 @@ internal sealed class AuthDataSeeder(
             UserName = email,
             Email = email,
             EmailConfirmed = true,
-            DisplayName = displayName,
+            FullName = fullName,
             CreatedAt = timeProvider.GetUtcNow(),
         };
 

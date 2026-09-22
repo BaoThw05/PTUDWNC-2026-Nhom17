@@ -7,8 +7,9 @@ public sealed class RegisterCommandValidator : AbstractValidator<RegisterCommand
 {
     public RegisterCommandValidator()
     {
+        RuleFor(command => command.FullName).ValidFullName();
         RuleFor(command => command.Email).ValidEmail();
+        RuleFor(command => command.UserName).ValidUserName();
         RuleFor(command => command.Password).StrongPassword();
-        RuleFor(command => command.DisplayName).ValidDisplayName();
     }
 }

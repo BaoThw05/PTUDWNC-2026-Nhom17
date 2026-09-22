@@ -29,7 +29,7 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
         Assert.Equal("/api/v1/auth/me", response.Headers.Location?.OriginalString);
         var auth = await ReadAuthAsync(response);
         Assert.Equal(email, auth.User.Email);
-        Assert.Equal("Người Thử", auth.User.DisplayName);
+        Assert.Equal("Người Thử", auth.User.FullName);
         Assert.Equal([Roles.Author], auth.User.Roles);
         Assert.NotEmpty(auth.AccessToken);
         Assert.NotEmpty(auth.RefreshToken);
@@ -45,6 +45,22 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.Equal(AuthErrorCodes.EmailExists, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Register_DuplicateUserName_Returns409()
+    {
+        var userName = NewUserName();
+        await _client.PostAsJsonAsync(
+            $"{BasePath}/register",
+            new { fullName = "Người Thử", email = NewEmail(), userName, password = StrongPassword });
+
+        var response = await _client.PostAsJsonAsync(
+            $"{BasePath}/register",
+            new { fullName = "Người Thử", email = NewEmail(), userName = userName.ToUpperInvariant(), password = StrongPassword });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.UserNameExists, await ReadErrorCodeAsync(response));
     }
 
     [Fact]
@@ -135,11 +151,11 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
             HttpMethod.Patch,
             $"{BasePath}/me",
             auth.AccessToken,
-            new { displayName = "  Tên Mới  " }));
+            new { fullName = "  Tên Mới  " }));
 
         var profile = await response.Content.ReadFromJsonAsync<UserProfileResponse>();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Tên Mới", profile!.DisplayName);
+        Assert.Equal("Tên Mới", profile!.FullName);
     }
 
     [Fact]
@@ -151,7 +167,7 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
             HttpMethod.Patch,
             $"{BasePath}/me",
             auth.AccessToken,
-            new { displayName = "A" }));
+            new { fullName = "A" }));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
     }

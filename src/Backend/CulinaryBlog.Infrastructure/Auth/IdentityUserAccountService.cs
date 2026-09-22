@@ -15,8 +15,8 @@ internal sealed class IdentityUserAccountService(
     AppDbContext dbContext,
     TimeProvider timeProvider) : IUserAccountService
 {
-    private static readonly string[] DuplicateErrorCodes =
-        [nameof(IdentityErrorDescriber.DuplicateEmail), nameof(IdentityErrorDescriber.DuplicateUserName)];
+    private static readonly string DuplicateEmailCode = nameof(IdentityErrorDescriber.DuplicateEmail);
+    private static readonly string DuplicateUserNameCode = nameof(IdentityErrorDescriber.DuplicateUserName);
 
     public async Task<UserAccount?> FindByIdAsync(Guid userId, CancellationToken cancellationToken)
     {
@@ -41,11 +41,11 @@ internal sealed class IdentityUserAccountService(
         var user = new ApplicationUser
         {
             Id = Guid.CreateVersion7(),
-            UserName = account.Email,
+            UserName = account.UserName,
             Email = account.Email,
             // Tài khoản không có mật khẩu chỉ được tạo từ Google, email đã được Google xác minh.
             EmailConfirmed = account.Password is null,
-            DisplayName = account.DisplayName,
+            FullName = account.FullName,
             AvatarUrl = account.AvatarUrl,
             CreatedAt = timeProvider.GetUtcNow(),
         };
@@ -83,13 +83,13 @@ internal sealed class IdentityUserAccountService(
         };
     }
 
-    public async Task<UserAccount> UpdateDisplayNameAsync(
+    public async Task<UserAccount> UpdateFullNameAsync(
         Guid userId,
-        string displayName,
+        string fullName,
         CancellationToken cancellationToken)
     {
         var user = await GetRequiredAsync(userId);
-        user.DisplayName = displayName;
+        user.FullName = fullName;
         EnsureSucceeded(await userManager.UpdateAsync(user));
 
         return await ToAccountAsync(user);
@@ -129,7 +129,8 @@ internal sealed class IdentityUserAccountService(
         return new UserAccount(
             user.Id,
             user.Email ?? string.Empty,
-            user.DisplayName,
+            user.UserName ?? string.Empty,
+            user.FullName,
             user.AvatarUrl,
             user.IsActive,
             user.CreatedAt,
@@ -143,9 +144,14 @@ internal sealed class IdentityUserAccountService(
             return;
         }
 
-        if (result.Errors.Any(error => DuplicateErrorCodes.Contains(error.Code)))
+        if (result.Errors.Any(error => error.Code == DuplicateEmailCode))
         {
             throw new ConflictException("The email is already registered.", AuthErrorCodes.EmailExists);
+        }
+
+        if (result.Errors.Any(error => error.Code == DuplicateUserNameCode))
+        {
+            throw new ConflictException("The username is already taken.", AuthErrorCodes.UserNameExists);
         }
 
         var errors = result.Errors

@@ -12,7 +12,9 @@ internal static class AuthApi
     public const string StrongPassword = "Author@12345";
 
     public static Task<HttpResponseMessage> RegisterAsync(HttpClient client, string email, string password = StrongPassword) =>
-        client.PostAsJsonAsync($"{BasePath}/register", new { email, password, displayName = "Người Thử" });
+        client.PostAsJsonAsync(
+            $"{BasePath}/register",
+            new { fullName = "Người Thử", email, userName = NewUserName(), password });
 
     public static Task<HttpResponseMessage> LoginAsync(HttpClient client, string email, string password) =>
         client.PostAsJsonAsync($"{BasePath}/login", new { email, password });
@@ -48,4 +50,6 @@ internal static class AuthApi
     }
 
     public static string NewEmail() => $"user-{Guid.NewGuid():N}@example.com";
+
+    public static string NewUserName() => $"user{Guid.NewGuid():N}";
 }

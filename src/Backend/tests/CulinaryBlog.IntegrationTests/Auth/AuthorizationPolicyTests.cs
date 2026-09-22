@@ -82,7 +82,7 @@ public sealed class AuthorizationPolicyTests : IClassFixture<ApiFactory>
     private string IssueToken(string role)
     {
         var issuer = _factory.Services.GetRequiredService<IAccessTokenIssuer>();
-        var user = new UserAccount(Guid.NewGuid(), "probe@example.com", "Probe", null, true, DateTimeOffset.UtcNow, [role]);
+        var user = new UserAccount(Guid.NewGuid(), "probe@example.com", "probe", "Probe", null, true, DateTimeOffset.UtcNow, [role]);
         return issuer.Issue(user).Value;
     }
 
