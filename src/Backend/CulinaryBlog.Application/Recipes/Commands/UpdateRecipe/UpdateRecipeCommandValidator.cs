@@ -1,0 +1,17 @@
+using FluentValidation;
+
+namespace CulinaryBlog.Application.Recipes.Commands.UpdateRecipe;
+
+public class UpdateRecipeCommandValidator : AbstractValidator<UpdateRecipeCommand>
+{
+    public UpdateRecipeCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Title).NotEmpty().Length(5, 200);
+        RuleFor(x => x.Description).NotEmpty().MaximumLength(2000);
+        RuleFor(x => x.PrepTimeMinutes).GreaterThan(0);
+        RuleFor(x => x.CookTimeMinutes).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Servings).GreaterThan(0);
+        RuleFor(x => x.Difficulty).IsInEnum();
+    }
+}
