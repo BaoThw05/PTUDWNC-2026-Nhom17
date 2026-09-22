@@ -24,14 +24,14 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
     formState: { errors, isDirty },
   } = useForm<ProfileValues>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { displayName: profile.displayName },
+    defaultValues: { fullName: profile.fullName },
   });
 
   const mutation = useMutation({
     mutationFn: updateProfile,
     onSuccess: async (updated) => {
-      reset({ displayName: updated.displayName });
-      await updateSession({ displayName: updated.displayName });
+      reset({ fullName: updated.fullName });
+      await updateSession({ fullName: updated.fullName });
       router.refresh();
     },
   });
@@ -51,7 +51,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
     >
       <FormAlert message={errorMessage} />
       <FormAlert message={mutation.isSuccess && !isDirty ? "Đã lưu thay đổi." : null} tone="info" />
-      <TextField label="Tên hiển thị" error={errors.displayName?.message} {...register("displayName")} />
+      <TextField label="Họ tên" error={errors.fullName?.message} {...register("fullName")} />
       <TextField label="Email" value={profile.email} readOnly disabled name="email" />
       <SubmitButton pending={mutation.isPending} pendingLabel="Đang lưu…">
         Lưu thay đổi

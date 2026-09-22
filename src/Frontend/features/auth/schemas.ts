@@ -3,11 +3,18 @@ import { z } from "zod";
 // Giống quy tắc ở backend (NFR-SEC-001, FR-AUTH-007) để báo lỗi ngay trên form.
 const email = z.string().trim().min(1, "Vui lòng nhập email.").pipe(z.email("Email không hợp lệ."));
 
-const displayName = z
+const fullName = z
   .string()
   .trim()
-  .min(2, "Tên hiển thị cần từ 2 ký tự.")
-  .max(100, "Tên hiển thị tối đa 100 ký tự.");
+  .min(2, "Họ tên cần từ 2 ký tự.")
+  .max(100, "Họ tên tối đa 100 ký tự.");
+
+const userName = z
+  .string()
+  .trim()
+  .min(3, "Tên đăng nhập cần từ 3 ký tự.")
+  .max(50, "Tên đăng nhập tối đa 50 ký tự.")
+  .regex(/^[a-zA-Z0-9_.]+$/, "Tên đăng nhập chỉ gồm chữ, số, '_' hoặc '.'.");
 
 const strongPassword = z
   .string()
@@ -25,8 +32,9 @@ export const loginSchema = z.object({
 
 export const registerSchema = z
   .object({
-    displayName,
+    fullName,
     email,
+    userName,
     password: strongPassword,
     confirmPassword: z.string(),
   })
@@ -35,7 +43,7 @@ export const registerSchema = z
     message: "Mật khẩu nhập lại không khớp.",
   });
 
-export const profileSchema = z.object({ displayName });
+export const profileSchema = z.object({ fullName });
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;

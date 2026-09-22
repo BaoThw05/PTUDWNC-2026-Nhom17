@@ -16,14 +16,20 @@ import { TextField } from "./TextField";
 
 // Tên trường trong lỗi validation của backend (PascalCase) → tên trường trên form.
 const BACKEND_FIELDS: Record<string, keyof RegisterValues> = {
+  FullName: "fullName",
   Email: "email",
+  UserName: "userName",
   Password: "password",
-  DisplayName: "displayName",
 };
 
 function applyBackendErrors(error: ApiError, setError: UseFormSetError<RegisterValues>): boolean {
   if (error.code === "AUTH_EMAIL_EXISTS") {
     setError("email", { message: authErrorMessage(error.code) });
+    return true;
+  }
+
+  if (error.code === "AUTH_USERNAME_EXISTS") {
+    setError("userName", { message: authErrorMessage(error.code) });
     return true;
   }
 
@@ -48,11 +54,11 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
 
-  const onSubmit = handleSubmit(async ({ displayName, email, password }) => {
+  const onSubmit = handleSubmit(async ({ fullName, email, userName, password }) => {
     setFormError(null);
 
     try {
-      await registerAccount({ displayName, email, password });
+      await registerAccount({ fullName, email, userName, password });
     } catch (error) {
       if (!(error instanceof ApiError)) {
         setFormError(authErrorMessage("SERVICE_UNAVAILABLE"));
@@ -77,10 +83,10 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <FormAlert message={formError} />
       <TextField
-        label="Tên hiển thị"
+        label="Họ tên"
         autoComplete="name"
-        error={errors.displayName?.message}
-        {...register("displayName")}
+        error={errors.fullName?.message}
+        {...register("fullName")}
       />
       <TextField
         label="Email"
@@ -88,6 +94,12 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
         autoComplete="email"
         error={errors.email?.message}
         {...register("email")}
+      />
+      <TextField
+        label="Tên đăng nhập"
+        autoComplete="username"
+        error={errors.userName?.message}
+        {...register("userName")}
       />
       <TextField
         label="Mật khẩu"
