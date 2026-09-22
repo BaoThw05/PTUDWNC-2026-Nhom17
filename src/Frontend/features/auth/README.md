@@ -30,7 +30,7 @@ const session = await requireSession("/dashboard/recipes");
 const recipes = await apiClient.get("/api/v1/me/recipes", { accessToken: session.accessToken });
 
 // Thông tin người dùng: useSession() (client) hoặc auth() (server).
-session.user.id; session.user.displayName; session.user.roles; // ["Author"] hoặc ["Admin", "Author"]
+session.user.id; session.user.fullName; session.user.roles; // ["Author"] hoặc ["Admin", "Author"]
 ```
 
 Tài khoản mẫu khi chạy dev: `author1@culinaryblog.test` / `Author@12345` (xem `src/Backend/CulinaryBlog.API/Endpoints/Auth/README.md`).

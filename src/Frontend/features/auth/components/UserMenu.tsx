@@ -29,7 +29,7 @@ export function UserMenu() {
   return (
     <div className="flex items-center gap-3">
       <Link href={PROFILE_PATH} className="font-medium hover:underline">
-        {session.user.displayName}
+        {session.user.fullName}
       </Link>
       <SignOutButton className="rounded-full border border-black/15 px-4 py-1.5 hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]" />
     </div>

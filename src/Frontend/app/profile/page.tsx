@@ -44,13 +44,13 @@ export default async function ProfilePage() {
           />
         ) : (
           <span className="flex size-16 items-center justify-center rounded-full bg-foreground text-2xl font-semibold text-background">
-            {profile.displayName.charAt(0).toUpperCase()}
+            {profile.fullName.charAt(0).toUpperCase()}
           </span>
         )}
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{profile.displayName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{profile.fullName}</h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {profile.roles.map((role) => ROLE_LABELS[role] ?? role).join(" · ")} · tham gia{" "}
+            @{profile.userName} · {profile.roles.map((role) => ROLE_LABELS[role] ?? role).join(" · ")} · tham gia{" "}
             {joinedDate.format(new Date(profile.createdAt))}
           </p>
         </div>

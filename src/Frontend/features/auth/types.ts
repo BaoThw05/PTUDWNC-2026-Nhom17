@@ -2,7 +2,8 @@
 export type UserProfile = {
   id: string;
   email: string;
-  displayName: string;
+  userName: string;
+  fullName: string;
   avatarUrl: string | null;
   roles: string[];
   createdAt: string;

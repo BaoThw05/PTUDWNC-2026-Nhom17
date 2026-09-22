@@ -36,7 +36,8 @@ function toToken({ accessToken, accessTokenExpiresAt, refreshToken, user }: Auth
     user: {
       id: user.id,
       email: user.email,
-      displayName: user.displayName,
+      userName: user.userName,
+      fullName: user.fullName,
       avatarUrl: user.avatarUrl,
       roles: user.roles,
     },
@@ -87,7 +88,7 @@ const config: NextAuthConfig = {
           return {
             id: auth.user.id,
             email: auth.user.email,
-            name: auth.user.displayName,
+            name: auth.user.fullName,
             image: auth.user.avatarUrl,
             backendAuth: auth,
           };
@@ -112,8 +113,8 @@ const config: NextAuthConfig = {
         return toToken(user.backendAuth);
       }
 
-      if (trigger === "update" && token.user && typeof session?.displayName === "string") {
-        return { ...token, user: { ...token.user, displayName: session.displayName } };
+      if (trigger === "update" && token.user && typeof session?.fullName === "string") {
+        return { ...token, user: { ...token.user, fullName: session.fullName } };
       }
 
       return refreshIfNeeded(token);
@@ -123,7 +124,7 @@ const config: NextAuthConfig = {
         session.user = {
           ...session.user,
           ...token.user,
-          name: token.user.displayName,
+          name: token.user.fullName,
           image: token.user.avatarUrl,
         };
       }
