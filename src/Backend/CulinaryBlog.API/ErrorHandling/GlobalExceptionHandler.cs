@@ -60,6 +60,7 @@ internal sealed class GlobalExceptionHandler(
         ConflictException e => (StatusCodes.Status409Conflict, e.Code),
         DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, ErrorCodes.ConcurrencyConflict),
         ForbiddenException e => (StatusCodes.Status403Forbidden, e.Code),
+        UnauthorizedException e => (StatusCodes.Status401Unauthorized, e.Code),
         AppException e => (StatusCodes.Status422UnprocessableEntity, e.Code),
         BadHttpRequestException e => (e.StatusCode, ErrorCodes.BadRequest),
         _ => (StatusCodes.Status500InternalServerError, ErrorCodes.InternalError),
