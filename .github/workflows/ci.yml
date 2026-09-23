@@ -25,9 +25,6 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/Frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,6 +32,14 @@ jobs:
           node-version: 20.9.0
           cache: npm
           cache-dependency-path: src/Frontend/package-lock.json
-      - run: npm ci
-      - run: npm run lint
-      - run: npm run build
+      - name: Show Node and npm versions
+        run: node --version && npm --version
+      - name: Install frontend dependencies
+        working-directory: src/Frontend
+        run: npm ci --no-audit --no-fund
+      - name: Lint frontend
+        working-directory: src/Frontend
+        run: npm run lint
+      - name: Build frontend
+        working-directory: src/Frontend
+        run: npm run build
