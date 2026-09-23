@@ -116,13 +116,10 @@ internal sealed class RecipesEndpoints : IEndpointModule
         .WithName("DeleteRecipeIngredient");
 
         // Bài của tôi (FR-RCP-003, S-11)
-        api.MapGet("/me/recipes", (RecipeStatus? status, int? page, int? pageSize) =>
+        api.MapGet("/me/recipes", async (string? status, int? page, int? pageSize, IMediator mediator) =>
         {
-            var result = new PagedResult<RecipeDto>(
-                Array.Empty<RecipeDto>(),
-                page ?? 1,
-                pageSize ?? PagedResult<RecipeDto>.DefaultPageSize,
-                0);
+            var query = new GetMyRecipesQuery(status, page ?? 1, pageSize ?? PagedResult<RecipeDto>.DefaultPageSize);
+            var result = await mediator.Send(query);
             return Results.Ok(result);
         })
         .WithTags(Tag)
