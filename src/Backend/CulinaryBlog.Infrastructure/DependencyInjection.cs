@@ -1,6 +1,5 @@
 ﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Persistence;
-using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
