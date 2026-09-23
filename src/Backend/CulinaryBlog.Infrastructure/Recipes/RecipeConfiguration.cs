@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Domain.Entities;
+using CulinaryBlog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -15,6 +15,10 @@ public sealed class RecipeConfiguration : IEntityTypeConfiguration<Recipe>
         builder.HasIndex(r => r.Slug)
             .IsUnique()
             .HasFilter("\"IsDeleted\" = false");
+
+        builder.HasIndex(r => r.AuthorId);
+        builder.HasIndex(r => r.CategoryId);
+        builder.HasIndex(r => new { r.Status, r.CreatedAt });
 
         builder.HasQueryFilter(r => !r.IsDeleted);
 
