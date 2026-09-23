@@ -1,10 +1,28 @@
+﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Domain.Common;
+using CulinaryBlog.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CulinaryBlog.Infrastructure.Persistence;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
+    public DbSet<Recipe> Recipes => Set<Recipe>();
+    public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
+    public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+
+    IQueryable<Recipe> IAppDbContext.Recipes => Recipes;
+    IQueryable<RecipeStep> IAppDbContext.RecipeSteps => RecipeSteps;
+    IQueryable<RecipeIngredient> IAppDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<Recipe> IAppDbContext.RecipesIncludingDeleted => Recipes.IgnoreQueryFilters();
+
+    public new void Add<TEntity>(TEntity entity) where TEntity : class => Set<TEntity>().Add(entity);
+
+    public new void Remove<TEntity>(TEntity entity) where TEntity : class => Set<TEntity>().Remove(entity);
+
+    public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity =>
+        Entry(entity).Property(e => e.Version).OriginalValue = version;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

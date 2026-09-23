@@ -1,3 +1,4 @@
+﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Observability;
@@ -16,6 +17,8 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
         services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
+
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         return services;
     }
