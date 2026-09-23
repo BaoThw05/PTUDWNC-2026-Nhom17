@@ -14,6 +14,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     IQueryable<Recipe> IAppDbContext.Recipes => Recipes;
     IQueryable<RecipeStep> IAppDbContext.RecipeSteps => RecipeSteps;
     IQueryable<RecipeIngredient> IAppDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<Recipe> IAppDbContext.RecipesIncludingDeleted => Recipes.IgnoreQueryFilters();
 
     public new void Add<TEntity>(TEntity entity) where TEntity : class => Set<TEntity>().Add(entity);
 

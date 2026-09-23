@@ -9,6 +9,9 @@ public interface IAppDbContext
     IQueryable<RecipeStep> RecipeSteps { get; }
     IQueryable<RecipeIngredient> RecipeIngredients { get; }
 
+    // Dùng cho thùng rác (S-03): bỏ qua Global Query Filter để tìm được recipe đã xóa mềm.
+    IQueryable<Recipe> RecipesIncludingDeleted { get; }
+
     void Add<TEntity>(TEntity entity) where TEntity : class;
     void Remove<TEntity>(TEntity entity) where TEntity : class;
 
