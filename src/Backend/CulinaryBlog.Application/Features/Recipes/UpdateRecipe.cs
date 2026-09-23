@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using CulinaryBlog.Domain.Enums;
 using FluentValidation;
@@ -39,6 +39,21 @@ public sealed class UpdateRecipeCommandHandler(IAppDbContext db) : IRequestHandl
         var recipe = db.Recipes.FirstOrDefault(r => r.Id == request.Id)
             ?? throw new NotFoundException(
                 $"Không tìm thấy công thức có id '{request.Id}'", RecipeErrorCodes.RecipeNotFound);
+
+        if (recipe.Title != request.Title && recipe.PublishedAt == null)
+        {
+            var baseSlug = SlugHelper.GenerateSlug(request.Title);
+            var slug = baseSlug;
+            var counter = 2;
+
+            while (db.Recipes.Any(r => r.Id != recipe.Id && r.Slug == slug))
+            {
+                slug = $"{baseSlug}-{counter}";
+                counter++;
+            }
+
+            recipe.Slug = slug;
+        }
 
         recipe.Title = request.Title;
         recipe.Description = request.Description;

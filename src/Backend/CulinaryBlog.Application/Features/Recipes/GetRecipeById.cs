@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using MediatR;
 
