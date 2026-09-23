@@ -16,6 +16,7 @@ public static class DependencyInjection
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
+        services.AddScoped<Features.Recipes.IRecipeAuthorizationHandler, Features.Recipes.RecipeAuthorizationHandler>();
 
         return services;
     }
