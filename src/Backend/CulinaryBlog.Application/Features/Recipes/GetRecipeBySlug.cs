@@ -1,17 +1,18 @@
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.Domain.Enums;
 using MediatR;
 
 namespace CulinaryBlog.Application.Features.Recipes;
 
-public sealed record GetRecipeByIdQuery(Guid Id) : IRequest<RecipeDto>;
+public sealed record GetRecipeBySlugQuery(string Slug) : IRequest<RecipeDto>;
 
-public sealed class GetRecipeByIdQueryHandler(IAppDbContext db) : IRequestHandler<GetRecipeByIdQuery, RecipeDto>
+public sealed class GetRecipeBySlugQueryHandler(IAppDbContext db) : IRequestHandler<GetRecipeBySlugQuery, RecipeDto>
 {
-    public Task<RecipeDto> Handle(GetRecipeByIdQuery request, CancellationToken cancellationToken)
+    public Task<RecipeDto> Handle(GetRecipeBySlugQuery request, CancellationToken cancellationToken)
     {
         var recipe = db.Recipes
-            .Where(r => r.Id == request.Id)
+            .Where(r => r.Slug == request.Slug && r.Status == RecipeStatus.Published)
             .Select(r => new RecipeDto
             {
                 Id = r.Id,
@@ -51,7 +52,7 @@ public sealed class GetRecipeByIdQueryHandler(IAppDbContext db) : IRequestHandle
         if (recipe is null)
         {
             throw new NotFoundException(
-                $"Không tìm thấy công thức có id '{request.Id}'", RecipeErrorCodes.RecipeNotFound);
+                $"Không tìm thấy công thức có slug '{request.Slug}'", RecipeErrorCodes.RecipeNotFound);
         }
 
         return Task.FromResult(recipe);

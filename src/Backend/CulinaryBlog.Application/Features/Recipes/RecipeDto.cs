@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Domain.Enums;
+using CulinaryBlog.Domain.Enums;
 
 namespace CulinaryBlog.Application.Features.Recipes;
 

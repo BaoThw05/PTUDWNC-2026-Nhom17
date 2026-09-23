@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using FluentValidation;
@@ -35,7 +35,15 @@ public sealed class CreateRecipeCommandHandler(IAppDbContext db) : IRequestHandl
 {
     public async Task<Guid> Handle(CreateRecipeCommand request, CancellationToken cancellationToken)
     {
-        var slug = SlugHelper.GenerateSlug(request.Title);
+        var baseSlug = SlugHelper.GenerateSlug(request.Title);
+        var slug = baseSlug;
+        var counter = 2;
+
+        while (db.Recipes.Any(r => r.Slug == slug))
+        {
+            slug = $"{baseSlug}-{counter}";
+            counter++;
+        }
 
         var recipe = new Recipe
         {
