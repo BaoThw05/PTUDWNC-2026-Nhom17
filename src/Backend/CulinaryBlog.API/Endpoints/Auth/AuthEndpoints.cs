@@ -1,4 +1,5 @@
 using CulinaryBlog.API.Auth;
+using CulinaryBlog.Application.Features.Auth.ChangePassword;
 using CulinaryBlog.Application.Features.Auth.Common;
 using CulinaryBlog.Application.Features.Auth.GetProfile;
 using CulinaryBlog.Application.Features.Auth.GoogleLogin;
@@ -61,6 +62,14 @@ internal sealed class AuthEndpoints : IEndpointModule
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        auth.MapPost("/change-password", ChangePasswordAsync)
+            .RequireAuthorization()
+            .RequireRateLimiting(AuthRateLimitPolicies.Credentials)
+            .WithSummary("Đổi mật khẩu và thu hồi mọi phiên đăng nhập")
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .ProducesProblem(StatusCodes.Status423Locked);
+
         auth.MapPatch("/me", UpdateProfileAsync)
             .RequireAuthorization()
             .WithSummary("Đổi tên hiển thị (FR-AUTH-007)")
@@ -105,6 +114,15 @@ internal sealed class AuthEndpoints : IEndpointModule
         ISender sender,
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await sender.Send(new GetProfileQuery(), cancellationToken));
+
+    private static async Task<NoContent> ChangePasswordAsync(
+        ChangePasswordCommand command,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
 
     private static async Task<Ok<UserProfileResponse>> UpdateProfileAsync(
         UpdateProfileCommand command,

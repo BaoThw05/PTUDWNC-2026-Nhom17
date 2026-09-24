@@ -43,8 +43,24 @@ export const registerSchema = z
     message: "Mật khẩu nhập lại không khớp.",
   });
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại.").max(128),
+    newPassword: strongPassword,
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Mật khẩu nhập lại không khớp.",
+  })
+  .refine((values) => values.newPassword !== values.currentPassword, {
+    path: ["newPassword"],
+    message: "Mật khẩu mới phải khác mật khẩu hiện tại.",
+  });
+
 export const profileSchema = z.object({ fullName });
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
+export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 export type ProfileValues = z.infer<typeof profileSchema>;
