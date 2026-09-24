@@ -52,6 +52,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
       <FormAlert message={errorMessage} />
       <FormAlert message={mutation.isSuccess && !isDirty ? "Đã lưu thay đổi." : null} tone="info" />
       <TextField label="Họ tên" error={errors.fullName?.message} {...register("fullName")} />
+      <TextField label="Tên đăng nhập" value={profile.userName} readOnly disabled name="userName" />
       <TextField label="Email" value={profile.email} readOnly disabled name="email" />
       <SubmitButton pending={mutation.isPending} pendingLabel="Đang lưu…">
         Lưu thay đổi
