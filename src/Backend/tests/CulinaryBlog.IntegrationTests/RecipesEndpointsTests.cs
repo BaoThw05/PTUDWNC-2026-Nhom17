@@ -8,15 +8,23 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory)
+public sealed class RecipesEndpointsTests
     : IClassFixture<WebApplicationFactory<Program>>
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    private readonly WebApplicationFactory<Program> _factory;
+
+    public RecipesEndpointsTests(WebApplicationFactory<Program> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("environment", "Development"));
+    }
+
     [Fact]
     public async Task PostRecipe_WithoutAuth_Returns401Unauthorized()
     {
-        using var client = factory.CreateClient();
+        using var client = _factory.CreateClient();
 
         var payload = new
         {
@@ -39,7 +47,7 @@ public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory
     [Fact]
     public async Task PostRecipe_WithInvalidData_Returns422UnprocessableEntity()
     {
-        using var client = factory.CreateClient();
+        using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add("X-User-Id", "author-test-1");
 
         var payload = new
@@ -64,7 +72,7 @@ public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory
     [Fact]
     public async Task Recipe_Lifecycle_2_08_2_09_2_10_E2E()
     {
-        using var client = factory.CreateClient();
+        using var client = _factory.CreateClient();
         var authorId = "author-" + Guid.NewGuid().ToString("N")[..8];
         client.DefaultRequestHeaders.Add("X-User-Id", authorId);
 
@@ -105,7 +113,7 @@ public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory
         var recipeId = createdResult.RootElement.GetProperty("id").GetGuid();
 
         // 2. [2.09] Người lạ xem bài Draft -> 404 RECIPE_NOT_FOUND (S-11)
-        using (var strangerClient = factory.CreateClient())
+        using (var strangerClient = _factory.CreateClient())
         {
             strangerClient.DefaultRequestHeaders.Add("X-User-Id", "stranger-user-999");
             var strangerResponse = await strangerClient.GetAsync($"/api/v1/recipes/{recipeId}");
@@ -156,7 +164,7 @@ public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory
         Assert.Equal(HttpStatusCode.UnprocessableEntity, putZeroVersionResponse.StatusCode);
 
         // 6. [2.10] Người khác sửa bài -> 403 RECIPE_FORBIDDEN
-        using (var strangerClient = factory.CreateClient())
+        using (var strangerClient = _factory.CreateClient())
         {
             strangerClient.DefaultRequestHeaders.Add("X-User-Id", "stranger-user-999");
             var updateAsStranger = new
@@ -217,7 +225,8 @@ public sealed class RecipesEndpointsTests(WebApplicationFactory<Program> factory
         var updatedRecipe = await updatedRecipeResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
         Assert.NotNull(updatedRecipe);
         Assert.Equal("Bún chả Hà Nội gia truyền", updatedRecipe.Title);
-        Assert.Equal("bun-cha-ha-noi-gia-truyen", updatedRecipe.Slug);
+        // Slug được sinh từ title mới; có thể có hậu tố -N nếu slug cùng đã tồn tại trong DB
+        Assert.StartsWith("bun-cha-ha-noi-gia-truyen", updatedRecipe.Slug);
         Assert.Equal(5, updatedRecipe.Servings);
     }
 }
