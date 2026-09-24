@@ -5,4 +5,5 @@ public enum RefreshTokenRevokeReason
     Rotated,
     Logout,
     ReuseDetected,
+    PasswordChanged,
 }

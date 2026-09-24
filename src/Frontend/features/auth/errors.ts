@@ -19,4 +19,6 @@ export function authErrorMessage(code: string | null | undefined): string {
 }
 
 /** Mã lỗi Auth.js đặt trên URL khi đăng nhập Google thất bại. */
+export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu. Vui lòng đăng nhập lại bằng mật khẩu mới.";
+
 export const GOOGLE_SIGN_IN_FAILED_MESSAGE = "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";

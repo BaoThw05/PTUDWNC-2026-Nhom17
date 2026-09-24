@@ -17,6 +17,10 @@ export function register(values: {
   });
 }
 
+export function changePassword(values: { currentPassword: string; newPassword: string }): Promise<void> {
+  return apiClient.post<void>(`${AUTH_PATH}/change-password`, { body: values });
+}
+
 export function updateProfile(values: { fullName: string }): Promise<UserProfile> {
   return apiClient.patch<UserProfile>(`${AUTH_PATH}/me`, { body: values });
 }

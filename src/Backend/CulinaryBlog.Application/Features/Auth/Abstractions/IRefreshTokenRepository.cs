@@ -11,6 +11,11 @@ public interface IRefreshTokenRepository
         DateTimeOffset now,
         CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<RefreshToken>> GetActiveForUserAsync(
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken);
+
     void Add(RefreshToken token);
 
     /// <summary>Trả về false khi token đã bị request khác sửa cùng lúc; khi đó các thay đổi đang chờ bị hủy.</summary>

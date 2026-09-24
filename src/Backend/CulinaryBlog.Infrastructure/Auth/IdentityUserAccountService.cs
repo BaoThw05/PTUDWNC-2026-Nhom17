@@ -83,6 +83,13 @@ internal sealed class IdentityUserAccountService(
         };
     }
 
+    public async Task SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken)
+    {
+        var user = await GetRequiredAsync(userId);
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        EnsureSucceeded(await userManager.ResetPasswordAsync(user, token, newPassword));
+    }
+
     public async Task<UserAccount> UpdateFullNameAsync(
         Guid userId,
         string fullName,

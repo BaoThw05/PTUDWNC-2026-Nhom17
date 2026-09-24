@@ -76,6 +76,12 @@ internal sealed class FakeUserAccountService : IUserAccountService
             : PasswordCheckResult.InvalidPassword);
     }
 
+    public Task SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken)
+    {
+        _passwords[userId] = newPassword;
+        return Task.CompletedTask;
+    }
+
     public Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken)
     {
         var user = GetRequired(userId) with { FullName = fullName };

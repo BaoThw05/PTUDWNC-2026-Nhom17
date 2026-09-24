@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { ApiError } from "@/lib/api/client";
 import { getProfile } from "@/features/auth/api/backend";
+import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm";
 import { ProfileForm } from "@/features/auth/components/ProfileForm";
 import { SignOutButton } from "@/features/auth/components/SignOutButton";
 import { LOGIN_PATH, PROFILE_PATH } from "@/features/auth/constants";
@@ -59,6 +60,14 @@ export default async function ProfilePage() {
       <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
         <h2 className="mb-4 text-lg font-semibold">Thông tin tài khoản</h2>
         <ProfileForm profile={profile} />
+      </div>
+
+      <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
+        <h2 className="mb-1 text-lg font-semibold">Đổi mật khẩu</h2>
+        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+          Sau khi đổi, bạn sẽ được đăng xuất khỏi mọi thiết bị và cần đăng nhập lại.
+        </p>
+        <ChangePasswordForm />
       </div>
 
       <SignOutButton className="self-start text-sm text-red-600 hover:underline dark:text-red-400" />

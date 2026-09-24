@@ -24,6 +24,13 @@ internal sealed class InMemoryRefreshTokenRepository : IRefreshTokenRepository
         Task.FromResult<IReadOnlyList<RefreshToken>>(
             [.. _tokens.Where(token => token.FamilyId == familyId && token.IsActive(now))]);
 
+    public Task<IReadOnlyList<RefreshToken>> GetActiveForUserAsync(
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<RefreshToken>>(
+            [.. _tokens.Where(token => token.UserId == userId && token.IsActive(now))]);
+
     public void Add(RefreshToken token) => _tokens.Add(token);
 
     public Task<bool> TrySaveChangesAsync(CancellationToken cancellationToken)

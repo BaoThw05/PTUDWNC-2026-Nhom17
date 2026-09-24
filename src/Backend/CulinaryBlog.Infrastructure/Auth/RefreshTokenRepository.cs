@@ -18,6 +18,14 @@ internal sealed class RefreshTokenRepository(AppDbContext dbContext) : IRefreshT
             .Where(token => token.FamilyId == familyId && token.RevokedAt == null && token.ExpiresAt > now)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<RefreshToken>> GetActiveForUserAsync(
+        Guid userId,
+        DateTimeOffset now,
+        CancellationToken cancellationToken) =>
+        await dbContext.RefreshTokens
+            .Where(token => token.UserId == userId && token.RevokedAt == null && token.ExpiresAt > now)
+            .ToListAsync(cancellationToken);
+
     public void Add(RefreshToken token) => dbContext.RefreshTokens.Add(token);
 
     public async Task<bool> TrySaveChangesAsync(CancellationToken cancellationToken)

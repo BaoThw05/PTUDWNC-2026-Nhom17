@@ -16,9 +16,10 @@ type LoginFormProps = {
   callbackUrl: string;
   googleEnabled: boolean;
   initialMessage: string | null;
+  initialTone?: "error" | "info";
 };
 
-export function LoginForm({ callbackUrl, googleEnabled, initialMessage }: LoginFormProps) {
+export function LoginForm({ callbackUrl, googleEnabled, initialMessage, initialTone = "error" }: LoginFormProps) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(initialMessage);
   const {
@@ -43,7 +44,7 @@ export function LoginForm({ callbackUrl, googleEnabled, initialMessage }: LoginF
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-        <FormAlert message={formError} />
+        <FormAlert message={formError} tone={formError === initialMessage ? initialTone : "error"} />
         <TextField
           label="Email"
           type="email"
