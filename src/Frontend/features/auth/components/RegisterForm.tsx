@@ -4,13 +4,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm, type UseFormSetError } from "react-hook-form";
+import { useForm, useWatch, type UseFormSetError } from "react-hook-form";
 import { ApiError } from "@/lib/api/client";
 import { register as registerAccount } from "../api/client";
 import { LOGIN_PATH } from "../constants";
 import { authErrorMessage } from "../errors";
 import { registerSchema, type RegisterValues } from "../schemas";
 import { FormAlert } from "./FormAlert";
+import { PasswordRequirements } from "./PasswordRequirements";
 import { SubmitButton } from "./SubmitButton";
 import { TextField } from "./TextField";
 
@@ -51,8 +52,11 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({ resolver: zodResolver(registerSchema) });
+
+  const password = useWatch({ control, name: "password" });
 
   const onSubmit = handleSubmit(async ({ fullName, email, userName, password }) => {
     setFormError(null);
@@ -108,9 +112,7 @@ export function RegisterForm({ callbackUrl }: { callbackUrl: string }) {
         error={errors.password?.message}
         {...register("password")}
       />
-      <p className="-mt-2 text-xs text-zinc-500">
-        Ít nhất 8 ký tự, gồm chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
-      </p>
+      <PasswordRequirements value={password ?? ""} />
       <TextField
         label="Nhập lại mật khẩu"
         type="password"
