@@ -18,7 +18,9 @@ internal static class AuthInfrastructureRegistration
             .AddIdentityCore<ApplicationUser>(ConfigureIdentity)
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddSignInManager();
+            .AddSignInManager()
+            // Cần cho ResetPasswordAsync (đổi mật khẩu) và sau này là quên mật khẩu.
+            .AddDefaultTokenProviders();
 
         services.AddOptions<JwtOptions>()
             .Bind(configuration.GetSection(JwtOptions.SectionName))
