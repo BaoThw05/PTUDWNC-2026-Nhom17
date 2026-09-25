@@ -47,7 +47,7 @@
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 1.01 | Gửi giảng viên xác nhận 2 điểm diễn giải (điều kiện publish; Cloudflare Tunnel không thay kho ảnh) | Có câu trả lời hoặc ghi "chấp nhận theo diễn giải của nhóm" | — | T7 19/09 | M |
-| 1.02 | Tạo `docs/SRS_v1.1.md` (từ bản Markdown) + bảng Change Request + thư mục `docs/adr/` + mẫu ADR | Cả nhóm mở được, có sẵn các dòng CR cho quyết định mục 3 của kế hoạch tổng | — | CN 20/09 | M |
+| 1.02 | Tạo `docs/SRS_v1.1.md` (từ bản Markdown) + bảng Change Request + thư mục `docs/ADR/` + mẫu ADR | Cả nhóm mở được, có sẵn các dòng CR cho quyết định mục 3 của kế hoạch tổng | — | CN 20/09 | M |
 | 1.03 | Viết ADR S-05 (kiến trúc xác thực) và S-06 (refresh token) | 2 file ADR, mỗi file ≤ 1 trang: bối cảnh, quyết định, hệ quả, phương án dự phòng | — | CN 20/09 | M |
 | 1.04 | Bổ sung nhóm mã lỗi `AUTH_*` vào bảng mã lỗi chung | Bảng mã lỗi có đủ mã ở mục 2 | TV2 tạo bảng | CN 20/09 | M |
 
