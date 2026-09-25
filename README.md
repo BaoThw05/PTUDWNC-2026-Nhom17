@@ -48,7 +48,9 @@ docker compose up -d
 docker compose ps             # đợi postgres, redis, minio báo healthy; minio-init Exited (0)
 ```
 
-Sau khi khởi động, PostgreSQL, Redis, MinIO, Seq và Mailpit đã sẵn sàng. MinIO
+Sau khi khởi động, mở ứng dụng tại http://localhost. Nginx chuyển tiếp giao diện
+Next.js, API và health check; không cần chạy `dotnet run` hay `npm run dev` trên máy.
+PostgreSQL, Redis, MinIO, Seq và Mailpit đã sẵn sàng. MinIO
 tự tạo bucket `culinary-blog`; mở MinIO Console tại http://localhost:9001,
 Seq tại http://localhost:5341 và Mailpit tại http://localhost:8025.
 
