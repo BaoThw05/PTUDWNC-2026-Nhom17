@@ -55,7 +55,14 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
-| | | | Recipes |
+| `RECIPE_NOT_FOUND` | 404 | Không tìm thấy Recipe (hoặc không thuộc quyền xem) | Recipes |
+| `RECIPE_FORBIDDEN` | 403 | Không phải tác giả của công thức (và không phải Admin) | Recipes |
+| `RECIPE_CONCURRENCY_CONFLICT` | 409 | Phiên bản `version` gửi lên không khớp với dữ liệu hiện tại (S-04) | Recipes |
+| `RECIPE_PUBLISH_INCOMPLETE` | 422 | Chưa đủ điều kiện xuất bản (chưa có bước nào hoặc xóa bước cuối khi đang Published) | Recipes |
+| `RECIPE_CATEGORY_INVALID` | 422 | `CategoryId` gửi lên không tồn tại hoặc không hợp lệ | Recipes |
+| `RECIPE_INVALID_STATE_TRANSITION` | 422 | Chuyển đổi trạng thái công thức không hợp lệ | Recipes |
+| `STEP_NOT_FOUND` | 404 | Không tìm thấy bước thực hiện (RecipeStep) | Recipes |
+| `INGREDIENT_NOT_FOUND` | 404 | Không tìm thấy nguyên liệu (RecipeIngredient) | Recipes |
 
 ## Categories / RecipeImages / File — TV3
 
