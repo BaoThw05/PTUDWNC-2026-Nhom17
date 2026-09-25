@@ -88,15 +88,9 @@ namespace CulinaryBlog.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AuthorId");
-
-                    b.HasIndex("CategoryId");
-
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasFilter("\"IsDeleted\" = false");
-
-                    b.HasIndex("Status", "CreatedAt");
 
                     b.ToTable("Recipes");
                 });

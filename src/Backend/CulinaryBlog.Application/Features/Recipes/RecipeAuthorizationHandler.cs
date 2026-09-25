@@ -16,13 +16,13 @@ public sealed class RecipeAuthorizationHandler(ICurrentUser currentUser) : IReci
 {
     public void EnsureCanModify(Recipe recipe)
     {
-        if (string.IsNullOrWhiteSpace(currentUser.UserId))
+        if (!currentUser.UserId.HasValue)
         {
             throw new UnauthorizedException("Bạn cần đăng nhập để thực hiện thao tác này.");
         }
 
-        var isAuthor = string.Equals(currentUser.UserId, recipe.AuthorId, StringComparison.Ordinal);
-        if (!isAuthor && !currentUser.IsAdmin)
+        var isAuthor = string.Equals(currentUser.UserId.Value.ToString(), recipe.AuthorId, StringComparison.OrdinalIgnoreCase);
+        if (!isAuthor && !currentUser.IsInRole("Admin"))
         {
             throw new ForbiddenException(
                 "Bạn không có quyền chỉnh sửa công thức này.",
@@ -44,10 +44,10 @@ public sealed class RecipeAuthorizationHandler(ICurrentUser currentUser) : IReci
 
         // Quyết định S-11: bài chưa xuất bản hoặc đã xóa mềm chỉ tác giả hoặc Admin mới được xem,
         // người khác truy cập nhận 404 để không làm lộ sự tồn tại của bài.
-        var isAuthor = !string.IsNullOrWhiteSpace(currentUser.UserId) &&
-                       string.Equals(currentUser.UserId, authorId, StringComparison.Ordinal);
+        var isAuthor = currentUser.UserId.HasValue &&
+                       string.Equals(currentUser.UserId.Value.ToString(), authorId, StringComparison.OrdinalIgnoreCase);
 
-        if (!isAuthor && !currentUser.IsAdmin)
+        if (!isAuthor && !currentUser.IsInRole("Admin"))
         {
             throw new NotFoundException(
                 $"Không tìm thấy công thức có id '{recipeId}'",

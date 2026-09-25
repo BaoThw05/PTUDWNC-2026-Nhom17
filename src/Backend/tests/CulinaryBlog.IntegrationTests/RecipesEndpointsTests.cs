@@ -8,23 +8,16 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class RecipesEndpointsTests
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class RecipesEndpointsTests(IntegrationTestFactory factory)
+    : IClassFixture<IntegrationTestFactory>
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
-    private readonly WebApplicationFactory<Program> _factory;
-
-    public RecipesEndpointsTests(WebApplicationFactory<Program> factory)
-    {
-        _factory = factory.WithWebHostBuilder(builder =>
-            builder.UseSetting("environment", "Development"));
-    }
 
     [Fact]
     public async Task PostRecipe_WithoutAuth_Returns401Unauthorized()
     {
-        using var client = _factory.CreateClient();
+        IntegrationTestFactory.CurrentUser.Reset();
+        using var client = factory.CreateClient();
 
         var payload = new
         {
@@ -47,8 +40,8 @@ public sealed class RecipesEndpointsTests
     [Fact]
     public async Task PostRecipe_WithInvalidData_Returns422UnprocessableEntity()
     {
-        using var client = _factory.CreateClient();
-        client.DefaultRequestHeaders.Add("X-User-Id", "author-test-1");
+        IntegrationTestFactory.CurrentUser.SetAsUser(Guid.NewGuid(), "Author");
+        using var client = factory.CreateClient();
 
         var payload = new
         {
@@ -72,9 +65,9 @@ public sealed class RecipesEndpointsTests
     [Fact]
     public async Task Recipe_Lifecycle_2_08_2_09_2_10_E2E()
     {
-        using var client = _factory.CreateClient();
-        var authorId = "author-" + Guid.NewGuid().ToString("N")[..8];
-        client.DefaultRequestHeaders.Add("X-User-Id", authorId);
+        var authorId = Guid.NewGuid();
+        IntegrationTestFactory.CurrentUser.SetAsUser(authorId, "Author");
+        using var client = factory.CreateClient();
 
         // 1. [2.08] Tạo Recipe Draft đầy đủ steps, ingredients, nutrition
         var createPayload = new
@@ -113,18 +106,18 @@ public sealed class RecipesEndpointsTests
         var recipeId = createdResult.RootElement.GetProperty("id").GetGuid();
 
         // 2. [2.09] Người lạ xem bài Draft -> 404 RECIPE_NOT_FOUND (S-11)
-        using (var strangerClient = _factory.CreateClient())
-        {
-            strangerClient.DefaultRequestHeaders.Add("X-User-Id", "stranger-user-999");
-            var strangerResponse = await strangerClient.GetAsync($"/api/v1/recipes/{recipeId}");
-            Assert.Equal(HttpStatusCode.NotFound, strangerResponse.StatusCode);
+        IntegrationTestFactory.CurrentUser.SetAsUser(Guid.NewGuid(), "User");
 
-            var strangerBody = await strangerResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
-            Assert.NotNull(strangerBody);
-            Assert.Equal("RECIPE_NOT_FOUND", strangerBody.RootElement.GetProperty("code").GetString());
-        }
+        var strangerResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.NotFound, strangerResponse.StatusCode);
+
+        var strangerBody = await strangerResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(strangerBody);
+        Assert.Equal("RECIPE_NOT_FOUND", strangerBody.RootElement.GetProperty("code").GetString());
 
         // 3. [2.09] Tác giả xem bài Draft -> 200 OK và có version, nutrition, steps, ingredients
+        IntegrationTestFactory.CurrentUser.SetAsUser(authorId, "Author");
+
         var getAuthorResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
         Assert.Equal(HttpStatusCode.OK, getAuthorResponse.StatusCode);
 
@@ -164,29 +157,29 @@ public sealed class RecipesEndpointsTests
         Assert.Equal(HttpStatusCode.UnprocessableEntity, putZeroVersionResponse.StatusCode);
 
         // 6. [2.10] Người khác sửa bài -> 403 RECIPE_FORBIDDEN
-        using (var strangerClient = _factory.CreateClient())
+        IntegrationTestFactory.CurrentUser.SetAsUser(Guid.NewGuid(), "User");
+
+        var updateAsStranger = new
         {
-            strangerClient.DefaultRequestHeaders.Add("X-User-Id", "stranger-user-999");
-            var updateAsStranger = new
-            {
-                Title = "Bún chả Hà Nội đặc biệt",
-                Description = "Cập nhật mô tả món ăn thơm ngon hơn.",
-                PrepTimeMinutes = 25,
-                CookTimeMinutes = 50,
-                Servings = 4,
-                Difficulty = Difficulty.Hard,
-                Version = recipe.Version
-            };
+            Title = "Bún chả Hà Nội đặc biệt",
+            Description = "Cập nhật mô tả món ăn thơm ngon hơn.",
+            PrepTimeMinutes = 25,
+            CookTimeMinutes = 50,
+            Servings = 4,
+            Difficulty = Difficulty.Hard,
+            Version = recipe.Version
+        };
 
-            var putStrangerResponse = await strangerClient.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", updateAsStranger);
-            Assert.Equal(HttpStatusCode.Forbidden, putStrangerResponse.StatusCode);
+        var putStrangerResponse = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", updateAsStranger);
+        Assert.Equal(HttpStatusCode.Forbidden, putStrangerResponse.StatusCode);
 
-            var forbiddenBody = await putStrangerResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
-            Assert.NotNull(forbiddenBody);
-            Assert.Equal(RecipeErrorCodes.RecipeForbidden, forbiddenBody.RootElement.GetProperty("code").GetString());
-        }
+        var forbiddenBody = await putStrangerResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(forbiddenBody);
+        Assert.Equal(RecipeErrorCodes.RecipeForbidden, forbiddenBody.RootElement.GetProperty("code").GetString());
 
         // 7. [2.10] Tác giả sửa bài với version bị lệch (stale version) -> 409 CONCURRENCY_CONFLICT
+        IntegrationTestFactory.CurrentUser.SetAsUser(authorId, "Author");
+
         var updateWithStaleVersion = new
         {
             Title = "Bún chả Hà Nội đặc biệt",

@@ -17,12 +17,12 @@ public sealed class GetMyRecipesQueryHandler(IAppDbContext db, ICurrentUser curr
 {
     public Task<PagedResult<RecipeDto>> Handle(GetMyRecipesQuery request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(currentUser.UserId))
+        if (!currentUser.UserId.HasValue)
         {
             throw new UnauthorizedException("Bạn cần đăng nhập để xem danh sách bài viết của mình.");
         }
 
-        var authorId = currentUser.UserId;
+        var authorId = currentUser.UserId.Value.ToString();
         var page = request.Page < 1 ? 1 : request.Page;
         var pageSize = request.PageSize switch
         {
