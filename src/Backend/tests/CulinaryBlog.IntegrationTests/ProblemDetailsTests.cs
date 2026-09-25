@@ -2,22 +2,24 @@ using System.Net;
 using System.Text.Json;
 using CulinaryBlog.API.Endpoints;
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.IntegrationTests.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class ProblemDetailsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ProblemDetailsTests : IClassFixture<ApiFactory>
 {
     private const string ProblemJson = "application/problem+json";
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public ProblemDetailsTests(WebApplicationFactory<Program> factory)
+    public ProblemDetailsTests(ApiFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.AddSingleton<IEndpointModule, ThrowingEndpoints>()));
@@ -62,6 +64,18 @@ public sealed class ProblemDetailsTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
+    public async Task Get_DbUpdateConcurrencyFailure_Returns409WithConcurrencyConflictCode()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/test-errors/concurrency");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        using var body = await ReadProblemAsync(response);
+        Assert.Equal("CONCURRENCY_CONFLICT", body.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
     public async Task Get_UnhandledFailure_Returns500WithoutDetail()
     {
         using var client = _factory.CreateClient();
@@ -93,6 +107,7 @@ public sealed class ProblemDetailsTests : IClassFixture<WebApplicationFactory<Pr
             group.MapGet("/validation", IResult () => throw new ValidationException(
                 new Dictionary<string, string[]> { ["Title"] = ["Title is required."] }));
             group.MapGet("/conflict", IResult () => throw new ConflictException("Duplicated.", "TEST_DUPLICATED"));
+            group.MapGet("/concurrency", IResult () => throw new DbUpdateConcurrencyException("Concurrency conflict occurred."));
             group.MapGet("/unhandled", IResult () => throw new InvalidOperationException("Sensitive internals."));
         }
     }

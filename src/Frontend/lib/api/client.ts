@@ -10,6 +10,11 @@ type JsonBody = Record<string, unknown> | unknown[];
 
 export type ApiRequestOptions = Omit<RequestInit, "body" | "method"> & {
   body?: JsonBody | FormData;
+  /**
+   * Token gắn vào header Authorization. Bỏ trống: trình duyệt tự lấy từ phiên đăng nhập.
+   * Truyền `null` để gửi request không kèm token.
+   */
+  accessToken?: string | null;
 };
 
 // Server gọi thẳng backend; trình duyệt đi qua rewrite /api/* của Next.js.
@@ -28,12 +33,12 @@ function isJson(response: Response): boolean {
 async function request<T>(
   method: string,
   path: string,
-  { body, headers, ...init }: ApiRequestOptions = {},
+  { body, headers, accessToken, ...init }: ApiRequestOptions = {},
 ): Promise<T> {
   const requestHeaders = new Headers(headers);
   requestHeaders.set("Accept", "application/json, application/problem+json");
 
-  const token = await getAccessToken();
+  const token = accessToken === undefined ? await getAccessToken() : accessToken;
   if (token) {
     requestHeaders.set("Authorization", `Bearer ${token}`);
   }

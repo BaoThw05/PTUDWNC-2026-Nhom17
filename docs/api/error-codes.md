@@ -38,13 +38,31 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
-| | | | Auth |
+| `AUTH_EMAIL_EXISTS` | 409 | Email đã được đăng ký (so sánh không phân biệt hoa/thường) | Auth |
+| `AUTH_USERNAME_EXISTS` | 409 | Tên đăng nhập (`userName`) đã được dùng (so sánh không phân biệt hoa/thường) | Auth |
+| `AUTH_INVALID_CREDENTIALS` | 401 | Email không tồn tại hoặc sai mật khẩu — dùng chung một mã để không lộ email đã đăng ký | Auth |
+| `AUTH_ACCOUNT_LOCKED` | 423 | Tài khoản bị khóa 15 phút sau 5 lần nhập sai mật khẩu | Auth |
+| `AUTH_ACCOUNT_DISABLED` | 403 | Tài khoản bị vô hiệu hóa (`IsActive = false`); chỉ báo khi mật khẩu đúng | Auth |
+| `AUTH_REFRESH_TOKEN_INVALID` | 401 | Refresh token không tồn tại | Auth |
+| `AUTH_REFRESH_TOKEN_EXPIRED` | 401 | Refresh token đã hết hạn (7 ngày) | Auth |
+| `AUTH_REFRESH_TOKEN_REVOKED` | 401 | Refresh token đã bị thu hồi (đăng xuất, hoặc bị dùng lại sau 30 giây → thu hồi cả family) | Auth |
+| `AUTH_USER_NOT_FOUND` | 404 | Người dùng trong access token không còn tồn tại | Auth |
+| `AUTH_GOOGLE_TOKEN_INVALID` | 401 | `idToken` Google sai chữ ký, sai audience hoặc hết hạn | Auth |
+| `AUTH_GOOGLE_EMAIL_UNVERIFIED` | 401 | Email của tài khoản Google chưa được Google xác minh | Auth |
+| `AUTH_GOOGLE_UNAVAILABLE` | 502 | Không xác minh được với Google, hoặc backend chưa cấu hình Google Client ID | Auth |
 
 ## Recipes — TV2
 
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
-| | | | Recipes |
+| `RECIPE_NOT_FOUND` | 404 | Không tìm thấy Recipe (hoặc không thuộc quyền xem) | Recipes |
+| `RECIPE_FORBIDDEN` | 403 | Không phải tác giả của công thức (và không phải Admin) | Recipes |
+| `RECIPE_CONCURRENCY_CONFLICT` | 409 | Phiên bản `version` gửi lên không khớp với dữ liệu hiện tại (S-04) | Recipes |
+| `RECIPE_PUBLISH_INCOMPLETE` | 422 | Chưa đủ điều kiện xuất bản (chưa có bước nào hoặc xóa bước cuối khi đang Published) | Recipes |
+| `RECIPE_CATEGORY_INVALID` | 422 | `CategoryId` gửi lên không tồn tại hoặc không hợp lệ | Recipes |
+| `RECIPE_INVALID_STATE_TRANSITION` | 422 | Chuyển đổi trạng thái công thức không hợp lệ | Recipes |
+| `STEP_NOT_FOUND` | 404 | Không tìm thấy bước thực hiện (RecipeStep) | Recipes |
+| `INGREDIENT_NOT_FOUND` | 404 | Không tìm thấy nguyên liệu (RecipeIngredient) | Recipes |
 
 ## Categories / RecipeImages / File — TV3
 
