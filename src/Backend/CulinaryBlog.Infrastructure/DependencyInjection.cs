@@ -1,6 +1,7 @@
 ﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Auth;
 using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.Observability;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddHostedService<DatabaseInitializer>();
 
         services.AddAuthInfrastructure(configuration);
+        services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 

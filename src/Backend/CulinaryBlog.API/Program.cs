@@ -4,6 +4,7 @@ using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
 using CulinaryBlog.Application;
 using CulinaryBlog.Infrastructure;
+using CulinaryBlog.API.Observability;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -26,6 +27,7 @@ builder.Services.AddAuthApi(builder.Configuration);
 var app = builder.Build();
 
 // Ghi log request ở ngoài cùng để log đúng status sau khi exception đã được đổi thành Problem Details.
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
@@ -43,6 +45,8 @@ else
 app.UseAuthApi();
 
 app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/live");
+app.MapHealthChecks("/health/ready");
 app.MapEndpointModules();
 
 app.Run();
