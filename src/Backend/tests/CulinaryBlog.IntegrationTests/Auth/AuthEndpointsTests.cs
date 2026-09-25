@@ -245,6 +245,45 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(AuthErrorCodes.GoogleUnavailable, await ReadErrorCodeAsync(response));
     }
 
+    [Fact]
+    public async Task ChangePassword_ValidRequest_Returns204AndRevokesEverySession()
+    {
+        var email = NewEmail();
+        var auth = await ReadAuthAsync(await RegisterAsync(_client, email));
+        const string newPassword = "NewAuthor@67890";
+
+        var response = await _client.SendAsync(WithBearer(
+            HttpMethod.Post, $"{BasePath}/change-password", auth.AccessToken,
+            new { currentPassword = StrongPassword, newPassword }));
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await RefreshAsync(_client, auth.RefreshToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await LoginAsync(_client, email, StrongPassword)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await LoginAsync(_client, email, newPassword)).StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WrongCurrentPassword_Returns422()
+    {
+        var auth = await RegisterNewAsync();
+
+        var response = await _client.SendAsync(WithBearer(
+            HttpMethod.Post, $"{BasePath}/change-password", auth.AccessToken,
+            new { currentPassword = "Wrong@12345", newPassword = "NewAuthor@67890" }));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ChangePassword_WithoutAccessToken_Returns401()
+    {
+        var response = await _client.PostAsJsonAsync(
+            $"{BasePath}/change-password",
+            new { currentPassword = StrongPassword, newPassword = "NewAuthor@67890" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private async Task<AuthResponse> RegisterNewAsync() => await ReadAuthAsync(await RegisterAsync(_client, NewEmail()));
 
     private async Task SetActiveAsync(string email, bool isActive)
