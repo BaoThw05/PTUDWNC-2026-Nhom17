@@ -9,10 +9,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace CulinaryBlog.Infrastructure.Persistence.Migrations
+namespace CulinaryBlog.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260922100457_Auth_Init")]
+    [Migration("20260925110830_Auth_Init")]
     partial class Auth_Init
     {
         /// <inheritdoc />
@@ -86,6 +86,164 @@ namespace CulinaryBlog.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens", (string)null);
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.Recipe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CookTimeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("Difficulty")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PrepTimeMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Servings")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(220)
+                        .HasColumnType("character varying(220)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("Recipes");
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.RecipeIngredient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("OrderIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Quantity")
+                        .HasColumnType("numeric");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeIngredients");
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.RecipeStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("RecipeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipeId");
+
+                    b.ToTable("RecipeSteps");
                 });
 
             modelBuilder.Entity("CulinaryBlog.Infrastructure.Auth.ApplicationUser", b =>
@@ -309,6 +467,70 @@ namespace CulinaryBlog.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.Recipe", b =>
+                {
+                    b.OwnsOne("CulinaryBlog.Domain.Entities.RecipeNutrition", "Nutrition", b1 =>
+                        {
+                            b1.Property<Guid>("RecipeId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int?>("Calories")
+                                .HasColumnType("integer")
+                                .HasColumnName("Nutrition_Calories");
+
+                            b1.Property<decimal?>("CarbsGrams")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Nutrition_CarbsGrams");
+
+                            b1.Property<decimal?>("FatGrams")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Nutrition_FatGrams");
+
+                            b1.Property<decimal?>("FiberGrams")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Nutrition_FiberGrams");
+
+                            b1.Property<decimal?>("ProteinGrams")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Nutrition_ProteinGrams");
+
+                            b1.Property<decimal?>("SugarGrams")
+                                .HasColumnType("numeric")
+                                .HasColumnName("Nutrition_SugarGrams");
+
+                            b1.HasKey("RecipeId");
+
+                            b1.ToTable("Recipes");
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecipeId");
+                        });
+
+                    b.Navigation("Nutrition");
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.RecipeIngredient", b =>
+                {
+                    b.HasOne("CulinaryBlog.Domain.Entities.Recipe", "Recipe")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.RecipeStep", b =>
+                {
+                    b.HasOne("CulinaryBlog.Domain.Entities.Recipe", "Recipe")
+                        .WithMany("Steps")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Recipe");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -358,6 +580,13 @@ namespace CulinaryBlog.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.Recipe", b =>
+                {
+                    b.Navigation("Ingredients");
+
+                    b.Navigation("Steps");
                 });
 #pragma warning restore 612, 618
         }
