@@ -69,7 +69,7 @@ public sealed class CreateRecipeCommandHandler(
     {
         var authorId = !string.IsNullOrWhiteSpace(request.AuthorId)
             ? request.AuthorId
-            : currentUser.UserId;
+            : currentUser.UserId?.ToString();
 
         if (string.IsNullOrWhiteSpace(authorId))
         {

@@ -3,7 +3,6 @@ using System.Text.Json;
 using CulinaryBlog.API.Endpoints;
 using CulinaryBlog.Application.Common.Exceptions;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
@@ -12,13 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class ProblemDetailsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ProblemDetailsTests : IClassFixture<IntegrationTestFactory>
 {
     private const string ProblemJson = "application/problem+json";
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public ProblemDetailsTests(WebApplicationFactory<Program> factory)
+    public ProblemDetailsTests(IntegrationTestFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.AddSingleton<IEndpointModule, ThrowingEndpoints>()));

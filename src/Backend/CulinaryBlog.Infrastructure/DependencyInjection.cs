@@ -14,8 +14,6 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHttpContextAccessor();
-        services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddScoped<ICategoryValidator, DefaultCategoryValidator>();
 
         services.AddSingleton<AuditInterceptor>();
