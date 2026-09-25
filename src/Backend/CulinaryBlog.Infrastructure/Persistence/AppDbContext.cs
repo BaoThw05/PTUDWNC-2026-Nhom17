@@ -7,10 +7,12 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IAppDbContext
 {
+    public DbSet<Category> Categories => Set<Category>();
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
 
+    IQueryable<Category> IAppDbContext.Categories => Categories;
     IQueryable<Recipe> IAppDbContext.Recipes => Recipes;
     IQueryable<RecipeStep> IAppDbContext.RecipeSteps => RecipeSteps;
     IQueryable<RecipeIngredient> IAppDbContext.RecipeIngredients => RecipeIngredients;
@@ -26,6 +28,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.HasPostgresExtension("citext");
 
         // Module đặt IEntityTypeConfiguration<T> trong thư mục Infrastructure/<Module>/ nên không cần sửa file này.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
