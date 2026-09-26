@@ -1,8 +1,11 @@
 ﻿using Amazon.Runtime;
 using Amazon.S3;
 using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Infrastructure.BackgroundJobs;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Storage;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,11 +18,33 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString(ConnectionStringName)
+            ?? throw new InvalidOperationException($"Connection string '{ConnectionStringName}' is missing.");
+
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
+            options.UseNpgsql(connectionString));
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         AddFileStorage(services, configuration);
+        services.AddSingleton<IBackgroundJobService, HangfireBackgroundJobService>();
+
+        services.AddHangfire(configuration => configuration
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(
+                options => options.UseNpgsqlConnection(connectionString),
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire",
+                    PrepareSchemaIfNecessary = true
+                }));
+        services.AddHangfireServer();
+
+        GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
+        {
+            Attempts = 3,
+            DelaysInSeconds = [60, 300, 1800]
+        });
 
         return services;
     }
