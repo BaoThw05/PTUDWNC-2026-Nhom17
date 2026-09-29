@@ -2,7 +2,7 @@
 
 > **Module:** Danh mục (FR-CAT-001 → 005) · Lưu trữ file (FR-FILE-001/002) · Ảnh công thức (FR-RCP-008) · Job resize ảnh (FR-JOB-002)
 > **Vai trò chung:** hạ tầng — Docker Compose, Hangfire, Nginx, Cloudflare Tunnel cho bản demo
-> **Hạn chốt:** CN 01/11/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
+> **Hạn chốt:** CN 25/10/2026 — ứng dụng hoàn thiện (đăng nhập, giao diện đầy đủ, web gần như hoàn chỉnh) · Xem mốc chung trong `00_KeHoach_TongThe.md`
 
 ## 1. Phạm vi trách nhiệm
 
@@ -34,89 +34,89 @@
 
 | Ngày | Mốc cá nhân | Gắn với mốc chung |
 |---|---|---|
-| CN 20/09 | Phương án storage dev + ADR storage, ảnh | M0 |
-| T5 24/09 | `docker compose up` cho cả nhóm | — |
-| T3 29/09 | Storage + Hangfire dùng được | M1 |
-| CN 11/10 | API danh mục + API ảnh | M2 |
-| CN 18/10 | Component upload + các trang danh mục | M3 |
-| CN 25/10 | Job resize, Nginx, demo qua Cloudflare Tunnel | M4 |
+| CN 13/09 | Phương án storage dev + ADR storage, ảnh | M0 |
+| T5 17/09 | `docker compose up` cho cả nhóm | — |
+| T3 22/09 | Storage + Hangfire dùng được | M1 |
+| CN 04/10 | API danh mục + API ảnh | M2 |
+| CN 11/10 | Component upload + các trang danh mục | M3 |
+| CN 18/10 | Job resize, Nginx, demo qua Cloudflare Tunnel | M4 |
 
 ## 4. Công việc chi tiết và deadline
 
-**Mức ưu tiên:** M = Must · S = Should · C = Could (trễ thì chuyển sau 01/11).
+**Mức ưu tiên:** M = Must · S = Should · C = Could (trễ thì chuyển sau 25/10).
 
-### G0 — Chốt quyết định (T4 16/09 → T3 22/09)
-
-| Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
-|---|---|---|---|---|---|
-| 3.01 | Thử kéo image MinIO cộng đồng (và bản dự phòng); ghi lại digest chạy được, hoặc chốt dùng `LocalFileStorage` cho dev | Ghi chú kết quả trong ADR storage | — | T7 19/09 | M |
-| 3.02 | ADR S-09 (storage trung lập S3 + `/media` qua Nginx + Cloudflare Tunnel cho demo) và ADR S-12 (định dạng, chữ ký file, key, biến thể ảnh) | 2 file ADR trong `docs/adr/` | 3.01 | CN 20/09 | M |
-
-### G1 — Nền tảng (T4 23/09 → T4 30/09)
+### G0 — Chốt quyết định (T4 09/09 → T3 15/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
-| 3.03 | `docker-compose.yml` dev: PostgreSQL 16 (ghim), Redis 7 (`requirepass`), storage (ghim digest) + tạo bucket tự động, Mailpit, Seq (EULA + mật khẩu); volume; `.env.example`; README "chạy trong 5 phút" | **Bàn giao cho nhóm:** một người mới clone repo chạy `docker compose up -d` thành công | 3.01 | T5 24/09 | M |
-| 3.04 | Entity Category (`Name`, `Slug`, `Description`, `ImageUrl` để trống, `OrderIndex`) + unique index không phân biệt hoa/thường + migration + seed khoảng 8 danh mục | **Bàn giao cho TV2:** bảng `Categories` có dữ liệu để Recipe tham chiếu | TV2 `BaseEntity` (25/09) | T7 26/09 | M |
-| 3.05 | `IFileStorage` ở Application (`UploadAsync(Stream, key, contentType)`, `DeleteAsync(key)`, `DeleteByPrefixAsync(prefix)`, `GetPublicUrl(key)`) + `S3FileStorage` + `LocalFileStorage`; chọn bằng cấu hình | **Bàn giao cho TV2:** test upload/xóa theo prefix chạy với container storage | 3.03 | CN 27/09 | M |
-| 3.06 | Báo cáo nghiên cứu Cloudflare Tunnel (1–2 trang): quick tunnel và named tunnel khác nhau thế nào, có cần domain trên Cloudflare không, chạy `cloudflared` trong Docker Compose, giới hạn khi demo, lưu ý bảo mật | File `docs/research/cloudflare-tunnel.md`; gửi nhóm đọc trước CN 27/09 | — | CN 27/09 | M |
-| 3.07 | Hangfire: Hangfire.PostgreSql (schema riêng), `AutomaticRetry` toàn cục, `IBackgroundJobService` ở Application, dashboard chỉ bật ở Development | **Bàn giao cho TV1, TV2:** enqueue một job mẫu và thấy chạy trong dashboard | 3.03, TV2 khung solution (23/09) | T3 29/09 | M |
+| 3.01 | Thử kéo image MinIO cộng đồng (và bản dự phòng); ghi lại digest chạy được, hoặc chốt dùng `LocalFileStorage` cho dev | Ghi chú kết quả trong ADR storage | — | T7 12/09 | M |
+| 3.02 | ADR S-09 (storage trung lập S3 + `/media` qua Nginx + Cloudflare Tunnel cho demo) và ADR S-12 (định dạng, chữ ký file, key, biến thể ảnh) | 2 file ADR trong `docs/adr/` | 3.01 | CN 13/09 | M |
 
-### G2a — Backend base (T5 01/10 → CN 11/10)
+### G1 — Nền tảng (T4 16/09 → T4 23/09)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
-| 3.08 | `GET /categories` (kèm `recipeCount` đếm Published chưa xóa) + `GET /categories/{slug}` (recipe Published, `PagedResult`, `pageSize` mặc định 12) | Test: danh mục rỗng, slug không tồn tại → 404, Draft không lọt vào danh sách | TV2 entity Recipe (27/09) | T7 03/10 | M |
-| 3.09 | `POST`, `PUT`, `DELETE /categories` (Admin): validation, trùng tên → 409, slug hậu tố, slug giữ nguyên khi đổi tên, xóa bị chặn nếu còn recipe (kể cả thùng rác) → 409 kèm số lượng; gọi `ICacheInvalidator("categories")` | Test: Author gọi → 403; trùng tên khác hoa/thường → 409; xóa danh mục có recipe trong thùng rác → 409 | TV1 JWT + policy (29/09), TV4 `ICacheInvalidator` (30/09) | T3 06/10 | M |
-| 3.10 | Entity RecipeImage (`OriginalKey`, `MediumKey`, `ThumbnailKey`, `AltText`, `IsPrimary`, `OrderIndex`) + partial unique index ảnh chính + migration | Không thể có 2 ảnh chính cho một recipe ở mức DB | TV2 entity Recipe (27/09) | T4 07/10 | M |
-| 3.11 | `POST /recipes/{id}/images` (multipart: `file`, `altText?`): kiểm tra quyền chủ bài/Admin, 5 MB, chữ ký file, key theo quy ước, ảnh đầu là ảnh chính, cập nhật `Recipe.UpdatedAt`, enqueue job resize (tạm là job rỗng); trả `{ imageId, originalUrl, altText, isPrimary, orderIndex }` | Test: JPEG/PNG/WebP hợp lệ; file .jpg đổi đuôi từ .exe → 415; 6 MB → 413; người khác upload → 403 | 3.05, 3.07, 3.10 | T6 09/10 | M |
-| 3.12 | `PATCH /recipes/{id}/images/{imageId}` (`altText`, `isPrimary`, `orderIndex`) + `DELETE` (xóa DB, enqueue `DeleteByPrefix`, gán lại ảnh chính) | Test: đổi ảnh chính → chỉ còn 1 ảnh chính; xóa ảnh chính → ảnh `OrderIndex` nhỏ nhất thành ảnh chính | 3.11 | CN 11/10 | M |
+| 3.03 | `docker-compose.yml` dev: PostgreSQL 16 (ghim), Redis 7 (`requirepass`), storage (ghim digest) + tạo bucket tự động, Mailpit, Seq (EULA + mật khẩu); volume; `.env.example`; README "chạy trong 5 phút" | **Bàn giao cho nhóm:** một người mới clone repo chạy `docker compose up -d` thành công | 3.01 | T5 17/09 | M |
+| 3.04 | Entity Category (`Name`, `Slug`, `Description`, `ImageUrl` để trống, `OrderIndex`) + unique index không phân biệt hoa/thường + migration + seed khoảng 8 danh mục | **Bàn giao cho TV2:** bảng `Categories` có dữ liệu để Recipe tham chiếu | TV2 `BaseEntity` (18/09) | T7 19/09 | M |
+| 3.05 | `IFileStorage` ở Application (`UploadAsync(Stream, key, contentType)`, `DeleteAsync(key)`, `DeleteByPrefixAsync(prefix)`, `GetPublicUrl(key)`) + `S3FileStorage` + `LocalFileStorage`; chọn bằng cấu hình | **Bàn giao cho TV2:** test upload/xóa theo prefix chạy với container storage | 3.03 | CN 20/09 | M |
+| 3.06 | Báo cáo nghiên cứu Cloudflare Tunnel (1–2 trang): quick tunnel và named tunnel khác nhau thế nào, có cần domain trên Cloudflare không, chạy `cloudflared` trong Docker Compose, giới hạn khi demo, lưu ý bảo mật | File `docs/research/cloudflare-tunnel.md`; gửi nhóm đọc trước CN 20/09 | — | CN 20/09 | M |
+| 3.07 | Hangfire: Hangfire.PostgreSql (schema riêng), `AutomaticRetry` toàn cục, `IBackgroundJobService` ở Application, dashboard chỉ bật ở Development | **Bàn giao cho TV1, TV2:** enqueue một job mẫu và thấy chạy trong dashboard | 3.03, TV2 khung solution (16/09) | T3 22/09 | M |
 
-### G2b — Frontend base (T2 12/10 → CN 18/10)
-
-| Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
-|---|---|---|---|---|---|
-| 3.13 | Component upload ảnh: kéo thả nhiều file, kiểm tra loại/dung lượng phía client, thanh tiến trình (Axios `onUploadProgress`), chọn ảnh chính, nhập alt text, xóa, sắp xếp | **Bàn giao cho TV2:** component nhận `recipeId`, dùng được trong wizard và trang sửa | 3.11, 3.12, TV4 API client (25/09) | T5 15/10 | M |
-| 3.14 | `/dashboard/categories` (Admin): danh sách, tạo, sửa, xóa; hiển thị lỗi 409 dễ hiểu | Author vào trang → bị chặn; Admin thao tác đủ | 3.09, TV1 Auth.js (02/10) | T6 16/10 | M |
-| 3.15 | `/categories` và `/categories/[slug]`: lưới danh mục, danh sách recipe Published có phân trang; ISR | Trang hiển thị dữ liệu seed; phân trang hoạt động | 3.08, TV2 trang chi tiết (15/10) cho link | CN 18/10 | M |
-
-### G3 — Tích hợp & base nâng cao (T2 19/10 → CN 25/10)
+### G2a — Backend base (T5 24/09 → CN 04/10)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
-| 3.16 | FR-JOB-002 job resize: tạo `thumb.webp` 300×300 (crop giữa) và `medium.webp` rộng tối đa 800 (giữ tỉ lệ); decode lỗi → đánh dấu ảnh lỗi, không retry vô hạn; cập nhật key; chọn thư viện (SkiaSharp hoặc NetVips) | Upload ảnh → vài giây sau có 2 biến thể trên storage; trang danh sách dùng thumbnail | 3.11 | T5 22/10 | M |
-| 3.17 | Nginx một domain: `/` → web:3000, `/api/` → api:8080, `/media/` → bucket storage, `/hangfire` có Basic Auth, `/health` chỉ nội bộ; `PublicBaseUrl` = `/media` | Toàn bộ site chạy qua `http://localhost` không lỗi CORS | 3.03, TV4 Next.js | T6 23/10 | M |
-| 3.18 | Cloudflare Tunnel cho demo: service `cloudflared` trong Compose (profile `demo`), hướng dẫn bật/tắt, kiểm tra đăng nhập, upload ảnh, xem ảnh qua URL công khai | Người ngoài mạng mở được site demo; ghi hướng dẫn trong README | 3.06, 3.17 | CN 25/10 | M |
-| 3.19 | Recurring job dọn file mồ côi: prefix `recipes/{id}/{imageId}/` không còn bản ghi trong DB → xóa (bỏ qua recipe đang trong thùng rác) | Chạy thử với thư mục giả lập, không xóa nhầm ảnh của recipe trong thùng rác | 3.05, 3.07 | CN 25/10 | C |
+| 3.08 | `GET /categories` (kèm `recipeCount` đếm Published chưa xóa) + `GET /categories/{slug}` (recipe Published, `PagedResult`, `pageSize` mặc định 12) | Test: danh mục rỗng, slug không tồn tại → 404, Draft không lọt vào danh sách | TV2 entity Recipe (20/09) | T7 26/09 | M |
+| 3.09 | `POST`, `PUT`, `DELETE /categories` (Admin): validation, trùng tên → 409, slug hậu tố, slug giữ nguyên khi đổi tên, xóa bị chặn nếu còn recipe (kể cả thùng rác) → 409 kèm số lượng; gọi `ICacheInvalidator("categories")` | Test: Author gọi → 403; trùng tên khác hoa/thường → 409; xóa danh mục có recipe trong thùng rác → 409 | TV1 JWT + policy (22/09), TV4 `ICacheInvalidator` (23/09) | T3 29/09 | M |
+| 3.10 | Entity RecipeImage (`OriginalKey`, `MediumKey`, `ThumbnailKey`, `AltText`, `IsPrimary`, `OrderIndex`) + partial unique index ảnh chính + migration | Không thể có 2 ảnh chính cho một recipe ở mức DB | TV2 entity Recipe (20/09) | T4 30/09 | M |
+| 3.11 | `POST /recipes/{id}/images` (multipart: `file`, `altText?`): kiểm tra quyền chủ bài/Admin, 5 MB, chữ ký file, key theo quy ước, ảnh đầu là ảnh chính, cập nhật `Recipe.UpdatedAt`, enqueue job resize (tạm là job rỗng); trả `{ imageId, originalUrl, altText, isPrimary, orderIndex }` | Test: JPEG/PNG/WebP hợp lệ; file .jpg đổi đuôi từ .exe → 415; 6 MB → 413; người khác upload → 403 | 3.05, 3.07, 3.10 | T6 02/10 | M |
+| 3.12 | `PATCH /recipes/{id}/images/{imageId}` (`altText`, `isPrimary`, `orderIndex`) + `DELETE` (xóa DB, enqueue `DeleteByPrefix`, gán lại ảnh chính) | Test: đổi ảnh chính → chỉ còn 1 ảnh chính; xóa ảnh chính → ảnh `OrderIndex` nhỏ nhất thành ảnh chính | 3.11 | CN 04/10 | M |
 
-### G4 — Kiểm thử, tài liệu, tổng duyệt (T2 26/10 → CN 01/11)
+### G2b — Frontend base (T2 05/10 → CN 11/10)
 
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
-| 3.20 | Hoàn thiện integration test danh mục và ảnh (sai định dạng, quá dung lượng, đổi ảnh chính, xóa danh mục bị chặn) | CI xanh | — | T4 28/10 | M |
-| 3.21 | Script backup base: `pg_dump` + nén volume storage; hướng dẫn khôi phục | Chạy thử khôi phục thành công trên máy khác | 3.03 | T5 29/10 | M |
-| 3.22 | Gửi TV1 phần SRS v1.1: 3.2, 3.5, FR-JOB-002, 5.3 (storage, Hangfire, Tunnel), 6.5, 7.5, 7.6, 8.2, 8.4, mã lỗi `CATEGORY_*`/`FILE_*`/`IMAGE_*` | Nội dung khớp OpenAPI thực tế | — | T5 29/10 | M |
-| 3.23 | Tổng duyệt demo **qua Cloudflare Tunnel** (máy chạy demo, mạng, kịch bản dự phòng khi Tunnel lỗi: demo trên `localhost`) | Cả nhóm truy cập được link demo trong buổi tổng duyệt | 3.18 | T7 31/10 | M |
-| 3.24 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0` | — | CN 01/11 | M |
+| 3.13 | Component upload ảnh: kéo thả nhiều file, kiểm tra loại/dung lượng phía client, thanh tiến trình (Axios `onUploadProgress`), chọn ảnh chính, nhập alt text, xóa, sắp xếp | **Bàn giao cho TV2:** component nhận `recipeId`, dùng được trong wizard và trang sửa | 3.11, 3.12, TV4 API client (18/09) | T5 08/10 | M |
+| 3.14 | `/dashboard/categories` (Admin): danh sách, tạo, sửa, xóa; hiển thị lỗi 409 dễ hiểu | Author vào trang → bị chặn; Admin thao tác đủ | 3.09, TV1 Auth.js (25/09) | T6 09/10 | M |
+| 3.15 | `/categories` và `/categories/[slug]`: lưới danh mục, danh sách recipe Published có phân trang; ISR | Trang hiển thị dữ liệu seed; phân trang hoạt động | 3.08, TV2 trang chi tiết (08/10) cho link | CN 11/10 | M |
+
+### G3 — Tích hợp & base nâng cao (T2 12/10 → CN 18/10)
+
+| Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
+|---|---|---|---|---|---|
+| 3.16 | FR-JOB-002 job resize: tạo `thumb.webp` 300×300 (crop giữa) và `medium.webp` rộng tối đa 800 (giữ tỉ lệ); decode lỗi → đánh dấu ảnh lỗi, không retry vô hạn; cập nhật key; chọn thư viện (SkiaSharp hoặc NetVips) | Upload ảnh → vài giây sau có 2 biến thể trên storage; trang danh sách dùng thumbnail | 3.11 | T5 15/10 | M |
+| 3.17 | Nginx một domain: `/` → web:3000, `/api/` → api:8080, `/media/` → bucket storage, `/hangfire` có Basic Auth, `/health` chỉ nội bộ; `PublicBaseUrl` = `/media` | Toàn bộ site chạy qua `http://localhost` không lỗi CORS | 3.03, TV4 Next.js | T6 16/10 | M |
+| 3.18 | Cloudflare Tunnel cho demo: service `cloudflared` trong Compose (profile `demo`), hướng dẫn bật/tắt, kiểm tra đăng nhập, upload ảnh, xem ảnh qua URL công khai | Người ngoài mạng mở được site demo; ghi hướng dẫn trong README | 3.06, 3.17 | CN 18/10 | M |
+| 3.19 | Recurring job dọn file mồ côi: prefix `recipes/{id}/{imageId}/` không còn bản ghi trong DB → xóa (bỏ qua recipe đang trong thùng rác) | Chạy thử với thư mục giả lập, không xóa nhầm ảnh của recipe trong thùng rác | 3.05, 3.07 | CN 18/10 | C |
+
+### G4 — Kiểm thử, tài liệu, tổng duyệt (T2 19/10 → CN 25/10)
+
+| Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
+|---|---|---|---|---|---|
+| 3.20 | Hoàn thiện integration test danh mục và ảnh (sai định dạng, quá dung lượng, đổi ảnh chính, xóa danh mục bị chặn) | CI xanh | — | T4 21/10 | M |
+| 3.21 | Script backup base: `pg_dump` + nén volume storage; hướng dẫn khôi phục | Chạy thử khôi phục thành công trên máy khác | 3.03 | T5 22/10 | M |
+| 3.22 | Gửi TV1 phần SRS v1.1: 3.2, 3.5, FR-JOB-002, 5.3 (storage, Hangfire, Tunnel), 6.5, 7.5, 7.6, 8.2, 8.4, mã lỗi `CATEGORY_*`/`FILE_*`/`IMAGE_*` | Nội dung khớp OpenAPI thực tế | — | T5 22/10 | M |
+| 3.23 | Tổng duyệt demo **qua Cloudflare Tunnel** (máy chạy demo, mạng, kịch bản dự phòng khi Tunnel lỗi: demo trên `localhost`) | Cả nhóm truy cập được link demo trong buổi tổng duyệt | 3.18 | T7 24/10 | M |
+| 3.24 | Sửa lỗi cuối, gắn tag cùng nhóm | Tag `v1.0` | — | CN 25/10 | M |
 
 ## 5. Bàn giao và nhận
 
 | Hướng | Nội dung | Với ai | Hạn |
 |---|---|---|---|
-| **Nhận** | Khung solution 4 tầng | TV2 | T4 23/09 |
-| **Giao** | `docker-compose.yml` dev | Cả nhóm | T5 24/09 |
-| **Nhận** | `AppDbContext` + `BaseEntity` | TV2 | T6 25/09 |
-| **Giao** | Entity Category + seed | TV2 | T7 26/09 |
-| **Giao** | `IFileStorage` (có `DeleteByPrefix`) | TV2 | CN 27/09 |
-| **Nhận** | Entity Recipe + migration | TV2 | CN 27/09 |
-| **Giao** | Hangfire + `IBackgroundJobService` | TV1, TV2 | T3 29/09 |
-| **Nhận** | JWT + policy Admin | TV1 | T3 29/09 |
-| **Nhận** | `ICacheInvalidator` | TV4 | T4 30/09 |
-| **Giao** | Component upload ảnh | TV2 | T5 15/10 |
-| **Giao** | Link demo qua Cloudflare Tunnel | Cả nhóm | CN 25/10 |
-| **Giao** | Phần SRS v1.1 | TV1 | T5 29/10 |
+| **Nhận** | Khung solution 4 tầng | TV2 | T4 16/09 |
+| **Giao** | `docker-compose.yml` dev | Cả nhóm | T5 17/09 |
+| **Nhận** | `AppDbContext` + `BaseEntity` | TV2 | T6 18/09 |
+| **Giao** | Entity Category + seed | TV2 | T7 19/09 |
+| **Giao** | `IFileStorage` (có `DeleteByPrefix`) | TV2 | CN 20/09 |
+| **Nhận** | Entity Recipe + migration | TV2 | CN 20/09 |
+| **Giao** | Hangfire + `IBackgroundJobService` | TV1, TV2 | T3 22/09 |
+| **Nhận** | JWT + policy Admin | TV1 | T3 22/09 |
+| **Nhận** | `ICacheInvalidator` | TV4 | T4 23/09 |
+| **Giao** | Component upload ảnh | TV2 | T5 08/10 |
+| **Giao** | Link demo qua Cloudflare Tunnel | Cả nhóm | CN 18/10 |
+| **Giao** | Phần SRS v1.1 | TV1 | T5 22/10 |
 
-## 6. Hướng phát triển sau 01/11
+## 6. Hướng phát triển sau 25/10
 
 | Thứ tự | Hạng mục | Ghi chú |
 |---|---|---|
@@ -136,11 +136,11 @@
 |---|---|---|
 | Image MinIO không còn kéo được | 3.01 thất bại | `LocalFileStorage` cho dev; Nginx phục vụ thư mục ảnh qua `/media` giống hệt |
 | Cloudflare Tunnel cần domain hoặc tài khoản mà nhóm chưa có | 3.06 kết luận named tunnel cần domain | Dùng quick tunnel (URL ngẫu nhiên) cho buổi demo; ghi rõ giới hạn trong README |
-| Thư viện ảnh khó chạy trong container Linux | 3.16 lỗi thiếu thư viện native | Đổi sang thư viện khác; nếu vẫn trễ → chuyển 3.16 sau 01/11, tạm hiển thị ảnh gốc |
-| Component upload trễ làm chậm wizard TV2 | T3 13/10 chưa upload được từ giao diện | Giao trước bản tối giản (chọn file + upload + hiển thị), kéo thả và sắp xếp bổ sung sau |
-| Khối lượng hạ tầng lấn phần module | CN 27/09 chưa xong 3.03–3.05 | Nhờ TV4 hỗ trợ README/`.env.example`; báo nhóm trong kênh chung ngày CN 27/09 |
+| Thư viện ảnh khó chạy trong container Linux | 3.16 lỗi thiếu thư viện native | Đổi sang thư viện khác; nếu vẫn trễ → chuyển 3.16 sau 25/10, tạm hiển thị ảnh gốc |
+| Component upload trễ làm chậm wizard TV2 | T3 06/10 chưa upload được từ giao diện | Giao trước bản tối giản (chọn file + upload + hiển thị), kéo thả và sắp xếp bổ sung sau |
+| Khối lượng hạ tầng lấn phần module | CN 20/09 chưa xong 3.03–3.05 | Nhờ TV4 hỗ trợ README/`.env.example`; báo nhóm trong kênh chung ngày CN 20/09 |
 
-**Checklist tự kiểm tra trước CN 01/11:**
+**Checklist tự kiểm tra trước CN 25/10:**
 - [ ] `docker compose up -d` chạy từ repo sạch, mọi image đã ghim phiên bản
 - [ ] Redis có mật khẩu; Seq khởi động được; email hiện trong Mailpit
 - [ ] Upload JPEG/PNG/WebP thành công; file giả mạo → 415; quá 5 MB → 413
