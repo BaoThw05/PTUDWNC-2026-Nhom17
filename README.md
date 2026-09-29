@@ -40,13 +40,19 @@ Bạn cần có:
 
 Các lệnh dưới đây chạy từ thư mục gốc repo, dùng được cả trên PowerShell lẫn bash.
 
-**Cơ sở dữ liệu và Redis**
+**Dịch vụ phát triển (chạy trong 5 phút)**
 
 ```bash
 cp .env.example .env          # PowerShell: Copy-Item .env.example .env
 docker compose up -d
-docker compose ps             # đợi cả hai service báo (healthy)
+docker compose ps             # đợi postgres, redis, minio báo healthy; minio-init Exited (0)
 ```
+
+Sau khi khởi động, mở ứng dụng tại http://localhost. Nginx chuyển tiếp giao diện
+Next.js, API và health check; không cần chạy `dotnet run` hay `npm run dev` trên máy.
+PostgreSQL, Redis, MinIO, Seq và Mailpit đã sẵn sàng. MinIO
+tự tạo bucket `culinary-blog`; mở MinIO Console tại http://localhost:9001,
+Seq tại http://localhost:5341 và Mailpit tại http://localhost:8025.
 
 **Backend**
 
@@ -85,7 +91,12 @@ Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trì
 | Frontend | 3000 | mặc định của `next dev` |
 | Backend API | 5000 | `CulinaryBlog.API/Properties/launchSettings.json` |
 | PostgreSQL | 5432 | `POSTGRES_PORT` trong `.env` |
-| Redis (có mật khẩu) | 6379 | `docker-compose.yml` |
+| Redis (có mật khẩu) | 6379 | `REDIS_PORT` trong `.env` |
+| MinIO API | 9000 | `MINIO_API_PORT` trong `.env` |
+| MinIO Console | 9001 | `MINIO_CONSOLE_PORT` trong `.env` |
+| Seq | 5341 | `SEQ_PORT` trong `.env` |
+| Mailpit SMTP | 1025 | `MAILPIT_SMTP_PORT` trong `.env` |
+| Mailpit UI | 8025 | `MAILPIT_UI_PORT` trong `.env` |
 
 Khi thêm dịch vụ mới vào compose (storage, Mailpit, Seq…), nhớ bổ sung cổng vào bảng này trong cùng PR.
 
