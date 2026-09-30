@@ -9,19 +9,10 @@ internal sealed class RecipeSearchConfiguration : IEntityTypeConfiguration<Recip
 {
     public void Configure(EntityTypeBuilder<Recipe> builder)
     {
-        builder.Property<NpgsqlTsVector>("SearchVector")
-            .HasColumnType("tsvector")
-            .IsRequired()
-            .ValueGeneratedOnAddOrUpdate();
-
         builder.Property<string>("SearchText")
             .HasColumnType("text")
             .IsRequired()
-            .ValueGeneratedOnAddOrUpdate();
-
-        builder.HasIndex("SearchVector")
-            .HasDatabaseName("IX_Recipes_SearchVector")
-            .HasMethod("gin");
+            .HasComputedColumnSql("lower(public.f_unaccent(\"Title\" || ' ' || \"Description\"))", stored: true);
 
         builder.HasIndex("SearchText")
             .HasDatabaseName("IX_Recipes_SearchText_Trgm")
