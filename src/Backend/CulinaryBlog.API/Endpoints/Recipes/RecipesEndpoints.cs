@@ -57,12 +57,26 @@ internal sealed class RecipesEndpoints : IEndpointModule
         })
         .WithName("PublishRecipe");
 
+        recipes.MapPatch("/{id:guid}/publish", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new PublishRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("PublishRecipePatch");
+
         recipes.MapPost("/{id:guid}/unpublish", async (Guid id, IMediator mediator) =>
         {
             await mediator.Send(new UnpublishRecipeCommand(id));
             return Results.NoContent();
         })
         .WithName("UnpublishRecipe");
+
+        recipes.MapPatch("/{id:guid}/unpublish", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new UnpublishRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("UnpublishRecipePatch");
 
         recipes.MapPost("/{id:guid}/archive", async (Guid id, IMediator mediator) =>
         {
@@ -71,12 +85,26 @@ internal sealed class RecipesEndpoints : IEndpointModule
         })
         .WithName("ArchiveRecipe");
 
+        recipes.MapPatch("/{id:guid}/archive", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new ArchiveRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("ArchiveRecipePatch");
+
         recipes.MapPost("/{id:guid}/unarchive", async (Guid id, IMediator mediator) =>
         {
             await mediator.Send(new UnarchiveRecipeCommand(id));
             return Results.NoContent();
         })
         .WithName("UnarchiveRecipe");
+
+        recipes.MapPatch("/{id:guid}/unarchive", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new UnarchiveRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("UnarchiveRecipePatch");
 
         recipes.MapPost("/{id:guid}/restore", async (Guid id, IMediator mediator) =>
         {
