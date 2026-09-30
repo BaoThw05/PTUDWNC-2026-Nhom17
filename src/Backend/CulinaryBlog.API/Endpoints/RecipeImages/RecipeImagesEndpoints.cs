@@ -24,6 +24,7 @@ internal sealed class RecipeImagesEndpoints : IEndpointModule
             var result = await mediator.Send(new UploadRecipeImageCommand(recipeId, content, altText), cancellationToken);
             return Results.Created($"/api/v1/recipes/{recipeId}/images/{result.ImageId}", result);
         })
+        .DisableAntiforgery()
         .WithName("UploadRecipeImage");
     }
 }
