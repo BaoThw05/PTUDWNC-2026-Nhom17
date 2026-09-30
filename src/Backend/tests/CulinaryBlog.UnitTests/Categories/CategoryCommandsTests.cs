@@ -108,6 +108,7 @@ public sealed class CategoryCommandsTests
         public IQueryable<Recipe> RecipesIncludingDeleted => RecipeItems.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class
         {

@@ -86,6 +86,7 @@ public sealed class CategoryQueriesTests
         public IQueryable<Recipe> Recipes { get; } = recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps { get; } = Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients { get; } = Enumerable.Empty<RecipeIngredient>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages { get; } = Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => Recipes;
 
         public void Add<TEntity>(TEntity entity) where TEntity : class => throw new NotSupportedException();
