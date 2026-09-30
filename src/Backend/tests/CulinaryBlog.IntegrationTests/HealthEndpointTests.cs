@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class HealthEndpointTests(WebApplicationFactory<Program> factory)
-    : IClassFixture<WebApplicationFactory<Program>>
+public sealed class HealthEndpointTests(IntegrationTestWebApplicationFactory factory)
+    : IClassFixture<IntegrationTestWebApplicationFactory>
 {
     [Fact]
     public async Task GetHealth_WhenApiRunning_Returns200()

@@ -15,7 +15,7 @@ builder.Host.UseSerilog((context, logger) => logger
     .WriteTo.Console());
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddApiProblemDetails();
 builder.Services.AddApiOpenApi();
