@@ -23,8 +23,6 @@ builder.Services.AddApiOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddEndpointModules();
 builder.Services.AddAuthApi(builder.Configuration);
-builder.Services.AddOutputCache(options => options.AddPolicy("RecipeList", policy =>
-    policy.Expire(TimeSpan.FromMinutes(15)).SetVaryByQuery("*")));
 
 var app = builder.Build();
 
@@ -45,7 +43,6 @@ else
 }
 
 app.UseAuthApi();
-app.UseOutputCache();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live");
