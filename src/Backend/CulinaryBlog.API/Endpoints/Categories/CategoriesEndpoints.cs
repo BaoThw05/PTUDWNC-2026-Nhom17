@@ -37,5 +37,37 @@ internal sealed class CategoriesEndpoints : IEndpointModule
             return Results.Ok(result);
         })
         .WithName("GetCategoryBySlug");
+
+        // TODO(TV1): thêm RequireAuthorization(policy => policy.RequireRole("Admin")) khi JWT/policy đã được merge.
+        categories.MapPost("/", async (
+            CreateCategoryCommand command,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await mediator.Send(command, cancellationToken);
+            return Results.Created($"/api/v1/categories/{result.Id}", result);
+        })
+        .WithName("CreateCategory");
+
+        categories.MapPut("/{id:guid}", async (
+            Guid id,
+            UpdateCategoryCommand command,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await mediator.Send(command with { Id = id }, cancellationToken);
+            return Results.Ok(result);
+        })
+        .WithName("UpdateCategory");
+
+        categories.MapDelete("/{id:guid}", async (
+            Guid id,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            await mediator.Send(new DeleteCategoryCommand(id), cancellationToken);
+            return Results.NoContent();
+        })
+        .WithName("DeleteCategory");
     }
 }

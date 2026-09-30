@@ -89,4 +89,6 @@ public sealed record CategoryRecipeSummaryDto(
 public static class CategoryErrorCodes
 {
     public const string CategoryNotFound = "CATEGORY_NOT_FOUND";
+    public const string CategoryNameExists = "CATEGORY_NAME_EXISTS";
+    public const string CategoryDeleteHasRecipes = "CATEGORY_DELETE_HAS_RECIPES";
 }
