@@ -1,5 +1,6 @@
 ﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.Auth;
+using CulinaryBlog.Infrastructure.Email;
 using CulinaryBlog.Infrastructure.Observability;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
@@ -32,6 +33,9 @@ public static class DependencyInjection
 
         services.AddAuthInfrastructure(configuration);
         services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
+
+        services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
