@@ -1,6 +1,5 @@
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Models;
-using CulinaryBlog.Domain.Auth;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
 using FluentValidation;
@@ -13,14 +12,14 @@ public sealed record GetRecipesQuery(
     string? Difficulty = null,
     int? MaxCookTime = null,
     int? MinServings = null,
-    string Sort = "-createdAt",
+    string Sort = "-publishedAt",
     int Page = 1,
     int PageSize = PagedResult<RecipeSummaryDto>.DefaultPageSize)
     : IRequest<PagedResult<RecipeSummaryDto>>;
 
 public sealed class GetRecipesQueryValidator : AbstractValidator<GetRecipesQuery>
 {
-    private static readonly string[] SortFields = ["createdAt", "title", "cookTime"];
+    private static readonly string[] SortFields = ["createdAt", "publishedAt", "title", "cookTimeMinutes"];
 
     public GetRecipesQueryValidator()
     {
@@ -34,7 +33,7 @@ public sealed class GetRecipesQueryValidator : AbstractValidator<GetRecipesQuery
             .WithMessage("Difficulty must be Easy, Medium, or Hard.");
         RuleFor(query => query.Sort)
             .Must(IsAllowedSort)
-            .WithMessage("Sort must be createdAt, title, cookTime, or one of those fields prefixed with '-'.");
+            .WithMessage("Sort must be createdAt, publishedAt, title, cookTimeMinutes, or one of those fields prefixed with '-'.");
     }
 
     private static bool IsAllowedSort(string sort)
@@ -49,30 +48,14 @@ public sealed class GetRecipesQueryValidator : AbstractValidator<GetRecipesQuery
     }
 }
 
-public sealed class GetRecipesQueryHandler(IAppDbContext db, ICurrentUser currentUser)
+public sealed class GetRecipesQueryHandler(IAppDbContext db)
     : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
     public Task<PagedResult<RecipeSummaryDto>> Handle(
         GetRecipesQuery request,
         CancellationToken cancellationToken)
     {
-        IQueryable<Recipe> query = db.Recipes;
-        var callerId = currentUser.UserId?.ToString();
-
-        if (!currentUser.IsInRole(Roles.Admin))
-        {
-            if (string.IsNullOrWhiteSpace(callerId))
-            {
-                query = query.Where(recipe => recipe.Status == RecipeStatus.Published);
-            }
-            else
-            {
-                query = query.Where(recipe =>
-                    recipe.Status == RecipeStatus.Published ||
-                    (recipe.AuthorId == callerId &&
-                     (recipe.Status == RecipeStatus.Draft || recipe.Status == RecipeStatus.Archived)));
-            }
-        }
+        IQueryable<Recipe> query = db.Recipes.Where(recipe => recipe.Status == RecipeStatus.Published);
 
         if (request.CategoryId.HasValue)
         {
@@ -103,11 +86,13 @@ public sealed class GetRecipesQueryHandler(IAppDbContext db, ICurrentUser curren
         {
             ("createdat", true) => query.OrderByDescending(recipe => recipe.CreatedAt),
             ("createdat", false) => query.OrderBy(recipe => recipe.CreatedAt),
+            ("publishedat", true) => query.OrderByDescending(recipe => recipe.PublishedAt),
+            ("publishedat", false) => query.OrderBy(recipe => recipe.PublishedAt),
             ("title", true) => query.OrderByDescending(recipe => recipe.Title),
             ("title", false) => query.OrderBy(recipe => recipe.Title),
-            ("cooktime", true) => query.OrderByDescending(recipe => recipe.CookTimeMinutes),
-            ("cooktime", false) => query.OrderBy(recipe => recipe.CookTimeMinutes),
-            _ => query.OrderByDescending(recipe => recipe.CreatedAt)
+            ("cooktimeminutes", true) => query.OrderByDescending(recipe => recipe.CookTimeMinutes),
+            ("cooktimeminutes", false) => query.OrderBy(recipe => recipe.CookTimeMinutes),
+            _ => query.OrderByDescending(recipe => recipe.PublishedAt)
         };
 
         var items = orderedQuery
