@@ -14,7 +14,6 @@ internal sealed class RecipeSearchMatch
     public Difficulty Difficulty { get; set; }
     public RecipeStatus Status { get; set; }
     public DateTimeOffset? PublishedAt { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
     public Guid? CategoryId { get; set; }
     public double RelevanceScore { get; set; }
 }

@@ -27,6 +27,14 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
 
         var appliedMigrations = await db.Database.GetAppliedMigrationsAsync();
         Assert.Contains("20260929163617_RecipeVietnameseSearch", appliedMigrations);
+        Assert.Contains("20260930104159_RecipeSearch_GeneratedSearchText", appliedMigrations);
+
+        var generatedColumn = await db.Database.SqlQueryRaw<string>("""
+            SELECT is_generated AS "Value"
+            FROM information_schema.columns
+            WHERE table_name = 'Recipes' AND column_name = 'SearchText'
+            """).SingleAsync();
+        Assert.Equal("ALWAYS", generatedColumn);
     }
 
     [Fact]
@@ -60,16 +68,16 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         await db.Database.ExecuteSqlRawAsync("SET LOCAL enable_seqscan = off");
         var connection = db.Database.GetDbConnection();
 
-        var fullTextPlan = await ReadExplainPlanAsync(
+        var ilikePlan = await ReadExplainPlanAsync(
             connection,
             transaction.GetDbTransaction(),
-            "EXPLAIN SELECT \"Id\" FROM \"Recipes\" WHERE \"SearchVector\" @@ to_tsquery('public.vietnamese', 'pho:* & bo:*')");
+            "EXPLAIN SELECT \"Id\" FROM \"Recipes\" WHERE \"SearchText\" ILIKE '%pho bo%'");
         var trigramPlan = await ReadExplainPlanAsync(
             connection,
             transaction.GetDbTransaction(),
             "EXPLAIN SELECT \"Id\" FROM \"Recipes\" WHERE \"SearchText\" % 'pho bo'");
 
-        Assert.Contains("IX_Recipes_SearchVector", fullTextPlan);
+        Assert.Contains("IX_Recipes_SearchText_Trgm", ilikePlan);
         Assert.Contains("IX_Recipes_SearchText_Trgm", trigramPlan);
     }
 
@@ -91,7 +99,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
     }
 
     [Fact]
-    public async Task ListRecipes_AuthorSeesOwnDraft_AndGuestDoesNot()
+    public async Task ListRecipes_DraftIsHiddenFromAuthorAndGuest()
     {
         using var authorClient = await CreateAuthorClientAsync();
         var createResponse = await authorClient.PostAsJsonAsync("/api/v1/recipes", new
@@ -112,7 +120,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, authorList.StatusCode);
         var authorResult = await authorList.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
         Assert.NotNull(authorResult);
-        Assert.Contains(authorResult.Items, recipe => recipe.Id == draftId && recipe.Status == RecipeStatus.Draft);
+        Assert.DoesNotContain(authorResult.Items, recipe => recipe.Id == draftId);
 
         using var guestClient = factory.CreateClient();
         var guestList = await guestClient.GetAsync("/api/v1/recipes?page=1&pageSize=50");
@@ -123,14 +131,14 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
     }
 
     [Fact]
-    public async Task ListRecipes_OwnerSeesArchivedAndAdminSeesAllStatuses()
+    public async Task ListRecipes_ArchivedIsHiddenFromOwnerAndAdmin()
     {
         using var ownerClient = await CreateSignedInClientAsync("author5@culinaryblog.test", AuthApi.StrongPassword);
         var ownerResponse = await ownerClient.GetAsync("/api/v1/recipes?page=1&pageSize=50");
         Assert.Equal(HttpStatusCode.OK, ownerResponse.StatusCode);
         var ownerResult = await ownerResponse.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
         Assert.NotNull(ownerResult);
-        Assert.Contains(ownerResult.Items, recipe => recipe.Status == RecipeStatus.Archived);
+        Assert.All(ownerResult.Items, recipe => Assert.Equal(RecipeStatus.Published, recipe.Status));
 
         using var adminClient = await CreateSignedInClientAsync(
             PostgresApiFactory.AdminEmail,
@@ -139,9 +147,42 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, adminResponse.StatusCode);
         var adminResult = await adminResponse.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
         Assert.NotNull(adminResult);
-        Assert.True(adminResult.TotalCount >= 50);
-        Assert.Contains(adminResult.Items, recipe => recipe.Status == RecipeStatus.Draft);
-        Assert.Contains(adminResult.Items, recipe => recipe.Status == RecipeStatus.Archived);
+        Assert.True(adminResult.TotalCount >= 35);
+        Assert.All(adminResult.Items, recipe => Assert.Equal(RecipeStatus.Published, recipe.Status));
+    }
+
+    [Fact]
+    public async Task ListRecipes_SoftDeletedRecipeIsHidden()
+    {
+        Guid deletedRecipeId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var recipe = await db.Recipes
+                .Where(recipe => recipe.Status == RecipeStatus.Published && !recipe.Title.StartsWith("Phở bò"))
+                .FirstAsync();
+            deletedRecipeId = recipe.Id;
+            recipe.IsDeleted = true;
+            await db.SaveChangesAsync();
+        }
+
+        try
+        {
+            using var client = factory.CreateClient();
+            var response = await client.GetAsync("/api/v1/recipes?page=1&pageSize=50");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
+            Assert.NotNull(result);
+            Assert.DoesNotContain(result.Items, recipe => recipe.Id == deletedRecipeId);
+        }
+        finally
+        {
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var recipe = await db.Recipes.IgnoreQueryFilters().SingleAsync(recipe => recipe.Id == deletedRecipeId);
+            recipe.IsDeleted = false;
+            await db.SaveChangesAsync();
+        }
     }
 
     [Fact]
@@ -149,7 +190,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
     {
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/api/v1/recipes?pageSize=51");
+        var response = await client.GetAsync("/api/v1/recipes?pageSize=100");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal("VALIDATION_ERROR", await AuthApi.ReadErrorCodeAsync(response));
@@ -163,6 +204,29 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync($"/api/v1/recipes?difficulty={difficulty}");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await AuthApi.ReadErrorCodeAsync(response));
+    }
+
+    [Theory]
+    [InlineData("publishedAt")]
+    [InlineData("cookTimeMinutes")]
+    public async Task ListRecipes_AllowedSortReturns200(string sort)
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync($"/api/v1/recipes?sort={sort}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListRecipes_InvalidSortReturns422()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/recipes?sort=invalid");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.Equal("VALIDATION_ERROR", await AuthApi.ReadErrorCodeAsync(response));
@@ -209,7 +273,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         var response = await client.GetAsync("/api/v1/recipes/search?q=a");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal("VALIDATION_ERROR", await AuthApi.ReadErrorCodeAsync(response));
+        Assert.Equal("SEARCH_QUERY_TOO_SHORT", await AuthApi.ReadErrorCodeAsync(response));
     }
 
     [Fact]
@@ -220,31 +284,29 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         var response = await client.GetAsync("/api/v1/recipes/search");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal("VALIDATION_ERROR", await AuthApi.ReadErrorCodeAsync(response));
+        Assert.Equal("SEARCH_QUERY_TOO_SHORT", await AuthApi.ReadErrorCodeAsync(response));
     }
 
     [Fact]
-    public async Task SearchRecipes_PunctuationOnlyTermReturnsEmptyPageWithoutSqlError()
+    public async Task SearchRecipes_PunctuationOnlyTermReturns422()
     {
         using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/api/v1/recipes/search?q=%25%25");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
-        Assert.NotNull(result);
-        Assert.Empty(result.Items);
-        Assert.Equal(0, result.TotalCount);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("SEARCH_QUERY_TOO_SHORT", await AuthApi.ReadErrorCodeAsync(response));
     }
 
     [Theory]
-    [InlineData("%25%25")]
-    [InlineData("%27%25")]
-    public async Task SearchRecipes_SpecialCharactersAreTreatedAsInput(string encodedSearchTerm)
+    [InlineData("phở% bò")]
+    [InlineData("phở_ bò")]
+    [InlineData("phở' bò")]
+    public async Task SearchRecipes_SpecialCharactersAreTreatedAsInput(string searchTerm)
     {
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync($"/api/v1/recipes/search?q={encodedSearchTerm}");
+        var response = await client.GetAsync($"/api/v1/recipes/search?q={Uri.EscapeDataString(searchTerm)}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();

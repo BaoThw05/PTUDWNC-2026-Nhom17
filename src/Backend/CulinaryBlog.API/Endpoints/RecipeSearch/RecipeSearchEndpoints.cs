@@ -30,15 +30,14 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
                 difficulty,
                 maxCookTime,
                 minServings,
-                sort ?? "-createdAt",
+                sort ?? "-publishedAt",
                 page ?? 1,
                 pageSize ?? 12);
 
             return Results.Ok(await sender.Send(query, cancellationToken));
         })
         .WithName("ListRecipes")
-        .WithSummary("List recipes visible to the current caller")
-        .CacheOutput("RecipeList")
+        .WithSummary("List published recipes for public browsing")
         .ProducesValidationProblem();
 
         recipeSearch.MapGet("/search", async (
@@ -47,7 +46,6 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
             string? difficulty,
             int? maxCookTime,
             int? minServings,
-            string? sort,
             int? page,
             int? pageSize,
             ISender sender,
@@ -59,14 +57,13 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
                 difficulty,
                 maxCookTime,
                 minServings,
-                sort,
                 page ?? 1,
                 pageSize ?? 10);
 
             return Results.Ok(await sender.Send(query, cancellationToken));
         })
         .WithName("SearchRecipes")
-        .WithSummary("Search published recipes using Vietnamese full-text and trigram matching")
+        .WithSummary("Search published recipes using Vietnamese accent normalization and trigram matching")
         .ProducesValidationProblem();
     }
 }
