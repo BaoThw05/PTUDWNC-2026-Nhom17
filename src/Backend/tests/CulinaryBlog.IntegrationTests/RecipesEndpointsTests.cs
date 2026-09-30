@@ -213,7 +213,16 @@ public sealed class RecipesEndpointsTests(PostgresApiFactory factory)
             CookTimeMinutes = 40,
             Servings = 5,
             Difficulty = Difficulty.Hard,
-            Version = recipe.Version
+            Version = recipe.Version,
+            Nutrition = new
+            {
+                Calories = 620,
+                ProteinGrams = 28.5m,
+                FatGrams = 22.0m,
+                CarbsGrams = 75.5m,
+                FiberGrams = 3.2m,
+                SugarGrams = 12.0m
+            }
         };
 
         var putSuccessResponse = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", updateValid);
@@ -227,5 +236,73 @@ public sealed class RecipesEndpointsTests(PostgresApiFactory factory)
         // Slug được sinh từ title mới; có thể có hậu tố -N nếu slug cùng đã tồn tại trong DB
         Assert.StartsWith("bun-cha-ha-noi-gia-truyen", updatedRecipe.Slug);
         Assert.Equal(5, updatedRecipe.Servings);
+
+        var currentSlug = updatedRecipe.Slug;
+
+        // 9. [2.12] Khách vãng lai gọi GET /recipes/{slug} khi bài đang là Draft -> 404 RECIPE_NOT_FOUND
+        using var guestClient = factory.CreateClient();
+        var getSlugWhileDraftResponse = await guestClient.GetAsync($"/api/v1/recipes/{currentSlug}");
+        Assert.Equal(HttpStatusCode.NotFound, getSlugWhileDraftResponse.StatusCode);
+        var notFoundSlugBody = await getSlugWhileDraftResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(notFoundSlugBody);
+        Assert.Equal(RecipeErrorCodes.RecipeNotFound, notFoundSlugBody.RootElement.GetProperty("code").GetString());
+
+        // 10. [2.11] Người lạ cố tình gọi POST /recipes/{id}/publish -> 403 RECIPE_FORBIDDEN
+        using var anotherStrangerClient = await CreateAuthorClientAsync();
+        var strangerPublishResponse = await anotherStrangerClient.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.Forbidden, strangerPublishResponse.StatusCode);
+
+        // 11. [2.11] Tác giả publish bài viết thành công -> 204 NoContent
+        var publishResponse = await client.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.NoContent, publishResponse.StatusCode);
+
+        // Kiểm tra bài đã Published và có PublishedAt
+        var publishedDetailResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var publishedDetail = await publishedDetailResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(publishedDetail);
+        Assert.Equal(RecipeStatus.Published, publishedDetail.Status);
+        Assert.NotNull(publishedDetail.PublishedAt);
+
+        // 12. [2.11] Tác giả publish lần 2 (idempotent S-11) -> 204 NoContent
+        var secondPublishResponse = await client.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.NoContent, secondPublishResponse.StatusCode);
+
+        // 13. [2.12] Khách vãng lai gọi GET /recipes/{slug} khi bài đã Published -> 200 OK + đầy đủ DTO
+        var getSlugPublishedResponse = await guestClient.GetAsync($"/api/v1/recipes/{currentSlug}");
+        Assert.Equal(HttpStatusCode.OK, getSlugPublishedResponse.StatusCode);
+        var publicRecipe = await getSlugPublishedResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(publicRecipe);
+        Assert.Equal("Bún chả Hà Nội gia truyền", publicRecipe.Title);
+        Assert.Equal(currentSlug, publicRecipe.Slug);
+        Assert.Equal(RecipeStatus.Published, publicRecipe.Status);
+        Assert.NotNull(publicRecipe.Nutrition);
+        Assert.Equal(620, publicRecipe.Nutrition.Calories);
+        Assert.Single(publicRecipe.Steps);
+        Assert.Equal(2, publicRecipe.Ingredients.Count);
+
+        // 14. [2.11] Tác giả Unpublish bài viết -> 204 NoContent
+        var unpublishResponse = await client.PostAsync($"/api/v1/recipes/{recipeId}/unpublish", null);
+        Assert.Equal(HttpStatusCode.NoContent, unpublishResponse.StatusCode);
+
+        // 15. [2.12] Khách vãng lai gọi GET /recipes/{slug} sau khi bài bị Unpublish -> 404 NOT_FOUND
+        var getSlugAfterUnpublishResponse = await guestClient.GetAsync($"/api/v1/recipes/{currentSlug}");
+        Assert.Equal(HttpStatusCode.NotFound, getSlugAfterUnpublishResponse.StatusCode);
+
+        // 16. [2.11] Tác giả Archive bài viết -> 204 NoContent, sau đó Unarchive về Draft -> 204 NoContent
+        var archiveResponse = await client.PatchAsync($"/api/v1/recipes/{recipeId}/archive", null);
+        Assert.Equal(HttpStatusCode.NoContent, archiveResponse.StatusCode);
+
+        var archivedDetailResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var archivedDetail = await archivedDetailResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(archivedDetail);
+        Assert.Equal(RecipeStatus.Archived, archivedDetail.Status);
+
+        var unarchiveResponse = await client.PatchAsync($"/api/v1/recipes/{recipeId}/unarchive", null);
+        Assert.Equal(HttpStatusCode.NoContent, unarchiveResponse.StatusCode);
+
+        var unarchivedDetailResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var unarchivedDetail = await unarchivedDetailResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(unarchivedDetail);
+        Assert.Equal(RecipeStatus.Draft, unarchivedDetail.Status);
     }
 }
