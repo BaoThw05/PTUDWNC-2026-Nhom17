@@ -304,5 +304,90 @@ public sealed class RecipesEndpointsTests(PostgresApiFactory factory)
         var unarchivedDetail = await unarchivedDetailResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
         Assert.NotNull(unarchivedDetail);
         Assert.Equal(RecipeStatus.Draft, unarchivedDetail.Status);
+
+        // 17. [2.13] Thêm bước thứ 2 và sửa bước
+        var addStepPayload = new
+        {
+            Title = "Nướng thịt",
+            Description = "Nướng than hoa đến khi vàng xém hai mặt",
+            DurationMinutes = 25
+        };
+        var addStepResponse = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", addStepPayload);
+        Assert.Equal(HttpStatusCode.Created, addStepResponse.StatusCode);
+        var step2Doc = await addStepResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(step2Doc);
+        var step2Id = step2Doc.RootElement.GetProperty("id").GetGuid();
+
+        var updateStepPayload = new
+        {
+            Title = "Nướng thịt than hoa",
+            Description = "Nướng than hoa vàng giòn thơm nức mũi",
+            DurationMinutes = 30
+        };
+        var updateStepResponse = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}/steps/{step2Id}", updateStepPayload);
+        Assert.Equal(HttpStatusCode.NoContent, updateStepResponse.StatusCode);
+
+        // 18. [2.13] Xóa bước và bảo vệ bước cuối khi Published
+        var deleteStep2Response = await client.DeleteAsync($"/api/v1/recipes/{recipeId}/steps/{step2Id}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteStep2Response.StatusCode);
+
+        // Publish lại bài viết
+        await client.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+
+        // Lấy bước duy nhất còn lại
+        var recipeWithOneStepResp = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var recipeWithOneStep = await recipeWithOneStepResp.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(recipeWithOneStep);
+        Assert.Single(recipeWithOneStep.Steps);
+        var lastStepId = recipeWithOneStep.Steps[0].Id;
+
+        // Xóa bước cuối cùng khi bài đang Published -> 422 RECIPE_PUBLISH_INCOMPLETE
+        var deleteLastStepResponse = await client.DeleteAsync($"/api/v1/recipes/{recipeId}/steps/{lastStepId}");
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, deleteLastStepResponse.StatusCode);
+
+        // 19. [2.14] Thêm, sửa, xóa nguyên liệu độc lập
+        var addIngPayload = new
+        {
+            Name = "Rau sống",
+            Quantity = (decimal?)200,
+            Unit = "g"
+        };
+        var addIngResponse = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/ingredients", addIngPayload);
+        Assert.Equal(HttpStatusCode.Created, addIngResponse.StatusCode);
+        var ingDoc = await addIngResponse.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(ingDoc);
+        var newIngId = ingDoc.RootElement.GetProperty("id").GetGuid();
+
+        var updateIngPayload = new
+        {
+            Name = "Rau sống kinh giới, tía tô",
+            Quantity = (decimal?)300,
+            Unit = "g"
+        };
+        var updateIngResponse = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}/ingredients/{newIngId}", updateIngPayload);
+        Assert.Equal(HttpStatusCode.NoContent, updateIngResponse.StatusCode);
+
+        var deleteIngResponse = await client.DeleteAsync($"/api/v1/recipes/{recipeId}/ingredients/{newIngId}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteIngResponse.StatusCode);
+
+        // 20. [2.15] Xóa bài vào thùng rác (Soft-delete)
+        var deleteRecipeResponse = await client.DeleteAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.NoContent, deleteRecipeResponse.StatusCode);
+
+        // Khách gọi GET theo slug hay id đều nhận 404
+        var getDeletedBySlugResp = await guestClient.GetAsync($"/api/v1/recipes/{currentSlug}");
+        Assert.Equal(HttpStatusCode.NotFound, getDeletedBySlugResp.StatusCode);
+
+        var getDeletedByIdGuestResp = await guestClient.GetAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.NotFound, getDeletedByIdGuestResp.StatusCode);
+
+        // 21. [2.15] Tác giả khôi phục bài viết từ thùng rác
+        var restoreResponse = await client.PostAsync($"/api/v1/recipes/{recipeId}/restore", null);
+        Assert.Equal(HttpStatusCode.NoContent, restoreResponse.StatusCode);
+
+        var restoredDetailResponse = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var restoredDetail = await restoredDetailResponse.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(restoredDetail);
+        Assert.Equal(RecipeStatus.Published, restoredDetail.Status);
     }
 }
