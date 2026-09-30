@@ -11,13 +11,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CulinaryBlog.IntegrationTests;
 
-public sealed class ProblemDetailsTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ProblemDetailsTests : IClassFixture<IntegrationTestWebApplicationFactory>
 {
     private const string ProblemJson = "application/problem+json";
 
     private readonly WebApplicationFactory<Program> _factory;
 
-    public ProblemDetailsTests(WebApplicationFactory<Program> factory)
+    public ProblemDetailsTests(IntegrationTestWebApplicationFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
             services.AddSingleton<IEndpointModule, ThrowingEndpoints>()));
