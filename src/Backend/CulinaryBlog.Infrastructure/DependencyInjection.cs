@@ -1,8 +1,10 @@
 ﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Application.Features.RecipeSearch;
 using CulinaryBlog.Infrastructure.Auth;
 using CulinaryBlog.Infrastructure.Observability;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
+using CulinaryBlog.Infrastructure.RecipeSearch;
 using CulinaryBlog.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,6 +34,8 @@ public static class DependencyInjection
 
         services.AddAuthInfrastructure(configuration);
         services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
+        services.AddScoped<IRecipeSearchRepository, RecipeSearchRepository>();
+        services.AddScoped<IDataSeeder, RecipeDataSeeder>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
