@@ -3,6 +3,7 @@ using Amazon.S3;
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure.BackgroundJobs;
 using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.RecipeImages;
 using CulinaryBlog.Infrastructure.Storage;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -33,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         AddFileStorage(services, configuration);
         services.AddSingleton<IBackgroundJobService, HangfireBackgroundJobService>();
+        services.AddTransient<IRecipeImageResizeJob, RecipeImageResizeJob>();
 
         services.AddHangfire(configuration => configuration
             .UseSimpleAssemblyNameTypeSerializer()

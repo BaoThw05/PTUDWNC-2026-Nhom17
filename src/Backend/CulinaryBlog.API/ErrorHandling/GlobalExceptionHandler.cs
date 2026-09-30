@@ -55,6 +55,8 @@ internal sealed class GlobalExceptionHandler(
     private static (int Status, string Code) Map(Exception exception) => exception switch
     {
         ValidationException e => (StatusCodes.Status422UnprocessableEntity, e.Code),
+        FileSizeExceededException e => (StatusCodes.Status413PayloadTooLarge, e.Code),
+        FileTypeNotAllowedException e => (StatusCodes.Status415UnsupportedMediaType, e.Code),
         NotFoundException e => (StatusCodes.Status404NotFound, e.Code),
         ConflictException e => (StatusCodes.Status409Conflict, e.Code),
         ForbiddenException e => (StatusCodes.Status403Forbidden, e.Code),
