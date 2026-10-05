@@ -50,6 +50,7 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 | `AUTH_GOOGLE_TOKEN_INVALID` | 401 | `idToken` Google sai chữ ký, sai audience hoặc hết hạn | Auth |
 | `AUTH_GOOGLE_EMAIL_UNVERIFIED` | 401 | Email của tài khoản Google chưa được Google xác minh | Auth |
 | `AUTH_GOOGLE_UNAVAILABLE` | 502 | Không xác minh được với Google, hoặc backend chưa cấu hình Google Client ID | Auth |
+| `AUTH_ADMIN_SELF_LOCKOUT` | 403 | Admin tự khóa tài khoản của mình hoặc tự bỏ vai trò Admin (`PATCH /admin/users/{id}`) | Auth |
 
 ## Recipes — TV2
 
