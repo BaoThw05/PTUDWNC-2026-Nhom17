@@ -1,3 +1,5 @@
+using CulinaryBlog.Application.Common.Models;
+
 namespace CulinaryBlog.Application.Features.Auth.Abstractions;
 
 /// <summary>
@@ -27,5 +29,15 @@ public interface IUserAccountService
         Guid userId,
         ExternalLogin login,
         string? avatarUrl,
+        CancellationToken cancellationToken);
+
+    /// <summary>Danh sách người dùng cho Admin, mới nhất trước; <paramref name="search"/> lọc theo email, tên đăng nhập, họ tên.</summary>
+    Task<PagedResult<UserAccount>> ListAsync(string? search, int page, int pageSize, CancellationToken cancellationToken);
+
+    /// <summary>Admin bật/tắt tài khoản và đặt lại vai trò; tham số null thì giữ nguyên.</summary>
+    Task<UserAccount> UpdateAccessAsync(
+        Guid userId,
+        bool? isActive,
+        IReadOnlyList<string>? roles,
         CancellationToken cancellationToken);
 }

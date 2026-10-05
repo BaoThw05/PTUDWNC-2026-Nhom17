@@ -1,10 +1,12 @@
 using CulinaryBlog.Application.Common.Errors;
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.Application.Common.Models;
 using CulinaryBlog.Application.Features.Auth;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Domain.Auth;
 using CulinaryBlog.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using ValidationException = CulinaryBlog.Application.Common.Exceptions.ValidationException;
 
 namespace CulinaryBlog.Infrastructure.Auth;
@@ -125,15 +127,92 @@ internal sealed class IdentityUserAccountService(
         return await ToAccountAsync(user);
     }
 
+    public async Task<PagedResult<UserAccount>> ListAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Users.AsNoTracking();
+        if (search is not null)
+        {
+            var term = search.ToLower();
+            query = query.Where(user =>
+                user.Email!.ToLower().Contains(term)
+                || user.UserName!.ToLower().Contains(term)
+                || user.FullName.ToLower().Contains(term));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var users = await query
+            .OrderByDescending(user => user.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var userIds = users.Select(user => user.Id).ToArray();
+        var roles = (await (
+                from userRole in dbContext.UserRoles
+                join role in dbContext.Roles on userRole.RoleId equals role.Id
+                where userIds.Contains(userRole.UserId)
+                select new { userRole.UserId, role.Name })
+            .ToListAsync(cancellationToken))
+            .ToLookup(row => row.UserId, row => row.Name!);
+
+        return new PagedResult<UserAccount>(
+            [.. users.Select(user => ToAccount(user, [.. roles[user.Id].Order()]))],
+            page,
+            pageSize,
+            totalCount);
+    }
+
+    public async Task<UserAccount> UpdateAccessAsync(
+        Guid userId,
+        bool? isActive,
+        IReadOnlyList<string>? roles,
+        CancellationToken cancellationToken)
+    {
+        var user = await GetRequiredAsync(userId);
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        if (isActive is { } active && user.IsActive != active)
+        {
+            user.IsActive = active;
+            EnsureSucceeded(await userManager.UpdateAsync(user));
+        }
+
+        if (roles is not null)
+        {
+            var current = await userManager.GetRolesAsync(user);
+            var removed = current.Except(roles).ToArray();
+            var added = roles.Except(current).ToArray();
+
+            if (removed.Length > 0)
+            {
+                EnsureSucceeded(await userManager.RemoveFromRolesAsync(user, removed));
+            }
+
+            if (added.Length > 0)
+            {
+                EnsureSucceeded(await userManager.AddToRolesAsync(user, added));
+            }
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return await ToAccountAsync(user);
+    }
+
     private async Task<ApplicationUser> GetRequiredAsync(Guid userId) =>
         await userManager.FindByIdAsync(userId.ToString())
         ?? throw new NotFoundException("The user no longer exists.", AuthErrorCodes.UserNotFound);
 
-    private async Task<UserAccount> ToAccountAsync(ApplicationUser user)
-    {
-        var roles = await userManager.GetRolesAsync(user);
+    private async Task<UserAccount> ToAccountAsync(ApplicationUser user) =>
+        ToAccount(user, [.. await userManager.GetRolesAsync(user)]);
 
-        return new UserAccount(
+    private static UserAccount ToAccount(ApplicationUser user, IReadOnlyList<string> roles) =>
+        new(
             user.Id,
             user.Email ?? string.Empty,
             user.UserName ?? string.Empty,
@@ -141,8 +220,7 @@ internal sealed class IdentityUserAccountService(
             user.AvatarUrl,
             user.IsActive,
             user.CreatedAt,
-            [.. roles]);
-    }
+            roles);
 
     private static void EnsureSucceeded(IdentityResult result)
     {

@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { AuthResponse, UserProfile } from "../types";
+import type { AdminUser, AuthResponse, UserProfile } from "../types";
 
 const AUTH_PATH = "/api/v1/auth";
 
@@ -23,4 +23,11 @@ export function changePassword(values: { currentPassword: string; newPassword: s
 
 export function updateProfile(values: { fullName: string }): Promise<UserProfile> {
   return apiClient.patch<UserProfile>(`${AUTH_PATH}/me`, { body: values });
+}
+
+export function updateUserAccess(
+  userId: string,
+  values: { isActive?: boolean; roles?: string[] },
+): Promise<AdminUser> {
+  return apiClient.patch<AdminUser>(`/api/v1/admin/users/${userId}`, { body: values });
 }

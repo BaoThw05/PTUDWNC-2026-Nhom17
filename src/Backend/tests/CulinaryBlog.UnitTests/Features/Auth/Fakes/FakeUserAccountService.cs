@@ -1,4 +1,5 @@
 using CulinaryBlog.Application.Common.Exceptions;
+using CulinaryBlog.Application.Common.Models;
 using CulinaryBlog.Application.Features.Auth;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Domain.Auth;
@@ -103,6 +104,34 @@ internal sealed class FakeUserAccountService : IUserAccountService
             _users[userId] = user;
         }
 
+        return Task.FromResult(user);
+    }
+
+    public Task<PagedResult<UserAccount>> ListAsync(
+        string? search,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken)
+    {
+        var matches = _users.Values
+            .Where(user => search is null || user.Email.Contains(search, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        return Task.FromResult(new PagedResult<UserAccount>(
+            [.. matches.Skip((page - 1) * pageSize).Take(pageSize)],
+            page,
+            pageSize,
+            matches.Count));
+    }
+
+    public Task<UserAccount> UpdateAccessAsync(
+        Guid userId,
+        bool? isActive,
+        IReadOnlyList<string>? roles,
+        CancellationToken cancellationToken)
+    {
+        var user = GetRequired(userId);
+        user = user with { IsActive = isActive ?? user.IsActive, Roles = roles ?? user.Roles };
+        _users[userId] = user;
         return Task.FromResult(user);
     }
 
