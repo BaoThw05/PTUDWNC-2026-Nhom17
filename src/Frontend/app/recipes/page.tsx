@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { RecipesScreen } from "@/features/search/components/RecipesScreen";
 
 export const metadata: Metadata = { title: "Công thức" };
 
-export default function RecipesPage() {
-  return (
-    <PlaceholderPage
-      title="Công thức"
-      owner="TV4"
-      requirements="FR-RCP-001, FR-SRCH-002 → 004"
-    />
-  );
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export const dynamic = "force-dynamic";
+
+export default async function RecipesPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  return <RecipesScreen searchParams={await searchParams} />;
 }
