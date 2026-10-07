@@ -20,6 +20,7 @@ namespace CulinaryBlog.Infrastructure.Migrations
                 .HasAnnotation("ProductVersion", "10.0.12")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "citext");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("CulinaryBlog.Domain.Auth.RefreshToken", b =>
@@ -83,6 +84,139 @@ namespace CulinaryBlog.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens", (string)null);
+                });
+
+            modelBuilder.Entity("CulinaryBlog.Domain.Entities.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("citext");
+
+                    b.Property<int>("OrderIndex")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0b89ac27-e8d0-4ee2-9e4b-1c0f1a52c001"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món nhẹ dùng trước bữa chính.",
+                            Name = "Món khai vị",
+                            OrderIndex = 1,
+                            Slug = "mon-khai-vi",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("1c89ac27-e8d0-4ee2-9e4b-1c0f1a52c002"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món ăn chính cho bữa cơm hằng ngày.",
+                            Name = "Món chính",
+                            OrderIndex = 2,
+                            Slug = "mon-chinh",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("2d89ac27-e8d0-4ee2-9e4b-1c0f1a52c003"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món ăn kèm cho bữa ăn thêm trọn vẹn.",
+                            Name = "Món phụ",
+                            OrderIndex = 3,
+                            Slug = "mon-phu",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("3e89ac27-e8d0-4ee2-9e4b-1c0f1a52c004"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món canh và súp nóng hổi.",
+                            Name = "Canh và súp",
+                            OrderIndex = 4,
+                            Slug = "canh-va-sup",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("4f89ac27-e8d0-4ee2-9e4b-1c0f1a52c005"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các công thức thuần chay và chay.",
+                            Name = "Món chay",
+                            OrderIndex = 5,
+                            Slug = "mon-chay",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("5a89ac27-e8d0-4ee2-9e4b-1c0f1a52c006"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món ngọt dùng sau bữa ăn.",
+                            Name = "Món tráng miệng",
+                            OrderIndex = 6,
+                            Slug = "mon-trang-mieng",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("6b89ac27-e8d0-4ee2-9e4b-1c0f1a52c007"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các loại thức uống giải khát.",
+                            Name = "Đồ uống",
+                            OrderIndex = 7,
+                            Slug = "do-uong",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("7c89ac27-e8d0-4ee2-9e4b-1c0f1a52c008"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các công thức bánh mặn và bánh ngọt.",
+                            Name = "Bánh",
+                            OrderIndex = 8,
+                            Slug = "banh",
+                            Version = 0u
+                        });
                 });
 
             modelBuilder.Entity("CulinaryBlog.Domain.Entities.Recipe", b =>
@@ -540,6 +674,11 @@ namespace CulinaryBlog.Infrastructure.Migrations
 
             modelBuilder.Entity("CulinaryBlog.Domain.Entities.Recipe", b =>
                 {
+                    b.HasOne("CulinaryBlog.Domain.Entities.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.OwnsOne("CulinaryBlog.Domain.Entities.RecipeNutrition", "Nutrition", b1 =>
                         {
                             b1.Property<Guid>("RecipeId")
