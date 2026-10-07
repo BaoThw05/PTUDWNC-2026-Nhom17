@@ -18,6 +18,9 @@ public interface IRefreshTokenRepository
 
     void Add(RefreshToken token);
 
+    /// <summary>Xóa vĩnh viễn các token có <c>ExpiresAt</c> trước <paramref name="cutoff"/>; trả về số dòng đã xóa (việc 1.20).</summary>
+    Task<int> DeleteExpiredBeforeAsync(DateTimeOffset cutoff, CancellationToken cancellationToken);
+
     /// <summary>Trả về false khi token đã bị request khác sửa cùng lúc; khi đó các thay đổi đang chờ bị hủy.</summary>
     Task<bool> TrySaveChangesAsync(CancellationToken cancellationToken);
 }
