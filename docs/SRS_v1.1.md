@@ -1484,6 +1484,7 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |AUTH_GOOGLE_TOKEN_INVALID|401|idToken Google sai<br>chữ ký, sai audience<br>hoặc hết hạn.|Auth|
 |AUTH_GOOGLE_EMAIL_UNVERIFIED|401|Email tài khoản<br>Google chưa được<br>Google xác minh.|Auth|
 |AUTH_GOOGLE_UNAVAILABLE|502|Không xác minh được<br>với Google, hoặc<br>backend chưa cấu<br>hình Google Client<br>ID.|Auth|
+|AUTH_RESET_TOKEN_INVALID|422|Link đặt lại mật khẩu<br>sai, đã hết hạn<br>(1 ngày) hoặc đã<br>được dùng.|Auth|
 |RECIPE_NOT_FOUND|404|Recipe với id/slug<br>không tồn tại hoặc đã<br>bị xóa.|Recipe|
 |RECIPE_SLUG_EXISTS|409|Slug đã tồn tại — tự<br>động thêm suffix<br>(slug-1, slug-2...).|Recipe|
 |RECIPE_PUBLISH_INCOMPLETE|400|Recipe thiếu điều kiện<br>publish: phải có ít nhất<br>1 ingredient và 1 step.|Recipe|
