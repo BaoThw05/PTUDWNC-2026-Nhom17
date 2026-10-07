@@ -1,22 +1,13 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getCategoryBySlug } from "@/features/categories/api/public-client";
+import { getCategoryBySlug } from "../api/public-client";
 import { ApiError } from "@/lib/api/client";
 
-export const revalidate = 300;
-
-function parsePage(value: string | string[] | undefined): number {
-  if (typeof value !== "string" || !/^[1-9]\d*$/.test(value)) return 1;
-  const page = Number(value);
-  return Number.isSafeInteger(page) && page <= 2_147_483_647 ? page : 1;
-}
-
-async function loadCategory(slug: string, page: number) {
+export async function loadCategory(slug: string, page: number) {
   try {
     return await getCategoryBySlug(slug, page, {
       accessToken: null,
-      next: { revalidate },
+      next: { revalidate: 300 },
     });
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) notFound();
@@ -24,23 +15,14 @@ async function loadCategory(slug: string, page: number) {
   }
 }
 
-export async function generateMetadata({ params }: PageProps<"/categories/[slug]">): Promise<Metadata> {
-  const { slug } = await params;
-  const { category } = await loadCategory(slug, 1);
-  return {
-    title: category.name,
-    description: category.description ?? `Khám phá công thức thuộc danh mục ${category.name}.`,
-  };
-}
-
-export default async function CategoryDetailPage({ params, searchParams }: PageProps<"/categories/[slug]">) {
-  const { slug } = await params;
-  const page = parsePage((await searchParams).page);
+export async function CategoryDetailPage({ slug, page }: { slug: string; page: number }) {
   const { category, recipes } = await loadCategory(slug, page);
   const categoryPath = `/categories/${encodeURIComponent(category.slug)}`;
   if (page > Math.max(1, recipes.totalPages)) {
-    redirect(`${categoryPath}?page=${Math.max(1, recipes.totalPages)}`);
+    redirect(`${categoryPath}/page/${Math.max(1, recipes.totalPages)}`);
   }
+
+  const pagePath = (value: number) => value === 1 ? categoryPath : `${categoryPath}/page/${value}`;
 
   return (
     <section className="space-y-8">
@@ -87,13 +69,13 @@ export default async function CategoryDetailPage({ params, searchParams }: PageP
       {recipes.totalPages > 1 && (
         <nav aria-label="Phân trang công thức" className="flex items-center justify-center gap-4">
           {recipes.hasPreviousPage ? (
-            <Link href={`${categoryPath}?page=${page - 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <Link href={pagePath(page - 1)} className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
               Trang trước
             </Link>
           ) : <span className="w-25" />}
           <span className="text-sm text-zinc-600 dark:text-zinc-400">Trang {page} / {recipes.totalPages}</span>
           {recipes.hasNextPage ? (
-            <Link href={`${categoryPath}?page=${page + 1}`} className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            <Link href={pagePath(page + 1)} className="rounded-lg border px-4 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800">
               Trang sau
             </Link>
           ) : <span className="w-25" />}

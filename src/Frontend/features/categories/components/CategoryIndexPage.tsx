@@ -1,19 +1,8 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { connection } from "next/server";
-import { getCategories } from "@/features/categories/api/public-client";
+import { getCategories } from "../api/public-client";
 
-export const metadata: Metadata = {
-  title: "Danh mục món ăn",
-  description: "Khám phá công thức nấu ăn theo từng danh mục.",
-};
-
-export const revalidate = 3600;
-
-export default async function CategoriesPage() {
-  // Backend không cần chạy trong lúc build; dữ liệu vẫn được cache và làm mới theo revalidate.
-  await connection();
-  const categories = await getCategories({ accessToken: null, next: { revalidate } });
+export async function CategoryIndexPage() {
+  const categories = await getCategories({ accessToken: null, next: { revalidate: 3600 } });
 
   return (
     <section className="space-y-8">
