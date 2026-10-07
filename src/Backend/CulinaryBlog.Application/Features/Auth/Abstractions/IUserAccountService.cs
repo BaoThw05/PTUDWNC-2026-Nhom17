@@ -22,6 +22,12 @@ public interface IUserAccountService
     /// <summary>Đặt mật khẩu mới (đã kiểm tra mật khẩu hiện tại); mật khẩu không đạt → <c>ValidationException</c>.</summary>
     Task SetPasswordAsync(Guid userId, string newPassword, CancellationToken cancellationToken);
 
+    /// <summary>Sinh token đặt lại mật khẩu của Identity (hết hạn sau 1 ngày, mất hiệu lực khi đổi mật khẩu).</summary>
+    Task<string> CreatePasswordResetTokenAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Đặt mật khẩu mới bằng token; token sai/hết hạn hoặc mật khẩu không đạt → <c>ValidationException</c>.</summary>
+    Task ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken);
+
     Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken);
 
     /// <summary>Liên kết đăng nhập ngoài; ảnh đại diện chỉ được gán khi tài khoản chưa có (S-17).</summary>
