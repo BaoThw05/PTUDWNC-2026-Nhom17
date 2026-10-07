@@ -16,4 +16,5 @@ public static class AuthErrorCodes
     public const string GoogleEmailUnverified = "AUTH_GOOGLE_EMAIL_UNVERIFIED";
     public const string GoogleUnavailable = "AUTH_GOOGLE_UNAVAILABLE";
     public const string AdminSelfLockout = "AUTH_ADMIN_SELF_LOCKOUT";
+    public const string ResetTokenInvalid = "AUTH_RESET_TOKEN_INVALID";
 }

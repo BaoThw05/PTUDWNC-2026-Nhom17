@@ -51,6 +51,7 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 | `AUTH_GOOGLE_EMAIL_UNVERIFIED` | 401 | Email của tài khoản Google chưa được Google xác minh | Auth |
 | `AUTH_GOOGLE_UNAVAILABLE` | 502 | Không xác minh được với Google, hoặc backend chưa cấu hình Google Client ID | Auth |
 | `AUTH_ADMIN_SELF_LOCKOUT` | 403 | Admin tự khóa tài khoản của mình hoặc tự bỏ vai trò Admin (`PATCH /admin/users/{id}`) | Auth |
+| `AUTH_RESET_TOKEN_INVALID` | 422 | Link đặt lại mật khẩu sai, đã hết hạn (1 ngày) hoặc đã được dùng (`POST /auth/reset-password`) | Auth |
 
 ## Recipes — TV2
 
