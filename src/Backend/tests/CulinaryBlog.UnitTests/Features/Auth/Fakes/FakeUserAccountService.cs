@@ -83,6 +83,23 @@ internal sealed class FakeUserAccountService : IUserAccountService
         return Task.CompletedTask;
     }
 
+    public Task<string> CreatePasswordResetTokenAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        GetRequired(userId);
+        return Task.FromResult($"reset-{userId}");
+    }
+
+    public Task ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken)
+    {
+        if (token != $"reset-{userId}")
+        {
+            throw new ValidationException(new Dictionary<string, string[]> { ["Token"] = ["Invalid token."] });
+        }
+
+        _passwords[userId] = newPassword;
+        return Task.CompletedTask;
+    }
+
     public Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken)
     {
         var user = GetRequired(userId) with { FullName = fullName };
