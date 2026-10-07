@@ -51,11 +51,6 @@ namespace CulinaryBlog.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Recipes_CategoryId",
-                table: "Recipes",
-                column: "CategoryId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Categories_Name",
                 table: "Categories",
                 column: "Name",
@@ -85,10 +80,6 @@ namespace CulinaryBlog.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Categories");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Recipes_CategoryId",
-                table: "Recipes");
 
             migrationBuilder.AlterDatabase()
                 .OldAnnotation("Npgsql:PostgresExtension:citext", ",,");
