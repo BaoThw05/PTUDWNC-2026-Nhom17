@@ -36,6 +36,7 @@ public static class DependencyInjection
 
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddSingleton(new AppLinks(configuration["Frontend:BaseUrl"] ?? "http://localhost:3000"));
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 

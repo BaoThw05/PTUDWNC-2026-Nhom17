@@ -92,16 +92,20 @@ internal sealed class IdentityUserAccountService(
         EnsureSucceeded(await userManager.ResetPasswordAsync(user, token, newPassword));
     }
 
-        public async Task<string> CreatePasswordResetTokenAsync(Guid userId, CancellationToken cancellationToken) =>
+    public async Task<string> CreatePasswordResetTokenAsync(Guid userId, CancellationToken cancellationToken) =>
         await userManager.GeneratePasswordResetTokenAsync(await GetRequiredAsync(userId));
 
-    public async Task ResetPasswordAsync(
-        Guid userId,
-        string token,
-        string newPassword,
-        CancellationToken cancellationToken) =>
-        EnsureSucceeded(await userManager.ResetPasswordAsync(await GetRequiredAsync(userId), token, newPassword));
+    public async Task ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken)
+    {
+        var result = await userManager.ResetPasswordAsync(await GetRequiredAsync(userId), token, newPassword);
 
+        if (result.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.InvalidToken)))
+        {
+            throw new ValidationException(AuthErrorCodes.ResetTokenInvalid, "The password reset link is invalid or has expired.");
+        }
+
+        EnsureSucceeded(result);
+    }
     public async Task<UserAccount> UpdateFullNameAsync(
         Guid userId,
         string fullName,

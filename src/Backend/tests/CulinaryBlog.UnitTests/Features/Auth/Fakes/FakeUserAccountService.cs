@@ -93,7 +93,7 @@ internal sealed class FakeUserAccountService : IUserAccountService
     {
         if (token != $"reset-{userId}")
         {
-            throw new ValidationException(new Dictionary<string, string[]> { ["Token"] = ["Invalid token."] });
+            throw new ValidationException(AuthErrorCodes.ResetTokenInvalid, "Invalid token.");
         }
 
         _passwords[userId] = newPassword;
