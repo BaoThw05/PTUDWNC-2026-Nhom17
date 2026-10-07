@@ -33,6 +33,9 @@ internal sealed class InMemoryRefreshTokenRepository : IRefreshTokenRepository
 
     public void Add(RefreshToken token) => _tokens.Add(token);
 
+    public Task<int> DeleteExpiredBeforeAsync(DateTimeOffset cutoff, CancellationToken cancellationToken) =>
+        Task.FromResult(_tokens.RemoveAll(token => token.ExpiresAt < cutoff));
+
     public Task<bool> TrySaveChangesAsync(CancellationToken cancellationToken)
     {
         if (ConflictsToSimulate > 0)

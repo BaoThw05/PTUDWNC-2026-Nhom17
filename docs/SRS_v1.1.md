@@ -55,7 +55,7 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
   | CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | 🔄 |
 | CR-09 | S-15 | Rate limit theo endpoint: đăng nhập/đăng ký/Google 5 lần/phút theo IP, refresh 30 lần/phút, còn lại 100 lần/phút theo người dùng hoặc IP; 429 kèm `Retry-After`; đọc IP thật qua `X-Forwarded-For` từ proxy tin cậy | NFR-SEC-003 | TV1, TV4 | — | ⬜ |
 | CR-10 | S-10 | Hợp đồng API: không vỏ bọc response; danh sách trả `PagedResult`; 422 cho validation; lỗi theo Problem Details (RFC 9457) có `code`, `traceId`; `sort=-field`; đổi tên thống nhất (người dùng dùng `fullName` như FR-AUTH, xem CR-04, CR-08) | Chương 3, Chương 8, Phụ lục A, B | TV2 | S-10 | ⬜ |
-| CR-11 | S-10 | Bổ sung mã lỗi `AUTH_*` vào Phụ lục B theo `docs/api/error-codes.md` | Phụ lục B | TV1 | — | ⬜ |
+| CR-11 | S-10 | Bổ sung mã lỗi `AUTH_*` vào Phụ lục B theo `docs/api/error-codes.md` | Phụ lục B | TV1 | — | ✅ |
 | CR-12 | S-11 | Điều kiện publish chỉ cần ≥ 1 bước; nguyên liệu và ảnh bổ sung được sau khi publish | FR-RCP-005, FR-RCP-006 | TV2 | S-11 | ⬜ |
 | CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ⬜ |
 | CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ⬜ |
@@ -1472,14 +1472,18 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 
 |**Error Code**|**HTTP**<br>**Status**|**Mô tả**|**Module**|
 |---|---|---|---|
-|AUTH_EMAIL_EXISTS|409|Email đã được đăng<br>ký bởi tài khoản khác.|Auth|
-|AUTH_INVALID_CREDENTIALS|401|Email hoặc mật khẩu<br>không đúng.|Auth|
-|AUTH_TOKEN_EXPIRED|401|Access Token đã hết<br>hạn (15 phút).|Auth|
-|AUTH_TOKEN_INVALID|401|Access Token sai định<br>dạng hoặc chữ ký<br>không hợp lệ.|Auth|
+|AUTH_EMAIL_EXISTS|409|Email đã được đăng<br>ký (không phân biệt<br>hoa/thường).|Auth|
+|AUTH_USERNAME_EXISTS|409|Tên đăng nhập<br>(userName) đã được<br>dùng.|Auth|
+|AUTH_INVALID_CREDENTIALS|401|Email không tồn tại<br>hoặc sai mật khẩu<br>(dùng chung 1 mã).|Auth|
+|AUTH_ACCOUNT_LOCKED|423|Tài khoản bị khóa 15<br>phút sau 5 lần sai<br>mật khẩu.|Auth|
+|AUTH_ACCOUNT_DISABLED|403|Tài khoản bị vô hiệu<br>hóa (IsActive=false);<br>chỉ báo khi mật khẩu<br>đúng.|Auth|
+|AUTH_REFRESH_TOKEN_INVALID|401|Refresh token không<br>tồn tại.|Auth|
 |AUTH_REFRESH_TOKEN_EXPIRED|401|Refresh Token đã hết<br>hạn (7 ngày).|Auth|
-|AUTH_REFRESH_TOKEN_REVOKED|401|Refresh Token đã bị<br>thu hồi (reuse<br>detection).|Auth|
-|AUTH_GOOGLE_TOKEN_INVALID|400|Google ID Token<br>không hợp lệ hoặc đã<br>hết hạn.|Auth|
-|AUTH_ACCOUNT_DISABLED|403|Tài khoản bị vô hiệu<br>hóa (IsActive=false)<br>bởi Admin.|Auth|
+|AUTH_REFRESH_TOKEN_REVOKED|401|Refresh Token đã bị<br>thu hồi (đăng xuất,<br>hoặc dùng lại sau 30<br>giây → thu hồi cả<br>family).|Auth|
+|AUTH_USER_NOT_FOUND|404|Người dùng trong<br>access token không<br>còn tồn tại.|Auth|
+|AUTH_GOOGLE_TOKEN_INVALID|401|idToken Google sai<br>chữ ký, sai audience<br>hoặc hết hạn.|Auth|
+|AUTH_GOOGLE_EMAIL_UNVERIFIED|401|Email tài khoản<br>Google chưa được<br>Google xác minh.|Auth|
+|AUTH_GOOGLE_UNAVAILABLE|502|Không xác minh được<br>với Google, hoặc<br>backend chưa cấu<br>hình Google Client<br>ID.|Auth|
 |RECIPE_NOT_FOUND|404|Recipe với id/slug<br>không tồn tại hoặc đã<br>bị xóa.|Recipe|
 |RECIPE_SLUG_EXISTS|409|Slug đã tồn tại — tự<br>động thêm suffix<br>(slug-1, slug-2...).|Recipe|
 |RECIPE_PUBLISH_INCOMPLETE|400|Recipe thiếu điều kiện<br>publish: phải có ít nhất<br>1 ingredient và 1 step.|Recipe|
