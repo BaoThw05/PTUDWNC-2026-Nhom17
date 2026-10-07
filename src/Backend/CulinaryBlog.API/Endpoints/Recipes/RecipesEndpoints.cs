@@ -1,4 +1,6 @@
-﻿using CulinaryBlog.Application.Features.Recipes;
+using CulinaryBlog.Application.Common.Models;
+using CulinaryBlog.Application.Features.Recipes;
+using CulinaryBlog.Domain.Enums;
 using MediatR;
 
 namespace CulinaryBlog.API.Endpoints.Recipes;
@@ -26,6 +28,13 @@ internal sealed class RecipesEndpoints : IEndpointModule
             return Results.Ok(recipe);
         })
         .WithName("GetRecipeById");
+
+        recipes.MapGet("/{slug}", async (string slug, IMediator mediator) =>
+        {
+            var recipe = await mediator.Send(new GetRecipeBySlugQuery(slug));
+            return Results.Ok(recipe);
+        })
+        .WithName("GetRecipeBySlug");
 
         recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeCommand command, IMediator mediator) =>
         {
@@ -55,11 +64,65 @@ internal sealed class RecipesEndpoints : IEndpointModule
         })
         .WithName("UnpublishRecipe");
 
+        recipes.MapPost("/{id:guid}/archive", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new ArchiveRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("ArchiveRecipe");
+
+        recipes.MapPost("/{id:guid}/unarchive", async (Guid id, IMediator mediator) =>
+        {
+            await mediator.Send(new UnarchiveRecipeCommand(id));
+            return Results.NoContent();
+        })
+        .WithName("UnarchiveRecipe");
+
         recipes.MapPost("/{id:guid}/restore", async (Guid id, IMediator mediator) =>
         {
             await mediator.Send(new RestoreRecipeCommand(id));
             return Results.NoContent();
         })
         .WithName("RestoreRecipe");
+
+        // Steps (FR-RCP-010)
+        recipes.MapPost("/{id:guid}/steps", async (Guid id, AddRecipeStepCommand command, IMediator mediator) =>
+        {
+            var stepId = await mediator.Send(command with { RecipeId = id });
+            return Results.Created($"/api/v1/recipes/{id}/steps/{stepId}", new { id = stepId });
+        })
+        .WithName("AddRecipeStep");
+
+        recipes.MapDelete("/{id:guid}/steps/{stepId:guid}", async (Guid id, Guid stepId, IMediator mediator) =>
+        {
+            await mediator.Send(new DeleteRecipeStepCommand(id, stepId));
+            return Results.NoContent();
+        })
+        .WithName("DeleteRecipeStep");
+
+        // Ingredients (FR-RCP-009)
+        recipes.MapPost("/{id:guid}/ingredients", async (Guid id, AddRecipeIngredientCommand command, IMediator mediator) =>
+        {
+            var ingredientId = await mediator.Send(command with { RecipeId = id });
+            return Results.Created($"/api/v1/recipes/{id}/ingredients/{ingredientId}", new { id = ingredientId });
+        })
+        .WithName("AddRecipeIngredient");
+
+        recipes.MapDelete("/{id:guid}/ingredients/{ingredientId:guid}", async (Guid id, Guid ingredientId, IMediator mediator) =>
+        {
+            await mediator.Send(new DeleteRecipeIngredientCommand(id, ingredientId));
+            return Results.NoContent();
+        })
+        .WithName("DeleteRecipeIngredient");
+
+        // Bài của tôi (FR-RCP-003, S-11)
+        api.MapGet("/me/recipes", async (string? status, int? page, int? pageSize, IMediator mediator) =>
+        {
+            var query = new GetMyRecipesQuery(status, page ?? 1, pageSize ?? PagedResult<RecipeDto>.DefaultPageSize);
+            var result = await mediator.Send(query);
+            return Results.Ok(result);
+        })
+        .WithTags(Tag)
+        .WithName("GetMyRecipes");
     }
 }

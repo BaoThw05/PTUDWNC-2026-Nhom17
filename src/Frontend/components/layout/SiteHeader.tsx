@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UserMenu } from "@/features/auth/components/UserMenu";
 
 const NAV_LINKS = [
   { href: "/recipes", label: "Công thức" },
@@ -20,12 +21,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/auth/login"
-            className="rounded-full bg-foreground px-4 py-1.5 text-background"
-          >
-            Đăng nhập
-          </Link>
+          <UserMenu />
         </nav>
       </div>
     </header>

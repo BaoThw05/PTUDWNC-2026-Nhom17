@@ -43,7 +43,7 @@
 |---|---|
 | `docker-compose.yml`, `.env.example`, `docker/` | TV3 |
 | `.github/` (CI, template PR), CODEOWNERS | TV4 |
-| `docs/SRS_v1.1.md`, `docs/adr/` | TV1 (mỗi người viết ADR phần mình) |
+| `docs/SRS_v1.1.md`, `docs/ADR/` | TV1 (mỗi người viết ADR phần mình) |
 | `docs/api/error-codes.md` | TV2 (mỗi người điền mục của module mình) |
 | `docs/KeHoach/` | Mỗi người cập nhật file của mình |
 
