@@ -35,7 +35,7 @@ public sealed class CategoryModelTests
         Assert.NotNull(category);
         Assert.NotNull(recipe);
         Assert.Equal(8, category.GetSeedData().Count());
-        Assert.Contains(category.GetSeedData(), seed => (string)seed[nameof(Category.Slug)] == "mon-chinh");
+        Assert.Contains(category.GetSeedData(), seed => seed[nameof(Category.Slug)] as string == "mon-chinh");
         Assert.Contains(recipe.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType == category
             && foreignKey.Properties.Single().Name == nameof(Recipe.CategoryId)
