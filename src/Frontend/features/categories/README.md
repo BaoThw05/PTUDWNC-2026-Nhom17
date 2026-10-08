@@ -15,3 +15,7 @@ features/categories/
 ```
 
 Trang trong `app/` chỉ ghép component từ thư mục này; component dùng chung cho nhiều module đặt ở `components/` gốc.
+
+## Trang quản trị
+
+`/dashboard/categories` kiểm tra phiên đăng nhập và vai trò Admin ở server. `CategoryAdmin` dùng API danh mục để tải danh sách, tạo, sửa, xóa; backend cũng yêu cầu policy Admin cho ba lệnh ghi. Form giữ `orderIndex` khi sửa, hiển thị lỗi 409 cho tên trùng và danh mục còn công thức. `api/client.ts` dùng `lib/api/client.ts` để gắn access token.
