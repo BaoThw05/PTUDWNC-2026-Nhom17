@@ -53,6 +53,8 @@ docker compose ps
 `http://localhost/scalar` để xem tài liệu API. Ảnh công thức đi qua
 `http://localhost/media/…`; dashboard tại `/hangfire` dùng tài khoản
 `HANGFIRE_USER` và `HANGFIRE_PASSWORD` trong `.env`.
+`AUTH_URL` phải bằng origin mà người dùng mở trong trình duyệt (ví dụ
+`http://localhost:18080` nếu đổi `APP_PORT` sang `18080`).
 
 Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, chỉnh các biến cổng trong
 `.env`. Không chạy đồng thời stack cũ có cùng tên container.
@@ -61,7 +63,8 @@ Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, c
 
 Tạo remotely-managed Tunnel trong Cloudflare và đặt Public Hostname trỏ tới
 `http://nginx:80`. Điền token của Tunnel vào `CLOUDFLARE_TUNNEL_TOKEN` trong
-`.env` (để trống khi chỉ chạy local), rồi chạy:
+`.env` (để trống khi chỉ chạy local), đặt `AUTH_URL` bằng URL HTTPS của Public
+Hostname và khởi động lại web, rồi chạy:
 
 ```bash
 docker compose --profile demo up -d cloudflared
