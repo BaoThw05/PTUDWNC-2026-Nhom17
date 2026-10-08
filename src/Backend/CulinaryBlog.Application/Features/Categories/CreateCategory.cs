@@ -6,7 +6,7 @@ using MediatR;
 
 namespace CulinaryBlog.Application.Features.Categories;
 
-public sealed record CreateCategoryCommand : IRequest<CategoryDto>
+public sealed record CreateCategoryCommand : IRequest<CategoryAdminDto>
 {
     public string Name { get; init; } = default!;
     public string? Description { get; init; }
@@ -27,14 +27,14 @@ public sealed class CreateCategoryCommandValidator : AbstractValidator<CreateCat
 }
 
 public sealed class CreateCategoryCommandHandler(IAppDbContext db, ICacheInvalidator cache)
-    : IRequestHandler<CreateCategoryCommand, CategoryDto>
+    : IRequestHandler<CreateCategoryCommand, CategoryAdminDto>
 {
-    public async Task<CategoryDto> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
+    public async Task<CategoryAdminDto> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
     {
         var name = request.Name.Trim();
         if (db.Categories.Any(category => category.Name.ToUpper() == name.ToUpper()))
         {
-            throw new ConflictException("Tên danh mục đã tồn tại.", CategoryErrorCodes.CategoryNameExists);
+            throw new ConflictException("Tên danh mục đã tồn tại.", CategoryAdminErrorCodes.CategoryNameExists);
         }
 
         var category = new Category
@@ -50,7 +50,7 @@ public sealed class CreateCategoryCommandHandler(IAppDbContext db, ICacheInvalid
         await db.SaveChangesAsync(cancellationToken);
         await cache.InvalidateAsync(["categories"], cancellationToken);
 
-        return new CategoryDto(category.Id, category.Name, category.Slug,
+        return new CategoryAdminDto(category.Id, category.Name, category.Slug,
             category.Description, category.ImageUrl, category.OrderIndex, 0);
     }
 }

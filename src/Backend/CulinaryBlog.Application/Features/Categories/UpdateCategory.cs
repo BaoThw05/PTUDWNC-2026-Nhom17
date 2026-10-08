@@ -6,7 +6,7 @@ using MediatR;
 
 namespace CulinaryBlog.Application.Features.Categories;
 
-public sealed record UpdateCategoryCommand : IRequest<CategoryDto>
+public sealed record UpdateCategoryCommand : IRequest<CategoryAdminDto>
 {
     public Guid Id { get; init; }
     public string Name { get; init; } = default!;
@@ -29,19 +29,19 @@ public sealed class UpdateCategoryCommandValidator : AbstractValidator<UpdateCat
 }
 
 public sealed class UpdateCategoryCommandHandler(IAppDbContext db, ICacheInvalidator cache)
-    : IRequestHandler<UpdateCategoryCommand, CategoryDto>
+    : IRequestHandler<UpdateCategoryCommand, CategoryAdminDto>
 {
-    public async Task<CategoryDto> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
+    public async Task<CategoryAdminDto> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
     {
         var category = db.Categories.FirstOrDefault(item => item.Id == request.Id)
             ?? throw new NotFoundException(
                 $"Không tìm thấy danh mục có id '{request.Id}'.",
-                CategoryErrorCodes.CategoryNotFound);
+                CategoryAdminErrorCodes.CategoryNotFound);
 
         var name = request.Name.Trim();
         if (db.Categories.Any(item => item.Id != category.Id && item.Name.ToUpper() == name.ToUpper()))
         {
-            throw new ConflictException("Tên danh mục đã tồn tại.", CategoryErrorCodes.CategoryNameExists);
+            throw new ConflictException("Tên danh mục đã tồn tại.", CategoryAdminErrorCodes.CategoryNameExists);
         }
 
         category.Name = name;
@@ -55,7 +55,7 @@ public sealed class UpdateCategoryCommandHandler(IAppDbContext db, ICacheInvalid
 
         var recipeCount = db.Recipes.Count(recipe =>
             recipe.CategoryId == category.Id && recipe.Status == RecipeStatus.Published);
-        return new CategoryDto(category.Id, category.Name, category.Slug,
+        return new CategoryAdminDto(category.Id, category.Name, category.Slug,
             category.Description, category.ImageUrl, category.OrderIndex, recipeCount);
     }
 }

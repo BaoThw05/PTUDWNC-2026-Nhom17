@@ -14,14 +14,14 @@ public sealed class DeleteCategoryCommandHandler(IAppDbContext db, ICacheInvalid
         var category = db.Categories.FirstOrDefault(item => item.Id == request.Id)
             ?? throw new NotFoundException(
                 $"Không tìm thấy danh mục có id '{request.Id}'.",
-                CategoryErrorCodes.CategoryNotFound);
+                CategoryAdminErrorCodes.CategoryNotFound);
 
         var recipeCount = db.RecipesIncludingDeleted.Count(recipe => recipe.CategoryId == category.Id);
         if (recipeCount > 0)
         {
             throw new ConflictException(
                 $"Không thể xóa danh mục vì còn {recipeCount} công thức thuộc danh mục.",
-                CategoryErrorCodes.CategoryDeleteHasRecipes);
+                CategoryAdminErrorCodes.CategoryDeleteHasRecipes);
         }
 
         db.Remove(category);

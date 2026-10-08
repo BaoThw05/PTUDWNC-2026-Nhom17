@@ -1,6 +1,6 @@
 namespace CulinaryBlog.Application.Features.Categories;
 
-public sealed record CategoryDto(
+public sealed record CategoryAdminDto(
     Guid Id,
     string Name,
     string Slug,
@@ -9,7 +9,7 @@ public sealed record CategoryDto(
     int OrderIndex,
     int RecipeCount);
 
-public static class CategoryErrorCodes
+public static class CategoryAdminErrorCodes
 {
     public const string CategoryNotFound = "CATEGORY_NOT_FOUND";
     public const string CategoryNameExists = "CATEGORY_NAME_EXISTS";

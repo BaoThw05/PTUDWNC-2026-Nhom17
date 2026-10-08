@@ -32,7 +32,7 @@ public sealed class CategoryCommandsTests
             new CreateCategoryCommandHandler(db, new TestCache()).Handle(
                 new CreateCategoryCommand { Name = "mÓN CHÍNH" }, CancellationToken.None));
 
-        Assert.Equal(CategoryErrorCodes.CategoryNameExists, error.Code);
+        Assert.Equal(CategoryAdminErrorCodes.CategoryNameExists, error.Code);
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class CategoryCommandsTests
             new DeleteCategoryCommandHandler(db, cache).Handle(
                 new DeleteCategoryCommand(category.Id), CancellationToken.None));
 
-        Assert.Equal(CategoryErrorCodes.CategoryDeleteHasRecipes, error.Code);
+        Assert.Equal(CategoryAdminErrorCodes.CategoryDeleteHasRecipes, error.Code);
         Assert.Contains("1 công thức", error.Message);
         Assert.Contains(category, db.CategoryItems);
         Assert.Empty(cache.InvalidatedTags);
