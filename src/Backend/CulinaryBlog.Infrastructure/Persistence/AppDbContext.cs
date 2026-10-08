@@ -19,11 +19,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
 
     IQueryable<Category> IAppDbContext.Categories => Categories;
     IQueryable<Recipe> IAppDbContext.Recipes => Recipes;
     IQueryable<RecipeStep> IAppDbContext.RecipeSteps => RecipeSteps;
     IQueryable<RecipeIngredient> IAppDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<RecipeImage> IAppDbContext.RecipeImages => RecipeImages;
     IQueryable<Recipe> IAppDbContext.RecipesIncludingDeleted => Recipes.IgnoreQueryFilters();
 
     public new void Add<TEntity>(TEntity entity) where TEntity : class => Set<TEntity>().Add(entity);
