@@ -1,6 +1,7 @@
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using CulinaryBlog.Application.Common.Models;
+using CulinaryBlog.Domain.Auth;
 using CulinaryBlog.Domain.Enums;
 using FluentValidation;
 using MediatR;
@@ -20,7 +21,7 @@ public sealed class GetCategoryBySlugQueryValidator : AbstractValidator<GetCateg
     }
 }
 
-public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db)
+public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser currentUser)
     : IRequestHandler<GetCategoryBySlugQuery, CategoryDetailDto>
 {
     public Task<CategoryDetailDto> Handle(GetCategoryBySlugQuery request, CancellationToken cancellationToken)
@@ -44,26 +45,32 @@ public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db)
                 CategoryErrorCodes.CategoryNotFound);
         }
 
+        var ownerId = currentUser.IsInRole(Roles.Author) ? currentUser.UserId?.ToString() : null;
         var recipes = db.Recipes
-            .Where(recipe => recipe.CategoryId == category.Id && recipe.Status == RecipeStatus.Published)
+            .Where(recipe => recipe.CategoryId == category.Id &&
+                (recipe.Status == RecipeStatus.Published ||
+                 (ownerId != null && recipe.Status == RecipeStatus.Draft && recipe.AuthorId == ownerId)))
             .OrderByDescending(recipe => recipe.PublishedAt)
             .ThenByDescending(recipe => recipe.CreatedAt);
 
         var totalCount = recipes.Count();
-        var items = recipes
-            .Skip((request.Page - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .Select(recipe => new CategoryRecipeSummaryDto(
-                recipe.Id,
-                recipe.Title,
-                recipe.Slug,
-                recipe.Description,
-                recipe.PrepTimeMinutes,
-                recipe.CookTimeMinutes,
-                recipe.Servings,
-                recipe.Difficulty,
-                recipe.PublishedAt))
-            .ToList();
+        var offset = ((long)request.Page - 1) * request.PageSize;
+        IReadOnlyList<CategoryRecipeSummaryDto> items = offset > int.MaxValue
+            ? []
+            : recipes
+                .Skip((int)offset)
+                .Take(request.PageSize)
+                .Select(recipe => new CategoryRecipeSummaryDto(
+                    recipe.Id,
+                    recipe.Title,
+                    recipe.Slug,
+                    recipe.Description,
+                    recipe.PrepTimeMinutes,
+                    recipe.CookTimeMinutes,
+                    recipe.Servings,
+                    recipe.Difficulty,
+                    recipe.PublishedAt))
+                .ToList();
 
         return Task.FromResult(new CategoryDetailDto(
             category,
