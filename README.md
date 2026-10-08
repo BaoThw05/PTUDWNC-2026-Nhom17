@@ -57,6 +57,25 @@ docker compose ps
 Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, chỉnh các biến cổng trong
 `.env`. Không chạy đồng thời stack cũ có cùng tên container.
 
+**Chia sẻ bản demo qua Cloudflare Tunnel**
+
+Tạo remotely-managed Tunnel trong Cloudflare và đặt Public Hostname trỏ tới
+`http://nginx:80`. Điền token của Tunnel vào `CLOUDFLARE_TUNNEL_TOKEN` trong
+`.env` (để trống khi chỉ chạy local), rồi chạy:
+
+```bash
+docker compose --profile demo up -d cloudflared
+docker compose --profile demo ps
+```
+
+Mở hostname công khai để kiểm tra đăng nhập, tải ảnh lên và xem ảnh qua
+`/media/…`. Nếu dùng Google OAuth, thêm callback URL của hostname công khai
+vào cấu hình Google. Dừng Tunnel bằng
+`docker compose --profile demo stop cloudflared`; site trên localhost vẫn chạy.
+Token là bí mật: không đưa vào commit hoặc log, và thay token khi nghi bị lộ.
+Chi tiết lựa chọn Quick Tunnel và Named Tunnel nằm trong
+[`docs/research/cloudflare-tunnel.md`](./docs/research/cloudflare-tunnel.md).
+
 **Chạy backend và frontend riêng khi phát triển**
 
 **Backend**
