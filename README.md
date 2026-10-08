@@ -40,13 +40,24 @@ Bạn cần có:
 
 Các lệnh dưới đây chạy từ thư mục gốc repo, dùng được cả trên PowerShell lẫn bash.
 
-**Cơ sở dữ liệu và Redis**
+**Chạy toàn bộ ứng dụng qua Nginx**
 
 ```bash
 cp .env.example .env          # PowerShell: Copy-Item .env.example .env
-docker compose up -d
-docker compose ps             # đợi cả hai service báo (healthy)
+docker compose up -d --build
+docker compose ps
 ```
+
+Đổi các mật khẩu và `AUTH_SECRET` trong `.env` trước khi chia sẻ bản demo. Mở
+`http://localhost` để xem web, `http://localhost/health` để kiểm tra API,
+`http://localhost/scalar` để xem tài liệu API. Ảnh công thức đi qua
+`http://localhost/media/…`; dashboard tại `/hangfire` dùng tài khoản
+`HANGFIRE_USER` và `HANGFIRE_PASSWORD` trong `.env`.
+
+Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, chỉnh các biến cổng trong
+`.env`. Không chạy đồng thời stack cũ có cùng tên container.
+
+**Chạy backend và frontend riêng khi phát triển**
 
 **Backend**
 
@@ -62,7 +73,7 @@ API chạy ở http://localhost:5000. Mở http://localhost:5000/health để ki
 Backend đọc connection string trong `appsettings.Development.json`, khớp sẵn với `.env.example`. Nếu bạn đổi mật khẩu trong `.env`, báo cho backend bằng user-secrets (không commit):
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=culinary_blog;Username=culinary_admin;Password=<mật khẩu>" --project CulinaryBlog.API
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=CulinaryBlogDb;Username=postgres;Password=<mật khẩu>" --project CulinaryBlog.API
 ```
 
 **Frontend**
@@ -74,7 +85,7 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000. Nếu trang chủ hiện **Backend API: OK** thì frontend đã nói chuyện được với backend.
+Mở http://localhost:3000. Cách chạy riêng này cần các dịch vụ nền trong Docker và không đi qua Nginx.
 
 ## 3. Cổng dịch vụ
 
@@ -82,18 +93,21 @@ Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trì
 
 | Dịch vụ | Cổng | Cấu hình ở đâu |
 |---|---|---|
-| Frontend | 3000 | mặc định của `next dev` |
-| Backend API | 5000 | `CulinaryBlog.API/Properties/launchSettings.json` |
+| Site qua Nginx | 80 | `APP_PORT` trong `.env` |
+| Frontend và Backend chạy riêng | 3000 và 5000 | `next dev` và `launchSettings.json` |
 | PostgreSQL | 5432 | `POSTGRES_PORT` trong `.env` |
-| Redis (có mật khẩu) | 6379 | `docker-compose.yml` |
+| Redis (có mật khẩu) | 6379 | `REDIS_PORT` trong `.env` |
+| MinIO API và Console | 9000 và 9001 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT` |
+| Seq | 5341 | `SEQ_PORT` |
+| Mailpit SMTP và UI | 1025 và 8025 | `MAILPIT_SMTP_PORT`, `MAILPIT_UI_PORT` |
 
-Khi thêm dịch vụ mới vào compose (storage, Mailpit, Seq…), nhớ bổ sung cổng vào bảng này trong cùng PR.
+API và web không mở cổng trực tiếp khi chạy bằng Compose; Nginx là điểm vào duy nhất của ứng dụng.
 
 ## 4. Cấu trúc thư mục
 
 ```
 .
-├── docker-compose.yml        PostgreSQL + Redis
+├── docker-compose.yml        ứng dụng và các dịch vụ nền
 ├── .env.example
 ├── global.json               ghim .NET SDK
 ├── CLAUDE.md                 hướng dẫn cho Claude Code
