@@ -35,6 +35,7 @@ public sealed class CategoryQueriesTests
             category =>
             {
                 Assert.Equal("Món chính", category.Name);
+                Assert.Equal(first.OrderIndex, category.OrderIndex);
                 Assert.Equal(1, category.RecipeCount);
             },
             category => Assert.Equal("Món khai vị", category.Name));
@@ -54,6 +55,7 @@ public sealed class CategoryQueriesTests
             .Handle(new GetCategoryBySlugQuery(category.Slug, Page: 1, PageSize: 1), CancellationToken.None);
 
         Assert.Equal(2, result.Category.RecipeCount);
+        Assert.Equal(category.OrderIndex, result.Category.OrderIndex);
         Assert.Equal(2, result.Recipes.TotalCount);
         Assert.Single(result.Recipes.Items);
         Assert.Equal(publishedNewest.Id, result.Recipes.Items[0].Id);

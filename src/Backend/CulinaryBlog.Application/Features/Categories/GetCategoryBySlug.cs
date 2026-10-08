@@ -34,6 +34,7 @@ public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser
                 item.Slug,
                 item.Description,
                 item.ImageUrl,
+                item.OrderIndex,
                 db.Recipes.Count(recipe =>
                     recipe.CategoryId == item.Id && recipe.Status == RecipeStatus.Published)))
             .FirstOrDefault();

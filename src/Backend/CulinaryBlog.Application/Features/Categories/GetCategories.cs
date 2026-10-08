@@ -20,6 +20,7 @@ public sealed class GetCategoriesQueryHandler(IAppDbContext db)
                 category.Slug,
                 category.Description,
                 category.ImageUrl,
+                category.OrderIndex,
                 db.Recipes.Count(recipe =>
                     recipe.CategoryId == category.Id && recipe.Status == RecipeStatus.Published)))
             .ToList();
@@ -34,4 +35,5 @@ public sealed record CategoryDto(
     string Slug,
     string? Description,
     string? ImageUrl,
+    int OrderIndex,
     int RecipeCount);
