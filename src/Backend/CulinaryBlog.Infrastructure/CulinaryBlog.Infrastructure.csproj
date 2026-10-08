@@ -5,8 +5,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- SignInManager (Identity) nằm trong shared framework ASP.NET Core. -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
+    <PackageReference Include="Google.Apis.Auth" />
   </ItemGroup>
 
 </Project>

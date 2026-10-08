@@ -1,7 +1,11 @@
 ﻿using Amazon.Runtime;
 using Amazon.S3;
 using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Infrastructure.Auth;
+using CulinaryBlog.Infrastructure.Observability;
 using CulinaryBlog.Infrastructure.Persistence;
+using CulinaryBlog.Infrastructure.Persistence.Interceptors;
+using CulinaryBlog.Infrastructure.Services;
 using CulinaryBlog.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,8 +19,22 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName)));
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICategoryValidator, DefaultCategoryValidator>();
+
+        services.AddSingleton<AuditInterceptor>();
+
+        services.AddDbContext<AppDbContext>((sp, options) =>
+        {
+            var auditInterceptor = sp.GetRequiredService<AuditInterceptor>();
+            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName))
+                .AddInterceptors(auditInterceptor);
+        });
+        services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
+        services.AddHostedService<DatabaseInitializer>();
+
+        services.AddAuthInfrastructure(configuration);
+        services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
         AddFileStorage(services, configuration);
