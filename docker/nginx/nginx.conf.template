@@ -1,0 +1,35 @@
+events {}
+
+http {
+  server {
+    listen 80;
+    client_max_body_size 6m;
+
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # Auth.js belongs to Next.js, while versioned API routes belong to ASP.NET.
+    location /api/auth/ { proxy_pass http://web:3000; }
+    location /api/ { proxy_pass http://api:8080; }
+
+    location = /health { proxy_pass http://api:8080; }
+    location /scalar { proxy_pass http://api:8080; }
+    location /openapi/ { proxy_pass http://api:8080; }
+
+    location /media/ {
+      proxy_pass http://minio:9000/${MINIO_BUCKET}/;
+      proxy_set_header Host minio:9000;
+    }
+
+    location /hangfire {
+      auth_basic "Hangfire";
+      auth_basic_user_file /etc/nginx/auth/hangfire.htpasswd;
+      proxy_pass http://api:8080;
+    }
+
+    location / { proxy_pass http://web:3000; }
+  }
+}
