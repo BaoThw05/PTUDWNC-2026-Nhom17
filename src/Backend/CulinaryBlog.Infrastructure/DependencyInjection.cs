@@ -1,4 +1,7 @@
 ﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Infrastructure.BackgroundJobs;
+using Hangfire;
+using Hangfire.PostgreSql;
 using CulinaryBlog.Infrastructure.Auth;
 using CulinaryBlog.Infrastructure.Observability;
 using CulinaryBlog.Infrastructure.Persistence;
@@ -16,6 +19,8 @@ public static class DependencyInjection
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        var connectionString = configuration.GetConnectionString(ConnectionStringName);
+
         services.AddHttpContextAccessor();
         services.AddScoped<ICategoryValidator, DefaultCategoryValidator>();
 
@@ -24,7 +29,7 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>((sp, options) =>
         {
             var auditInterceptor = sp.GetRequiredService<AuditInterceptor>();
-            options.UseNpgsql(configuration.GetConnectionString(ConnectionStringName))
+            options.UseNpgsql(connectionString)
                 .AddInterceptors(auditInterceptor);
         });
         services.Configure<DatabaseOptions>(configuration.GetSection(DatabaseOptions.SectionName));
@@ -34,6 +39,28 @@ public static class DependencyInjection
         services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        if (!string.IsNullOrWhiteSpace(connectionString))
+        {
+            services.AddSingleton<IBackgroundJobService, HangfireBackgroundJobService>();
+
+            services.AddHangfire(configuration => configuration
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(
+                    options => options.UseNpgsqlConnection(connectionString),
+                    new PostgreSqlStorageOptions
+                    {
+                        SchemaName = "hangfire",
+                        PrepareSchemaIfNecessary = true
+                    }));
+            services.AddHangfireServer();
+
+            GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
+            {
+                Attempts = 3,
+                DelaysInSeconds = [60, 300, 1800]
+            });
+        }
 
         return services;
     }
