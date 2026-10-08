@@ -47,7 +47,7 @@ public static class DependencyInjection
                 .UseSimpleAssemblyNameTypeSerializer()
                 .UseRecommendedSerializerSettings()
                 .UsePostgreSqlStorage(
-                    connectionString,
+                    options => options.UseNpgsqlConnection(connectionString),
                     new PostgreSqlStorageOptions
                     {
                         SchemaName = "hangfire",
