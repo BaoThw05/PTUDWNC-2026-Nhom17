@@ -1,4 +1,4 @@
-﻿using CulinaryBlog.Domain.Enums;
+using CulinaryBlog.Domain.Enums;
 
 namespace CulinaryBlog.Application.Features.Recipes;
 
@@ -20,8 +20,19 @@ public sealed class RecipeDto
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset? UpdatedAt { get; init; }
 
+    public RecipeNutritionDto? Nutrition { get; init; }
     public List<RecipeStepDto> Steps { get; init; } = [];
     public List<RecipeIngredientDto> Ingredients { get; init; } = [];
+}
+
+public sealed class RecipeNutritionDto
+{
+    public int? Calories { get; init; }
+    public decimal? ProteinGrams { get; init; }
+    public decimal? FatGrams { get; init; }
+    public decimal? CarbsGrams { get; init; }
+    public decimal? FiberGrams { get; init; }
+    public decimal? SugarGrams { get; init; }
 }
 
 public sealed class RecipeStepDto
@@ -40,4 +51,18 @@ public sealed class RecipeIngredientDto
     public decimal? Quantity { get; init; }
     public string? Unit { get; init; }
     public int OrderIndex { get; init; }
+}
+
+public sealed class CreateRecipeStepDto
+{
+    public string? Title { get; init; }
+    public string Description { get; init; } = default!;
+    public int DurationMinutes { get; init; }
+}
+
+public sealed class CreateRecipeIngredientDto
+{
+    public string Name { get; init; } = default!;
+    public decimal? Quantity { get; init; }
+    public string? Unit { get; init; }
 }
