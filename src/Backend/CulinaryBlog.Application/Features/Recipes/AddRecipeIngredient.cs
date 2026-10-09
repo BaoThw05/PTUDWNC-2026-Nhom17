@@ -24,8 +24,9 @@ public sealed class AddRecipeIngredientCommandValidator : AbstractValidator<AddR
     }
 }
 
-public sealed class AddRecipeIngredientCommandHandler(IAppDbContext db)
-    : IRequestHandler<AddRecipeIngredientCommand, Guid>
+public sealed class AddRecipeIngredientCommandHandler(
+    IAppDbContext db,
+    IRecipeAuthorizationHandler authorizationHandler) : IRequestHandler<AddRecipeIngredientCommand, Guid>
 {
     public async Task<Guid> Handle(AddRecipeIngredientCommand request, CancellationToken cancellationToken)
     {
@@ -33,7 +34,14 @@ public sealed class AddRecipeIngredientCommandHandler(IAppDbContext db)
             ?? throw new NotFoundException(
                 $"Không tìm thấy công thức có id '{request.RecipeId}'", RecipeErrorCodes.RecipeNotFound);
 
-        var nextOrderIndex = db.RecipeIngredients.Count(i => i.RecipeId == request.RecipeId);
+        // Quyết định S-11 & 2.14: Chỉ tác giả hoặc Admin mới có quyền thêm nguyên liệu
+        authorizationHandler.EnsureCanModify(recipe);
+
+        var maxOrderIndex = db.RecipeIngredients
+            .Where(i => i.RecipeId == request.RecipeId)
+            .Select(i => (int?)i.OrderIndex)
+            .Max() ?? -1;
+        var nextOrderIndex = maxOrderIndex + 1;
 
         var ingredient = new RecipeIngredient
         {

@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { RecipeWizard } from "@/features/recipes/components/RecipeWizard";
 
-export const metadata: Metadata = { title: "Tạo công thức" };
+export const metadata: Metadata = {
+  title: "Tạo công thức mới",
+  description: "Tạo công thức nấu ăn mới qua từng bước",
+};
 
 export default function NewRecipePage() {
-  return (
-    <PlaceholderPage
-      title="Tạo công thức"
-      owner="TV2"
-      requirements="FR-RCP-003, 009, 010"
-    />
-  );
+  return <RecipeWizard />;
 }

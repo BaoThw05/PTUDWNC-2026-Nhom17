@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { RecipeEditor } from "@/features/recipes/components/RecipeEditor";
 
-export const metadata: Metadata = { title: "Sửa công thức" };
+export const metadata: Metadata = {
+  title: "Chỉnh sửa công thức",
+  description: "Chỉnh sửa công thức nấu ăn của bạn",
+};
 
-export default async function EditRecipePage({ params }: PageProps<"/dashboard/recipes/[id]/edit">) {
+interface EditRecipePageProps {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function EditRecipePage({ params }: EditRecipePageProps) {
   const { id } = await params;
 
-  return (
-    <PlaceholderPage
-      title="Sửa công thức"
-      owner="TV2"
-      requirements="FR-RCP-004, 009, 010"
-    >
-      <p className="text-zinc-600 dark:text-zinc-400">
-        Tham số <code>id</code>: {id}
-      </p>
-    </PlaceholderPage>
-  );
+  return <RecipeEditor recipeId={id} />;
 }
