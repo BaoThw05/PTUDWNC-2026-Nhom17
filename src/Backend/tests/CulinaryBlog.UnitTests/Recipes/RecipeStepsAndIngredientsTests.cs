@@ -200,6 +200,7 @@ public sealed class RecipeStepsAndIngredientsTests
         private readonly List<RecipeStep> _steps = [.. (steps ?? [])];
         private readonly List<RecipeIngredient> _ingredients = [.. (ingredients ?? [])];
 
+        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
         public IQueryable<Recipe> Recipes => _recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
