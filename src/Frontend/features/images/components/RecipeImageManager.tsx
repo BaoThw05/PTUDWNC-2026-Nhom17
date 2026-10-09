@@ -50,10 +50,11 @@ export type RecipeImageManagerProps = {
   recipeId: string;
   initialImages?: RecipeImage[];
   onChange?: (images: RecipeImage[]) => void;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 /** Dùng sau khi recipe đã được tạo; TV2 chỉ cần truyền recipeId vào wizard/trang sửa. */
-export function RecipeImageManager({ recipeId, initialImages, onChange }: RecipeImageManagerProps) {
+export function RecipeImageManager({ recipeId, initialImages, onChange, onPendingChange }: RecipeImageManagerProps) {
   const queryClient = useQueryClient();
   const queryKey = ["recipe-images", recipeId] as const;
   const { data: images, isPending, error: loadError } = useQuery({
@@ -72,14 +73,23 @@ export function RecipeImageManager({ recipeId, initialImages, onChange }: Recipe
   const activeControllerRef = useRef<AbortController | null>(null);
   const previewUrlsRef = useRef(new Set<string>());
   const onChangeRef = useRef(onChange);
+  const onPendingChangeRef = useRef(onPendingChange);
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
 
   useEffect(() => {
+    onPendingChangeRef.current = onPendingChange;
+  }, [onPendingChange]);
+
+  useEffect(() => {
     if (images) onChangeRef.current?.(sortImages(images));
   }, [images]);
+
+  useEffect(() => {
+    onPendingChangeRef.current?.(uploads.some((item) => item.status !== "failed"));
+  }, [uploads]);
 
   useEffect(() => {
     const previewUrls = previewUrlsRef.current;
