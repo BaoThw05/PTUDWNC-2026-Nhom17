@@ -5,6 +5,7 @@ namespace CulinaryBlog.Application.Abstractions;
 
 public interface IAppDbContext
 {
+    IQueryable<Category> Categories { get; }
     IQueryable<Recipe> Recipes { get; }
     IQueryable<RecipeStep> RecipeSteps { get; }
     IQueryable<RecipeIngredient> RecipeIngredients { get; }
