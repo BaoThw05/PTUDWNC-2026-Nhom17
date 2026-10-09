@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { MyRecipesTable } from "@/features/recipes/components/MyRecipesTable";
 
-export const metadata: Metadata = { title: "Công thức của tôi" };
+export const metadata: Metadata = {
+  title: "Công thức của tôi",
+  description: "Quản lý công thức nấu ăn cá nhân",
+};
 
 export default function MyRecipesPage() {
-  return (
-    <PlaceholderPage
-      title="Công thức của tôi"
-      owner="TV2"
-      requirements="FR-RCP-005 → 007, thùng rác"
-    />
-  );
+  return <MyRecipesTable />;
 }
