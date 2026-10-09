@@ -1,3 +1,4 @@
+import axios from "axios";
 import { getAccessToken } from "./access-token";
 import { ApiError, toProblemDetails } from "./problem-details";
 
@@ -14,6 +15,13 @@ export type ApiRequestOptions = Omit<RequestInit, "body" | "method"> & {
    * Token gắn vào header Authorization. Bỏ trống: trình duyệt tự lấy từ phiên đăng nhập.
    * Truyền `null` để gửi request không kèm token.
    */
+  accessToken?: string | null;
+};
+
+export type ApiUploadOptions = {
+  body: FormData;
+  onProgress?: (percent: number) => void;
+  signal?: AbortSignal;
   accessToken?: string | null;
 };
 
@@ -72,6 +80,28 @@ async function request<T>(
   return (isJson(response) ? await response.json() : await response.text()) as T;
 }
 
+async function upload<T>(path: string, { body, onProgress, signal, accessToken }: ApiUploadOptions): Promise<T> {
+  const token = accessToken === undefined ? await getAccessToken() : accessToken;
+  try {
+    const response = await axios.post<T>(`${resolveBaseUrl()}${path}`, body, {
+      headers: {
+        Accept: "application/json, application/problem+json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      signal,
+      onUploadProgress: ({ loaded, total }) => {
+        if (total && total > 0) onProgress?.(Math.min(100, Math.round((loaded / total) * 100)));
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      throw new ApiError(error.response.status, toProblemDetails(error.response.data));
+    }
+    throw error;
+  }
+}
+
 /** Điểm duy nhất để gọi backend. Đường dẫn giữ nguyên như backend, ví dụ `/api/v1/recipes`. */
 export const apiClient = {
   get: <T>(path: string, options?: ApiRequestOptions) =>
@@ -84,4 +114,5 @@ export const apiClient = {
     request<T>("PATCH", path, options),
   delete: <T>(path: string, options?: ApiRequestOptions) =>
     request<T>("DELETE", path, options),
+  upload,
 };
