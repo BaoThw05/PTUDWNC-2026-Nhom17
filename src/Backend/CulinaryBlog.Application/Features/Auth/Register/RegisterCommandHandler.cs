@@ -1,3 +1,4 @@
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Application.Features.Auth.Common;
@@ -5,7 +6,10 @@ using MediatR;
 
 namespace CulinaryBlog.Application.Features.Auth.Register;
 
-public sealed class RegisterCommandHandler(IUserAccountService users, AuthSessionIssuer sessions)
+public sealed class RegisterCommandHandler(
+    IUserAccountService users,
+    AuthSessionIssuer sessions,
+    IBackgroundJobService jobs)
     : IRequestHandler<RegisterCommand, AuthResponse>
 {
     public async Task<AuthResponse> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -21,7 +25,10 @@ public sealed class RegisterCommandHandler(IUserAccountService users, AuthSessio
             new NewUserAccount(email, request.FullName.Trim(), request.UserName.Trim(), request.Password),
             cancellationToken);
 
-        // TODO(TV1): IWelcomeEmailJob đã sẵn sàng; chỉ còn thiếu IBackgroundJobService (TV3, 3.07) để enqueue thay vì gọi trực tiếp (việc 1.15).
-        return await sessions.StartAsync(user, cancellationToken);
+        var response = await sessions.StartAsync(user, cancellationToken);
+
+        // FR-JOB-001: enqueue sau khi user và refresh token đã lưu; lỗi gửi mail thì Hangfire tự retry.
+        jobs.Enqueue<IWelcomeEmailJob>(job => job.ExecuteAsync(user.Id, CancellationToken.None));
+        return response;
     }
 }
