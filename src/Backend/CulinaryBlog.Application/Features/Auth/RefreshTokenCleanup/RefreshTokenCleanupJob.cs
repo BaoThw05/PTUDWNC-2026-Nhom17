@@ -5,7 +5,7 @@ namespace CulinaryBlog.Application.Features.Auth.RefreshTokenCleanup;
 
 /// <summary>
 /// Job chạy hằng ngày: xóa refresh token đã hết hạn quá <see cref="Retention"/> (việc 1.20).
-/// TODO(TV1): đăng ký recurring (cron <c>Cron.Daily</c>) qua <c>IBackgroundJobService.AddOrUpdateRecurring</c> khi TV3 merge Hangfire (3.07).
+/// Lập lịch recurring trong <c>AuthRecurringJobsRegistration</c> (Infrastructure).
 /// </summary>
 public sealed class RefreshTokenCleanupJob(
     IRefreshTokenRepository refreshTokens,
