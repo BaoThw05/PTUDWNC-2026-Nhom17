@@ -19,4 +19,6 @@ internal sealed class AuthTestContext
     public FakeCurrentUser CurrentUser { get; } = new();
 
     public AuthSessionIssuer Sessions { get; }
+
+    public FakeBackgroundJobService Jobs { get; } = new();
 }
