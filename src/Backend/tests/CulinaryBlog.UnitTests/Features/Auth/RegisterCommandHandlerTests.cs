@@ -13,7 +13,7 @@ public sealed class RegisterCommandHandlerTests
 
     public RegisterCommandHandlerTests()
     {
-        _handler = new RegisterCommandHandler(_context.Users, _context.Sessions);
+        _handler = new RegisterCommandHandler(_context.Users, _context.Sessions, _context.Jobs);
     }
 
     [Fact]
@@ -28,6 +28,7 @@ public sealed class RegisterCommandHandlerTests
         Assert.Equal("Tuấn", response.User.FullName);
         Assert.Contains(Roles.Author, response.User.Roles);
         Assert.Single(_context.RefreshTokens.Tokens);
+        Assert.Single(_context.Jobs.Enqueued);
     }
 
     [Fact]
@@ -40,6 +41,7 @@ public sealed class RegisterCommandHandlerTests
             CancellationToken.None));
 
         Assert.Equal(AuthErrorCodes.EmailExists, exception.Code);
+        Assert.Empty(_context.Jobs.Enqueued);
     }
 
     [Fact]
