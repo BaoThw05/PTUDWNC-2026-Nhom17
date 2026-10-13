@@ -15,5 +15,6 @@ internal sealed class RecipeSearchMatch
     public RecipeStatus Status { get; set; }
     public DateTimeOffset? PublishedAt { get; set; }
     public Guid? CategoryId { get; set; }
+    public string? ThumbnailKey { get; set; }
     public double RelevanceScore { get; set; }
 }

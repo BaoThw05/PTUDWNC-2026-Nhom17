@@ -48,7 +48,7 @@ public sealed class GetRecipesQueryValidator : AbstractValidator<GetRecipesQuery
     }
 }
 
-public sealed class GetRecipesQueryHandler(IAppDbContext db)
+public sealed class GetRecipesQueryHandler(IAppDbContext db, IFileStorage fileStorage)
     : IRequestHandler<GetRecipesQuery, PagedResult<RecipeSummaryDto>>
 {
     public Task<PagedResult<RecipeSummaryDto>> Handle(
@@ -95,11 +95,12 @@ public sealed class GetRecipesQueryHandler(IAppDbContext db)
             _ => query.OrderByDescending(recipe => recipe.PublishedAt)
         };
 
-        var items = orderedQuery
+        var rows = orderedQuery
             .ThenBy(recipe => recipe.Id)
             .Skip((request.Page - 1) * request.PageSize)
             .Take(request.PageSize)
-            .Select(recipe => new RecipeSummaryDto(
+            .Select(recipe => new
+            {
                 recipe.Id,
                 recipe.Title,
                 recipe.Slug,
@@ -111,8 +112,27 @@ public sealed class GetRecipesQueryHandler(IAppDbContext db)
                 recipe.Status,
                 recipe.PublishedAt,
                 recipe.CategoryId,
-                null))
+                ThumbnailKey = recipe.Images
+                    .Where(image => image.IsPrimary)
+                    .Select(image => image.ThumbnailKey ?? image.MediumKey ?? image.OriginalKey)
+                    .FirstOrDefault()
+            })
             .ToList();
+
+        var items = rows.Select(recipe => new RecipeSummaryDto(
+            recipe.Id,
+            recipe.Title,
+            recipe.Slug,
+            recipe.Description,
+            recipe.PrepTimeMinutes,
+            recipe.CookTimeMinutes,
+            recipe.Servings,
+            recipe.Difficulty,
+            recipe.Status,
+            recipe.PublishedAt,
+            recipe.CategoryId,
+            recipe.ThumbnailKey is null ? null : fileStorage.GetPublicUrl(recipe.ThumbnailKey))
+        ).ToList();
 
         return Task.FromResult(new PagedResult<RecipeSummaryDto>(items, request.Page, request.PageSize, totalCount));
     }

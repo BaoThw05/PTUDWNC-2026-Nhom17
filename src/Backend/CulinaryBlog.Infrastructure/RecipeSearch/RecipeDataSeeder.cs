@@ -1,5 +1,6 @@
 using Bogus;
 using CulinaryBlog.Application.Features.Recipes;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Domain.Auth;
 using CulinaryBlog.Domain.Entities;
 using CulinaryBlog.Domain.Enums;
@@ -14,6 +15,7 @@ namespace CulinaryBlog.Infrastructure.RecipeSearch;
 
 internal sealed class RecipeDataSeeder(
     AppDbContext db,
+    IFileStorage fileStorage,
     UserManager<ApplicationUser> userManager,
     IOptions<AuthSeedOptions> authSeedOptions,
     TimeProvider timeProvider,
@@ -50,13 +52,6 @@ internal sealed class RecipeDataSeeder(
 
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
-        if (await db.Recipes.IgnoreQueryFilters().AnyAsync(
-                recipe => recipe.Slug.StartsWith("sample-"), cancellationToken))
-        {
-            logger.LogInformation("Recipe sample data already exists; skipping recipe seed");
-            return;
-        }
-
         var authors = await EnsureSampleAuthorsAsync(cancellationToken);
         if (authors.Count < 5)
         {
@@ -64,15 +59,99 @@ internal sealed class RecipeDataSeeder(
             return;
         }
 
+        var categories = await db.Categories
+            .OrderBy(category => category.OrderIndex)
+            .ToListAsync(cancellationToken);
+        if (categories.Count == 0)
+        {
+            logger.LogWarning("Recipe seed needs at least one category; category seed was not applied");
+            return;
+        }
+
         var faker = new Faker();
         var now = timeProvider.GetUtcNow();
-        var recipes = Enumerable.Range(0, 50)
-            .Select(index => CreateRecipe(index, authors[index % authors.Count], faker, now))
-            .ToArray();
+        var existingRecipes = await db.Recipes.IgnoreQueryFilters()
+            .Where(recipe => recipe.Slug.StartsWith("sample-"))
+            .ToListAsync(cancellationToken);
+        var recipesByIndex = existingRecipes
+            .Select(recipe => (Recipe: recipe, Index: GetSampleIndex(recipe.Slug)))
+            .Where(item => item.Index.HasValue)
+            .ToDictionary(item => item.Index!.Value, item => item.Recipe);
+        var recipes = new Recipe[50];
+        var newRecipes = new List<Recipe>();
 
-        await db.Recipes.AddRangeAsync(recipes, cancellationToken);
+        for (var index = 0; index < recipes.Length; index++)
+        {
+            var category = categories[index % categories.Count];
+            if (!recipesByIndex.TryGetValue(index + 1, out var recipe))
+            {
+                recipe = CreateRecipe(index, authors[index % authors.Count], category.Id, faker, now);
+                newRecipes.Add(recipe);
+            }
+            else
+            {
+                recipe.CategoryId = category.Id;
+            }
+
+            recipes[index] = recipe;
+        }
+
+        await db.Recipes.AddRangeAsync(newRecipes, cancellationToken);
+
+        var sampleRecipeIds = recipes.Select(recipe => recipe.Id).ToArray();
+        var recipesWithPrimaryImage = await db.RecipeImages.IgnoreQueryFilters()
+            .Where(image => sampleRecipeIds.Contains(image.RecipeId) && image.IsPrimary)
+            .Select(image => image.RecipeId)
+            .ToHashSetAsync(cancellationToken);
+        var imageIndexes = Enumerable.Range(0, recipes.Length)
+            .Where(index => index % 10 == 0 && recipes[index].Status == RecipeStatus.Published
+                && !recipesWithPrimaryImage.Contains(recipes[index].Id))
+            .ToArray();
+        var availableArtwork = new HashSet<int>();
+
+        foreach (var variant in imageIndexes.Select(index => index / 10 % 3).Distinct())
+        {
+            var key = SampleImageKey(variant);
+            try
+            {
+                await using var stream = new MemoryStream(SampleRecipeArtwork.CreatePng(variant));
+                await fileStorage.UploadAsync(stream, key, "image/png", cancellationToken);
+                availableArtwork.Add(variant);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                logger.LogWarning(exception, "Could not upload sample recipe artwork {StorageKey}", key);
+            }
+        }
+
+        foreach (var index in imageIndexes)
+        {
+            var variant = index / 10 % 3;
+            if (!availableArtwork.Contains(variant))
+            {
+                continue;
+            }
+
+            var recipe = recipes[index];
+            db.RecipeImages.Add(new RecipeImage
+            {
+                Id = Guid.CreateVersion7(),
+                RecipeId = recipe.Id,
+                OriginalKey = SampleImageKey(variant),
+                ThumbnailKey = SampleImageKey(variant),
+                AltText = $"Món {recipe.Title}",
+                IsPrimary = true,
+                OrderIndex = 0,
+                CreatedAt = now
+            });
+        }
+
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Seeded {RecipeCount} sample recipes for {AuthorCount} authors", recipes.Length, authors.Count);
+        logger.LogInformation(
+            "Ensured {RecipeCount} sample recipes for {AuthorCount} authors and {CategoryCount} categories",
+            recipes.Length,
+            authors.Count,
+            categories.Count);
     }
 
     private async Task<IReadOnlyList<ApplicationUser>> EnsureSampleAuthorsAsync(CancellationToken cancellationToken)
@@ -122,7 +201,12 @@ internal sealed class RecipeDataSeeder(
         return authors;
     }
 
-    private static Recipe CreateRecipe(int index, ApplicationUser author, Faker faker, DateTimeOffset now)
+    private static Recipe CreateRecipe(
+        int index,
+        ApplicationUser author,
+        Guid categoryId,
+        Faker faker,
+        DateTimeOffset now)
     {
         var title = $"{DishNames[index / Variations.Length]} {Variations[index % Variations.Length]}";
         var createdAt = now.AddDays(-faker.Random.Int(1, 180)).AddMinutes(-index);
@@ -146,7 +230,7 @@ internal sealed class RecipeDataSeeder(
             Status = status,
             PublishedAt = status == RecipeStatus.Published ? createdAt.AddHours(faker.Random.Int(1, 24)) : null,
             AuthorId = author.Id.ToString(),
-            CategoryId = null,
+            CategoryId = categoryId,
             IsDeleted = false,
             CreatedAt = createdAt,
             UpdatedAt = null
@@ -168,6 +252,16 @@ internal sealed class RecipeDataSeeder(
 
         return recipe;
     }
+
+    private static int? GetSampleIndex(string slug)
+    {
+        var parts = slug.Split('-', 3);
+        return parts.Length >= 2 && parts[0] == "sample" && int.TryParse(parts[1], out var number)
+            ? number
+            : null;
+    }
+
+    private static string SampleImageKey(int variant) => $"seed/recipes/sample-dish-{variant + 1:00}.png";
 
     private static void EnsureSucceeded(IdentityResult result, string subject)
     {

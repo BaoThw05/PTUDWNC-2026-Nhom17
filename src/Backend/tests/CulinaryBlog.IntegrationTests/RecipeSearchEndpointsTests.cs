@@ -46,6 +46,9 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
 
         Assert.Equal(50, await sampleRecipes.CountAsync());
         Assert.Equal(5, await sampleRecipes.Select(recipe => recipe.AuthorId).Distinct().CountAsync());
+        Assert.Equal(50, await sampleRecipes.CountAsync(recipe => recipe.CategoryId.HasValue));
+        var sampleRecipeIds = sampleRecipes.Select(recipe => recipe.Id);
+        Assert.Equal(5, await db.RecipeImages.CountAsync(image => sampleRecipeIds.Contains(image.RecipeId) && image.IsPrimary));
         Assert.Equal(
             await sampleRecipes.CountAsync(recipe => recipe.Status == RecipeStatus.Published),
             await db.RecipeSteps.CountAsync(step =>
@@ -56,6 +59,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         await recipeSeeder.SeedAsync(CancellationToken.None);
 
         Assert.Equal(50, await sampleRecipes.CountAsync());
+        Assert.Equal(5, await db.RecipeImages.CountAsync(image => sampleRecipeIds.Contains(image.RecipeId) && image.IsPrimary));
     }
 
     [Fact]
@@ -96,6 +100,19 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(5, result.Items.Count);
         Assert.True(result.TotalCount >= 35);
         Assert.All(result.Items, recipe => Assert.Equal(RecipeStatus.Published, recipe.Status));
+    }
+
+    [Fact]
+    public async Task ListRecipes_ProjectsPrimaryImageThumbnailUrl()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/recipes?page=1&pageSize=50");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
+        Assert.NotNull(result);
+        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl == "/media/seed/recipes/sample-dish-01.png");
     }
 
     [Fact]
@@ -263,6 +280,19 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.NotEmpty(result.Items);
         Assert.Contains(result.Items, recipe => recipe.Title.StartsWith("Phở bò", StringComparison.OrdinalIgnoreCase));
         Assert.All(result.Items, recipe => Assert.NotNull(recipe.RelevanceScore));
+    }
+
+    [Fact]
+    public async Task SearchRecipes_ProjectsPrimaryImageThumbnailUrl()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/v1/recipes/search?q=pho%20bo");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
+        Assert.NotNull(result);
+        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl == "/media/seed/recipes/sample-dish-01.png");
     }
 
     [Fact]

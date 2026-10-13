@@ -1,3 +1,4 @@
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Models;
 using CulinaryBlog.Application.Features.RecipeSearch;
 using CulinaryBlog.Domain.Enums;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CulinaryBlog.Infrastructure.RecipeSearch;
 
-internal sealed class RecipeSearchRepository(AppDbContext db) : IRecipeSearchRepository
+internal sealed class RecipeSearchRepository(AppDbContext db, IFileStorage fileStorage) : IRecipeSearchRepository
 {
     public async Task<PagedResult<RecipeSummaryDto>> SearchAsync(
         string normalizedTerm,
@@ -34,6 +35,13 @@ internal sealed class RecipeSearchRepository(AppDbContext db) : IRecipeSearchRep
                     recipe."Status",
                     recipe."PublishedAt",
                     recipe."CategoryId",
+                    (
+                        SELECT COALESCE(image."ThumbnailKey", image."MediumKey", image."OriginalKey")
+                        FROM "RecipeImages" AS image
+                        WHERE image."RecipeId" = recipe."Id" AND image."IsPrimary" = true
+                        ORDER BY image."OrderIndex"
+                        LIMIT 1
+                    ) AS "ThumbnailKey",
                     similarity(recipe."SearchText", {normalizedTerm})::double precision AS "RelevanceScore"
                 FROM "Recipes" AS recipe
                 WHERE recipe."Status" = {(int)RecipeStatus.Published}
@@ -51,12 +59,14 @@ internal sealed class RecipeSearchRepository(AppDbContext db) : IRecipeSearchRep
             .AsNoTracking();
 
         var totalCount = await matches.CountAsync(cancellationToken);
-        var items = await matches
+        var rows = await matches
             .OrderByDescending(match => match.RelevanceScore)
             .ThenBy(match => match.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(match => new RecipeSummaryDto(
+            .ToListAsync(cancellationToken);
+
+        var items = rows.Select(match => new RecipeSummaryDto(
                 match.Id,
                 match.Title,
                 match.Slug,
@@ -68,9 +78,9 @@ internal sealed class RecipeSearchRepository(AppDbContext db) : IRecipeSearchRep
                 match.Status,
                 match.PublishedAt,
                 match.CategoryId,
-                null,
+                match.ThumbnailKey is null ? null : fileStorage.GetPublicUrl(match.ThumbnailKey),
                 match.RelevanceScore))
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return new PagedResult<RecipeSummaryDto>(items, page, pageSize, totalCount);
     }
