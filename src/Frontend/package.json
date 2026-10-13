@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
     "generate:api-types": "openapi-typescript http://localhost:5000/openapi/v1.json -o lib/api/generated.ts"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
