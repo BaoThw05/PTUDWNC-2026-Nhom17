@@ -24,6 +24,7 @@ public class Recipe : BaseEntity, ISoftDeletable
 
     public ICollection<RecipeStep> Steps { get; set; } = new List<RecipeStep>();
     public ICollection<RecipeIngredient> Ingredients { get; set; } = new List<RecipeIngredient>();
+    public ICollection<RecipeImage> Images { get; set; } = new List<RecipeImage>();
 
     public bool IsDeleted { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
