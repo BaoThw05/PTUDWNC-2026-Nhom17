@@ -51,7 +51,7 @@ public sealed class GoogleLoginCommandHandler(
             new NewUserAccount(identity.Email, FullNameOf(identity), GenerateUserNameFrom(identity.Email), Password: null, identity.PictureUrl),
             cancellationToken);
 
-        // TODO(TV1): gửi email chào mừng cho tài khoản mới tạo từ Google (việc 1.15).
+        // TODO(TV1): IWelcomeEmailJob đã sẵn sàng; chỉ còn thiếu IBackgroundJobService (TV3, 3.07) để enqueue thay vì gọi trực tiếp (việc 1.15).
         return await users.LinkExternalLoginAsync(created.Id, login, avatarUrl: null, cancellationToken);
     }
 

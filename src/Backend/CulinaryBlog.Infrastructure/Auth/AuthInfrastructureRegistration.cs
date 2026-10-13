@@ -14,12 +14,12 @@ internal static class AuthInfrastructureRegistration
 
     public static IServiceCollection AddAuthInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // AddDefaultTokenProviders: cần cho ResetPasswordAsync (đổi mật khẩu) và sau này là quên mật khẩu.
         services
             .AddIdentityCore<ApplicationUser>(ConfigureIdentity)
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<AppDbContext>()
             .AddSignInManager()
-            // Cần cho ResetPasswordAsync (đổi mật khẩu) và sau này là quên mật khẩu.
             .AddDefaultTokenProviders();
 
         services.AddOptions<JwtOptions>()

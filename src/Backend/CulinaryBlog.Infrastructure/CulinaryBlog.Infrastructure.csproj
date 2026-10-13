@@ -11,10 +11,14 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" />
+    <PackageReference Include="Hangfire.AspNetCore" />
+    <PackageReference Include="Hangfire.PostgreSql" />
+    <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Google.Apis.Auth" />
+    <PackageReference Include="MailKit" />
   </ItemGroup>
 
 </Project>
