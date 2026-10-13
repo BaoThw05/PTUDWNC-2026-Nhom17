@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 const siteName = "Culinary Blog";
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 type PageMetadata = {
   title: string;
