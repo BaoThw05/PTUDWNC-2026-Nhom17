@@ -21,6 +21,14 @@ export function changePassword(values: { currentPassword: string; newPassword: s
   return apiClient.post<void>(`${AUTH_PATH}/change-password`, { body: values });
 }
 
+export function forgotPassword(values: { email: string }): Promise<void> {
+  return apiClient.post<void>(`${AUTH_PATH}/forgot-password`, { body: values, accessToken: null });
+}
+
+export function resetPassword(values: { userId: string; token: string; newPassword: string }): Promise<void> {
+  return apiClient.post<void>(`${AUTH_PATH}/reset-password`, { body: values, accessToken: null });
+}
+
 export function updateProfile(values: { fullName: string }): Promise<UserProfile> {
   return apiClient.patch<UserProfile>(`${AUTH_PATH}/me`, { body: values });
 }
