@@ -3,5 +3,7 @@ export const SESSION_REFETCH_SECONDS = 4 * 60;
 
 export const LOGIN_PATH = "/auth/login";
 export const REGISTER_PATH = "/auth/register";
+export const FORGOT_PASSWORD_PATH = "/auth/forgot-password";
+export const RESET_PASSWORD_PATH = "/auth/reset-password";
 export const PROFILE_PATH = "/profile";
 export const ADMIN_USERS_PATH = "/admin/users";
