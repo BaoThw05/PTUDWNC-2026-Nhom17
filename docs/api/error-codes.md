@@ -75,4 +75,4 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
-| | | | RecipeSearch |
+| `SEARCH_QUERY_TOO_SHORT` | 422 | Từ khóa sau chuẩn hóa có ít hơn 2 ký tự chữ/số | RecipeSearch |

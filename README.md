@@ -55,6 +55,9 @@ docker compose ps
 `HANGFIRE_USER` và `HANGFIRE_PASSWORD` trong `.env`.
 `AUTH_URL` phải bằng origin mà người dùng mở trong trình duyệt (ví dụ
 `http://localhost:18080` nếu đổi `APP_PORT` sang `18080`).
+PostgreSQL, Redis, MinIO, Seq và Mailpit cũng khởi động trong Compose; MinIO
+tự tạo bucket `culinary-blog`. Mở MinIO Console tại `http://localhost:9001`,
+Seq tại `http://localhost:5341` và Mailpit tại `http://localhost:8025`.
 
 Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, chỉnh các biến cổng trong
 `.env`. Không chạy đồng thời stack cũ có cùng tên container.
@@ -119,9 +122,11 @@ Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trì
 | Frontend và Backend chạy riêng | 3000 và 5000 | `next dev` và `launchSettings.json` |
 | PostgreSQL | 5432 | `POSTGRES_PORT` trong `.env` |
 | Redis (có mật khẩu) | 6379 | `REDIS_PORT` trong `.env` |
-| MinIO API và Console | 9000 và 9001 | `MINIO_API_PORT`, `MINIO_CONSOLE_PORT` |
-| Seq | 5341 | `SEQ_PORT` |
-| Mailpit SMTP và UI | 1025 và 8025 | `MAILPIT_SMTP_PORT`, `MAILPIT_UI_PORT` |
+| MinIO API | 9000 | `MINIO_API_PORT` trong `.env` |
+| MinIO Console | 9001 | `MINIO_CONSOLE_PORT` trong `.env` |
+| Seq | 5341 | `SEQ_PORT` trong `.env` |
+| Mailpit SMTP | 1025 | `MAILPIT_SMTP_PORT` trong `.env` |
+| Mailpit UI | 8025 | `MAILPIT_UI_PORT` trong `.env` |
 
 API và web không mở cổng trực tiếp khi chạy bằng Compose; Nginx là điểm vào duy nhất của ứng dụng.
 
