@@ -8,6 +8,7 @@ import {
   deleteRecipeIngredient,
   deleteRecipeStep,
   getRecipeById,
+  reorderRecipeSteps,
   updateRecipe,
 } from "../api/client";
 import type { RecipeSummary, UpdateRecipeRequest } from "../types";
@@ -195,6 +196,25 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       await loadRecipe();
     } catch (err: unknown) {
       setErrorMessage((err as Error).message || "Không thể xóa bước thực hiện.");
+    }
+  };
+
+  // Sắp xếp lại thứ tự các bước (Task 2.22)
+  const handleMoveStep = async (currentIndex: number, direction: -1 | 1) => {
+    if (!recipe) return;
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= recipe.steps.length) return;
+
+    const newSteps = [...recipe.steps];
+    const temp = newSteps[currentIndex];
+    newSteps[currentIndex] = newSteps[targetIndex];
+    newSteps[targetIndex] = temp;
+
+    try {
+      await reorderRecipeSteps(recipeId, newSteps.map((s) => s.id));
+      await loadRecipe();
+    } catch (err: unknown) {
+      setErrorMessage((err as Error).message || "Không thể sắp xếp lại các bước.");
     }
   };
 
@@ -422,19 +442,39 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
         {/* Danh sách các bước */}
         <div className="space-y-3">
-          {recipe.steps.map((st) => (
+          {recipe.steps.map((st, index) => (
             <div key={st.id} className="rounded-lg border border-zinc-200 p-3 space-y-1 dark:border-zinc-800">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
                   Bước {st.stepNumber}: {st.title} {st.durationMinutes && `(${st.durationMinutes} phút)`}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteStep(st.id)}
-                  className="text-xs text-rose-500 hover:text-rose-700"
-                >
-                  Xóa bước
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={index === 0}
+                    onClick={() => handleMoveStep(index, -1)}
+                    className="rounded border border-zinc-200 px-2 py-0.5 text-xs font-bold hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                    title="Chuyển bước lên trên"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    disabled={index === recipe.steps.length - 1}
+                    onClick={() => handleMoveStep(index, 1)}
+                    className="rounded border border-zinc-200 px-2 py-0.5 text-xs font-bold hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                    title="Chuyển bước xuống dưới"
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteStep(st.id)}
+                    className="ml-2 text-xs text-rose-500 hover:text-rose-700"
+                  >
+                    Xóa bước
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-zinc-600 dark:text-zinc-400">{st.description}</p>
             </div>

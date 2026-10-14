@@ -136,6 +136,14 @@ internal sealed class RecipesEndpoints : IEndpointModule
         .WithName("AddRecipeStep")
         .WithSummary("Thêm bước thực hiện mới (FR-RCP-010)");
 
+        recipes.MapPut("/{id:guid}/steps/order", async (Guid id, ReorderRecipeStepsRequest request, IMediator mediator) =>
+        {
+            await mediator.Send(new ReorderRecipeStepsCommand(id, request.StepIds));
+            return Results.NoContent();
+        })
+        .WithName("ReorderRecipeSteps")
+        .WithSummary("Sắp xếp lại thứ tự các bước thực hiện (FR-RCP-010, Task 2.22)");
+
         recipes.MapPut("/{id:guid}/steps/{stepId:guid}", async (Guid id, Guid stepId, UpdateRecipeStepCommand command, IMediator mediator) =>
         {
             await mediator.Send(command with { RecipeId = id, StepId = stepId });
