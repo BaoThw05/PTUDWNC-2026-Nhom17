@@ -92,7 +92,9 @@ public sealed class CategoryCommandsTests
 
     private static Category Category(string name, string slug) => new()
     {
-        Id = Guid.NewGuid(), Name = name, Slug = slug
+        Id = Guid.NewGuid(),
+        Name = name,
+        Slug = slug
     };
 
     private static Recipe Recipe(Guid categoryId, bool isDeleted) => new()

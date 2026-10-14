@@ -125,18 +125,18 @@ public sealed class CategoryQueriesTests
         DateTimeOffset? publishedAt = null,
         string authorId = "author-1",
         bool isDeleted = false) => new()
-    {
-        Id = Guid.NewGuid(),
-        Title = "Công thức thử nghiệm",
-        Slug = Guid.NewGuid().ToString("N"),
-        Description = "Mô tả thử nghiệm",
-        AuthorId = authorId,
-        CategoryId = categoryId,
-        Status = status,
-        PublishedAt = publishedAt,
-        CreatedAt = DateTimeOffset.UtcNow,
-        IsDeleted = isDeleted
-    };
+        {
+            Id = Guid.NewGuid(),
+            Title = "Công thức thử nghiệm",
+            Slug = Guid.NewGuid().ToString("N"),
+            Description = "Mô tả thử nghiệm",
+            AuthorId = authorId,
+            CategoryId = categoryId,
+            Status = status,
+            PublishedAt = publishedAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsDeleted = isDeleted
+        };
 
     private sealed class TestCurrentUser : ICurrentUser
     {
