@@ -69,7 +69,13 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 | Mã | HTTP | Mô tả | Module |
 |---|---|---|---|
 | | | | Categories |
-| | | | RecipeImages |
+| `IMAGE_NOT_FOUND` | 404 | Không tìm thấy ảnh thuộc công thức | RecipeImages |
+| `IMAGE_ALT_TEXT_INVALID` | 422 | Alt text dài quá 500 ký tự | RecipeImages |
+| `IMAGE_ORDER_INVALID` | 422 | Thứ tự ảnh là số âm | RecipeImages |
+| `IMAGE_PRIMARY_REQUIRED` | 422 | Không thể bỏ ảnh chính khi chưa chọn ảnh thay thế | RecipeImages |
+| `FILE_SIZE_EXCEEDED` | 413 | File ảnh vượt quá 5 MB | File |
+| `FILE_TYPE_NOT_ALLOWED` | 415 | MIME và chữ ký file không hợp lệ hoặc không khớp | File |
+| `STORAGE_UNAVAILABLE` | 503 | Không thể lưu ảnh vào storage | File |
 
 ## Search — TV4
 

@@ -11,6 +11,7 @@ public sealed class RecipeImageConfiguration : IEntityTypeConfiguration<RecipeIm
         builder.Property(image => image.OriginalKey).IsRequired().HasMaxLength(500);
         builder.Property(image => image.MediumKey).HasMaxLength(500);
         builder.Property(image => image.ThumbnailKey).HasMaxLength(500);
+        builder.Property(image => image.ProcessingError).HasMaxLength(500);
         builder.Property(image => image.AltText).HasMaxLength(500);
         builder.Property(image => image.OrderIndex).HasDefaultValue(0);
 

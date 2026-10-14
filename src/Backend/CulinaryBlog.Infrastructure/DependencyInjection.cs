@@ -1,6 +1,7 @@
 ﻿using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Features.RecipeSearch;
 using CulinaryBlog.Infrastructure.BackgroundJobs;
+using CulinaryBlog.Infrastructure.RecipeImages;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Amazon.Runtime;
@@ -16,6 +17,7 @@ using CulinaryBlog.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace CulinaryBlog.Infrastructure;
 
@@ -23,7 +25,7 @@ public static class DependencyInjection
 {
     private const string ConnectionStringName = "DefaultConnection";
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
         var connectionString = configuration.GetConnectionString(ConnectionStringName);
 
@@ -50,6 +52,8 @@ public static class DependencyInjection
         services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
+        services.AddTransient<IRecipeImageResizeJob, RecipeImageResizeJob>();
+        services.AddTransient<IRecipeImageDeleteJob, RecipeImageDeleteJob>();
         if (!string.IsNullOrWhiteSpace(connectionString))
         {
             services.AddSingleton<IBackgroundJobService, HangfireBackgroundJobService>();
@@ -64,7 +68,8 @@ public static class DependencyInjection
                         SchemaName = "hangfire",
                         PrepareSchemaIfNecessary = true
                     }));
-            services.AddHangfireServer();
+            if (!environment.IsEnvironment("Testing"))
+                services.AddHangfireServer();
 
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
             {

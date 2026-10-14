@@ -35,6 +35,13 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity =>
         Entry(entity).Property(e => e.Version).OriginalValue = version;
 
+    public async Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default)
+    {
+        await using var transaction = await Database.BeginTransactionAsync(cancellationToken);
+        await action();
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

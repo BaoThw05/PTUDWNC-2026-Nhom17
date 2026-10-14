@@ -5,6 +5,8 @@ public interface IFileStorage
 {
     Task UploadAsync(Stream content, string key, string contentType, CancellationToken cancellationToken = default);
 
+    Task<Stream> OpenReadAsync(string key, CancellationToken cancellationToken = default);
+
     Task DeleteAsync(string key, CancellationToken cancellationToken = default);
 
     Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
