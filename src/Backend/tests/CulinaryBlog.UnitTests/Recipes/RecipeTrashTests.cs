@@ -115,10 +115,11 @@ public sealed class RecipeTrashTests
         private readonly List<Recipe> _active = [.. (activeRecipes ?? [])];
         private readonly List<Recipe> _deleted = [.. (deletedRecipes ?? [])];
 
-        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
+        public IQueryable<CulinaryBlog.Domain.Entities.Category> Categories => Enumerable.Empty<CulinaryBlog.Domain.Entities.Category>().AsQueryable();
         public IQueryable<Recipe> Recipes => _active.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
+        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _active.Concat(_deleted).AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class { }

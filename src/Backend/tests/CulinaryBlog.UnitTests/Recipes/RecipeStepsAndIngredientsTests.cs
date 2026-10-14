@@ -200,10 +200,11 @@ public sealed class RecipeStepsAndIngredientsTests
         private readonly List<RecipeStep> _steps = [.. (steps ?? [])];
         private readonly List<RecipeIngredient> _ingredients = [.. (ingredients ?? [])];
 
-        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
+        public IQueryable<CulinaryBlog.Domain.Entities.Category> Categories => Enumerable.Empty<CulinaryBlog.Domain.Entities.Category>().AsQueryable();
         public IQueryable<Recipe> Recipes => _recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
+        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _recipes.AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class
