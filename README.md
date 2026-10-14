@@ -40,19 +40,49 @@ Bạn cần có:
 
 Các lệnh dưới đây chạy từ thư mục gốc repo, dùng được cả trên PowerShell lẫn bash.
 
-**Dịch vụ phát triển (chạy trong 5 phút)**
+**Chạy toàn bộ ứng dụng qua Nginx**
 
 ```bash
 cp .env.example .env          # PowerShell: Copy-Item .env.example .env
-docker compose up -d
-docker compose ps             # đợi postgres, redis, minio báo healthy; minio-init Exited (0)
+docker compose up -d --build
+docker compose ps
 ```
 
-Sau khi khởi động, mở ứng dụng tại http://localhost. Nginx chuyển tiếp giao diện
-Next.js, API và health check; không cần chạy `dotnet run` hay `npm run dev` trên máy.
-PostgreSQL, Redis, MinIO, Seq và Mailpit đã sẵn sàng. MinIO
-tự tạo bucket `culinary-blog`; mở MinIO Console tại http://localhost:9001,
-Seq tại http://localhost:5341 và Mailpit tại http://localhost:8025.
+Đổi các mật khẩu và `AUTH_SECRET` trong `.env` trước khi chia sẻ bản demo. Mở
+`http://localhost` để xem web, `http://localhost/health` để kiểm tra API,
+`http://localhost/scalar` để xem tài liệu API. Ảnh công thức đi qua
+`http://localhost/media/…`; dashboard tại `/hangfire` dùng tài khoản
+`HANGFIRE_USER` và `HANGFIRE_PASSWORD` trong `.env`.
+`AUTH_URL` phải bằng origin mà người dùng mở trong trình duyệt (ví dụ
+`http://localhost:18080` nếu đổi `APP_PORT` sang `18080`).
+PostgreSQL, Redis, MinIO, Seq và Mailpit cũng khởi động trong Compose; MinIO
+tự tạo bucket `culinary-blog`. Mở MinIO Console tại `http://localhost:9001`,
+Seq tại `http://localhost:5341` và Mailpit tại `http://localhost:8025`.
+
+Nếu cổng 80 hoặc các cổng dịch vụ đã được máy sử dụng, chỉnh các biến cổng trong
+`.env`. Không chạy đồng thời stack cũ có cùng tên container.
+
+**Chia sẻ bản demo qua Cloudflare Tunnel**
+
+Tạo remotely-managed Tunnel trong Cloudflare và đặt Public Hostname trỏ tới
+`http://nginx:80`. Điền token của Tunnel vào `CLOUDFLARE_TUNNEL_TOKEN` trong
+`.env` (để trống khi chỉ chạy local), đặt `AUTH_URL` bằng URL HTTPS của Public
+Hostname và khởi động lại web, rồi chạy:
+
+```bash
+docker compose --profile demo up -d cloudflared
+docker compose --profile demo ps
+```
+
+Mở hostname công khai để kiểm tra đăng nhập, tải ảnh lên và xem ảnh qua
+`/media/…`. Nếu dùng Google OAuth, thêm callback URL của hostname công khai
+vào cấu hình Google. Dừng Tunnel bằng
+`docker compose --profile demo stop cloudflared`; site trên localhost vẫn chạy.
+Token là bí mật: không đưa vào commit hoặc log, và thay token khi nghi bị lộ.
+Chi tiết lựa chọn Quick Tunnel và Named Tunnel nằm trong
+[`docs/research/cloudflare-tunnel.md`](./docs/research/cloudflare-tunnel.md).
+
+**Chạy backend và frontend riêng khi phát triển**
 
 **Backend**
 
@@ -68,7 +98,7 @@ API chạy ở http://localhost:5000. Mở http://localhost:5000/health để ki
 Backend đọc connection string trong `appsettings.Development.json`, khớp sẵn với `.env.example`. Nếu bạn đổi mật khẩu trong `.env`, báo cho backend bằng user-secrets (không commit):
 
 ```bash
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=culinary_blog;Username=culinary_admin;Password=<mật khẩu>" --project CulinaryBlog.API
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=CulinaryBlogDb;Username=postgres;Password=<mật khẩu>" --project CulinaryBlog.API
 ```
 
 **Frontend**
@@ -80,7 +110,7 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000. Nếu trang chủ hiện **Backend API: OK** thì frontend đã nói chuyện được với backend.
+Mở http://localhost:3000. Cách chạy riêng này cần các dịch vụ nền trong Docker và không đi qua Nginx.
 
 ## 3. Cổng dịch vụ
 
@@ -88,8 +118,8 @@ Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trì
 
 | Dịch vụ | Cổng | Cấu hình ở đâu |
 |---|---|---|
-| Frontend | 3000 | mặc định của `next dev` |
-| Backend API | 5000 | `CulinaryBlog.API/Properties/launchSettings.json` |
+| Site qua Nginx | 80 | `APP_PORT` trong `.env` |
+| Frontend và Backend chạy riêng | 3000 và 5000 | `next dev` và `launchSettings.json` |
 | PostgreSQL | 5432 | `POSTGRES_PORT` trong `.env` |
 | Redis (có mật khẩu) | 6379 | `REDIS_PORT` trong `.env` |
 | MinIO API | 9000 | `MINIO_API_PORT` trong `.env` |
@@ -98,13 +128,13 @@ Cả nhóm dùng chung các cổng sau. Nếu máy bạn đang có chương trì
 | Mailpit SMTP | 1025 | `MAILPIT_SMTP_PORT` trong `.env` |
 | Mailpit UI | 8025 | `MAILPIT_UI_PORT` trong `.env` |
 
-Khi thêm dịch vụ mới vào compose (storage, Mailpit, Seq…), nhớ bổ sung cổng vào bảng này trong cùng PR.
+API và web không mở cổng trực tiếp khi chạy bằng Compose; Nginx là điểm vào duy nhất của ứng dụng.
 
 ## 4. Cấu trúc thư mục
 
 ```
 .
-├── docker-compose.yml        PostgreSQL + Redis
+├── docker-compose.yml        ứng dụng và các dịch vụ nền
 ├── .env.example
 ├── global.json               ghim .NET SDK
 ├── CLAUDE.md                 hướng dẫn cho Claude Code
