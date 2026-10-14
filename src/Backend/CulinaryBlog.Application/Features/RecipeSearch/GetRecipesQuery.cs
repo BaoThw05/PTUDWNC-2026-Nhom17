@@ -12,7 +12,7 @@ public sealed record GetRecipesQuery(
     string? Difficulty = null,
     int? MaxCookTime = null,
     int? MinServings = null,
-    string Sort = "-publishedAt",
+    string Sort = "-createdAt",
     int Page = 1,
     int PageSize = PagedResult<RecipeSummaryDto>.DefaultPageSize)
     : IRequest<PagedResult<RecipeSummaryDto>>;

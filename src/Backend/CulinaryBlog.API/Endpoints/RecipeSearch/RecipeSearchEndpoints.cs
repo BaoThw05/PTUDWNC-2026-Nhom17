@@ -30,7 +30,7 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
                 difficulty,
                 maxCookTime,
                 minServings,
-                sort ?? "-publishedAt",
+                sort ?? "-createdAt",
                 page ?? 1,
                 pageSize ?? 12);
 
