@@ -39,8 +39,8 @@ public sealed class RestoreRecipeCommandHandler(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        // S-07 & 2.15: Xóa cache tag tương ứng
-        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}"], cancellationToken);
+        // S-07 & 2.15 & 2.20: Xóa cache tag tương ứng
+        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}", "categories"], cancellationToken);
 
         logger.LogInformation("Recipe {RecipeId} restored from trash with slug {Slug}", recipe.Id, recipe.Slug);
     }

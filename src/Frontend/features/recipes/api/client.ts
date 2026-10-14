@@ -58,6 +58,12 @@ export async function deleteRecipeStep(recipeId: string, stepId: string): Promis
   return apiClient.delete<void>(`${RECIPES_PATH}/${recipeId}/steps/${stepId}`);
 }
 
+export async function reorderRecipeSteps(recipeId: string, stepIds: string[]): Promise<void> {
+  return apiClient.put<void>(`${RECIPES_PATH}/${recipeId}/steps/order`, {
+    body: { stepIds } as unknown as Record<string, unknown>,
+  });
+}
+
 export async function addRecipeIngredient(
   recipeId: string,
   data: CreateRecipeIngredientDto,

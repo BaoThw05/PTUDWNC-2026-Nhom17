@@ -26,6 +26,8 @@ public static class DependencyInjection
         services.AddAuthFeature();
 
         services.AddScoped<Features.Recipes.IRecipeAuthorizationHandler, Features.Recipes.RecipeAuthorizationHandler>();
+        services.AddScoped<Features.Recipes.IRecipeTrashCleanupJob, Features.Recipes.RecipeTrashCleanupJob>();
+        services.AddScoped<Features.Recipes.RecipeTrashCleanupJob>();
 
         return services;
     }

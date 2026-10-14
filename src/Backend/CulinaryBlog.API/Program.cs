@@ -51,4 +51,14 @@ app.MapHealthChecks("/health/live");
 app.MapHealthChecks("/health/ready");
 app.MapEndpointModules();
 
+// Task 2.21: Lập lịch recurring job dọn dẹp thùng rác công thức hằng ngày (S-03)
+var backgroundJobs = app.Services.GetService<CulinaryBlog.Application.Abstractions.IBackgroundJobService>();
+if (backgroundJobs is not null)
+{
+    backgroundJobs.AddOrUpdateRecurring<CulinaryBlog.Application.Features.Recipes.RecipeTrashCleanupJob>(
+        "recipe-trash-cleanup",
+        job => job.ExecuteAsync(CancellationToken.None),
+        Cron.Daily());
+}
+
 app.Run();

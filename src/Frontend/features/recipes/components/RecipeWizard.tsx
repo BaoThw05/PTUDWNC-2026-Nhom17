@@ -117,6 +117,16 @@ export function RecipeWizard() {
     }
   };
 
+  const handleMoveStep = (currentIndex: number, direction: -1 | 1) => {
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= steps.length) return;
+    const newSteps = [...steps];
+    const temp = newSteps[currentIndex];
+    newSteps[currentIndex] = newSteps[targetIndex];
+    newSteps[targetIndex] = temp;
+    setSteps(newSteps);
+  };
+
   // Submit tạo bài (Lưu nháp hoặc Xuất bản)
   const handleSubmit = async (shouldPublish: boolean) => {
     try {
@@ -497,15 +507,35 @@ export function RecipeWizard() {
                     }}
                     className="w-20 rounded-md border border-zinc-300 px-2.5 py-1 text-sm dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
                   />
-                  {steps.length > 1 && (
+                  <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => handleRemoveStep(idx)}
-                      className="text-xs text-rose-500 hover:text-rose-700"
+                      disabled={idx === 0}
+                      onClick={() => handleMoveStep(idx, -1)}
+                      className="rounded border border-zinc-200 px-2 py-1 text-xs font-bold hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                      title="Chuyển bước lên trên"
                     >
-                      Xóa
+                      ↑
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      disabled={idx === steps.length - 1}
+                      onClick={() => handleMoveStep(idx, 1)}
+                      className="rounded border border-zinc-200 px-2 py-1 text-xs font-bold hover:bg-zinc-100 disabled:opacity-30 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                      title="Chuyển bước xuống dưới"
+                    >
+                      ↓
+                    </button>
+                    {steps.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveStep(idx)}
+                        className="ml-1 text-xs text-rose-500 hover:text-rose-700"
+                      >
+                        Xóa
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <textarea
