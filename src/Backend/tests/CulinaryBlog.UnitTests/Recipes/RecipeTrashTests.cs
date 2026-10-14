@@ -118,12 +118,15 @@ public sealed class RecipeTrashTests
         public IQueryable<Recipe> Recipes => _active.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
+        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _active.Concat(_deleted).AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class { }
         public void Remove<TEntity>(TEntity entity) where TEntity : class { }
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : CulinaryBlog.Domain.Common.BaseEntity { }
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => action();
     }
 
     private sealed class FakeCacheInvalidator : ICacheInvalidator

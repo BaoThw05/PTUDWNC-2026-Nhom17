@@ -20,4 +20,5 @@ public interface IAppDbContext
     void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity;
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+    Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default);
 }

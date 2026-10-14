@@ -11,6 +11,7 @@ public sealed class PostgresApiFactory : ApiFactory, IAsyncLifetime
     public const string AuthorPassword = "Author@12345";
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16.15-alpine").Build();
+    private readonly string _storageRoot = Path.Combine(Path.GetTempPath(), $"culinaryblog-tests-{Guid.NewGuid():N}");
 
     protected override IDictionary<string, string?> Settings
     {
@@ -20,6 +21,8 @@ public sealed class PostgresApiFactory : ApiFactory, IAsyncLifetime
             settings["ConnectionStrings:DefaultConnection"] = _postgres.GetConnectionString();
             settings["Database:ApplyMigrationsOnStartup"] = "true";
             settings["Database:SeedOnStartup"] = "true";
+            settings["FileStorage:Provider"] = "Local";
+            settings["FileStorage:LocalRootPath"] = _storageRoot;
             settings["Seed:Auth:AdminEmail"] = AdminEmail;
             settings["Seed:Auth:AdminPassword"] = AdminPassword;
             settings["Seed:Auth:AuthorPassword"] = AuthorPassword;
@@ -33,5 +36,6 @@ public sealed class PostgresApiFactory : ApiFactory, IAsyncLifetime
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        if (Directory.Exists(_storageRoot)) Directory.Delete(_storageRoot, recursive: true);
     }
 }

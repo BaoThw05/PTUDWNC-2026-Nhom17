@@ -314,6 +314,9 @@ namespace CulinaryBlog.Infrastructure.Migrations
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsProcessingFailed")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("MediumKey")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -325,6 +328,10 @@ namespace CulinaryBlog.Infrastructure.Migrations
 
                     b.Property<string>("OriginalKey")
                         .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ProcessingError")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 

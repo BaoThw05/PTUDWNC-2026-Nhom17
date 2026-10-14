@@ -203,6 +203,8 @@ public sealed class RecipeStepsAndIngredientsTests
         public IQueryable<Recipe> Recipes => _recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
+        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _recipes.AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class
@@ -221,6 +223,7 @@ public sealed class RecipeStepsAndIngredientsTests
 
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : CulinaryBlog.Domain.Common.BaseEntity { }
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => action();
     }
 
     private sealed class TestCurrentUser : ICurrentUser
