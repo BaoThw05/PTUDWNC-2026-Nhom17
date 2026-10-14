@@ -9,6 +9,9 @@ export type UserProfile = {
   createdAt: string;
 };
 
+/** Khớp AdminUserResponse của backend (trang quản trị người dùng). */
+export type AdminUser = UserProfile & { isActive: boolean };
+
 /** Khớp AuthResponse của backend. */
 export type AuthResponse = {
   accessToken: string;

@@ -31,7 +31,7 @@
 
 | Đường dẫn | Phụ trách |
 |---|---|
-| `app/auth/`, `app/profile/`, `features/auth/`, `lib/api/access-token.ts` | TV1 |
+| `app/auth/`, `app/profile/`, `app/admin/`, `features/auth/`, `lib/api/access-token.ts` | TV1 |
 | `app/recipes/[slug]/`, `app/dashboard/page.tsx`, `app/dashboard/recipes/`, `features/recipes/` | TV2 |
 | `app/categories/`, `app/dashboard/categories/`, `features/categories/`, `features/images/` | TV3 |
 | `app/page.tsx`, `app/recipes/page.tsx`, `app/search/`, `features/search/` | TV4 |
