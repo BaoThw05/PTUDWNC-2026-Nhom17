@@ -30,6 +30,15 @@ public sealed class GetRecipeBySlugQueryHandler(IAppDbContext db) : IRequestHand
                 Version = r.Version,
                 CreatedAt = r.CreatedAt,
                 UpdatedAt = r.UpdatedAt,
+                Nutrition = r.Nutrition == null ? null : new RecipeNutritionDto
+                {
+                    Calories = r.Nutrition.Calories,
+                    ProteinGrams = r.Nutrition.ProteinGrams,
+                    FatGrams = r.Nutrition.FatGrams,
+                    CarbsGrams = r.Nutrition.CarbsGrams,
+                    FiberGrams = r.Nutrition.FiberGrams,
+                    SugarGrams = r.Nutrition.SugarGrams
+                },
                 Steps = r.Steps.OrderBy(s => s.StepNumber).Select(s => new RecipeStepDto
                 {
                     Id = s.Id,

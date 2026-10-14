@@ -4,6 +4,7 @@ using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
 using CulinaryBlog.Application;
 using CulinaryBlog.Infrastructure;
+using Hangfire;
 using CulinaryBlog.API.Observability;
 using Scalar.AspNetCore;
 using Serilog;
@@ -36,6 +37,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
+    app.UseHangfireDashboard("/hangfire");
 }
 else
 {
