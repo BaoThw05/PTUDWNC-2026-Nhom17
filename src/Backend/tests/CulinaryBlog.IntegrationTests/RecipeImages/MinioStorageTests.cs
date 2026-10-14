@@ -11,7 +11,7 @@ public sealed class MinioStorageTests
     [Fact]
     public async Task UploadReadAndDeletePrefix_UsesRealMinio()
     {
-        await using var minio = new ContainerBuilder("quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e")
+        await using var minio = new ContainerBuilder("dappros/minio@sha256:624bad2fe79a8613aa3c5c9b765ebcab365080b8445cf1b05c357cc7753725f0")
             .WithEnvironment("MINIO_ROOT_USER", "minioadmin")
             .WithEnvironment("MINIO_ROOT_PASSWORD", "minioadmin")
             .WithCommand("server", "/data")
