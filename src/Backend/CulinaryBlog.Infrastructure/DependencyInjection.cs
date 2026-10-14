@@ -1,15 +1,17 @@
 ﻿using CulinaryBlog.Application.Abstractions;
+using CulinaryBlog.Application.Features.RecipeSearch;
 using CulinaryBlog.Infrastructure.BackgroundJobs;
 using CulinaryBlog.Infrastructure.RecipeImages;
 using Hangfire;
 using Hangfire.PostgreSql;
-﻿using Amazon.Runtime;
+using Amazon.Runtime;
 using Amazon.S3;
 using CulinaryBlog.Infrastructure.Auth;
 using CulinaryBlog.Infrastructure.Email;
 using CulinaryBlog.Infrastructure.Observability;
 using CulinaryBlog.Infrastructure.Persistence;
 using CulinaryBlog.Infrastructure.Persistence.Interceptors;
+using CulinaryBlog.Infrastructure.RecipeSearch;
 using CulinaryBlog.Infrastructure.Services;
 using CulinaryBlog.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -43,6 +45,8 @@ public static class DependencyInjection
 
         services.AddAuthInfrastructure(configuration);
         services.AddSingleton<ICacheInvalidator, NoOpCacheInvalidator>();
+        services.AddScoped<IRecipeSearchRepository, RecipeSearchRepository>();
+        services.AddScoped<IDataSeeder, RecipeDataSeeder>();
 
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
