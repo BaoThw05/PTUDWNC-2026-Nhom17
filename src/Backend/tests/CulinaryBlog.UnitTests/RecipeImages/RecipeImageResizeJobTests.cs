@@ -19,7 +19,7 @@ public sealed class RecipeImageResizeJobTests
             .Options;
         using var db = new AppDbContext(options);
 
-        Assert.Contains("20261007120000_AddRecipeImageProcessingStatus", db.Database.GetMigrations());
+        Assert.Contains("20261014120000_AddRecipeImageProcessingStatus", db.Database.GetMigrations());
     }
 
     [Fact]
