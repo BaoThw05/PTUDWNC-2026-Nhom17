@@ -13,6 +13,8 @@ public sealed class PostgresApiFactory : ApiFactory, IAsyncLifetime
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16.15-alpine").Build();
     private readonly string _storageRoot = Path.Combine(Path.GetTempPath(), $"culinaryblog-tests-{Guid.NewGuid():N}");
 
+    public string StorageRoot => _storageRoot;
+
     protected override IDictionary<string, string?> Settings
     {
         get

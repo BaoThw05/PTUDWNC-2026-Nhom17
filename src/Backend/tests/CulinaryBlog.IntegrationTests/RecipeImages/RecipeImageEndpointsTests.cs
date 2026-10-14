@@ -76,6 +76,10 @@ public sealed class RecipeImageEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.UnsupportedMediaType, invalid.StatusCode);
         Assert.Equal("FILE_TYPE_NOT_ALLOWED", await AuthApi.ReadErrorCodeAsync(invalid));
 
+        using var wrongContentType = await UploadAsync(owner, recipeId, Png, "image/jpeg", null);
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, wrongContentType.StatusCode);
+        Assert.Equal("FILE_TYPE_NOT_ALLOWED", await AuthApi.ReadErrorCodeAsync(wrongContentType));
+
         var oversized = new byte[5 * 1024 * 1024 + 1];
         Png.CopyTo(oversized, 0);
         using var tooLarge = await UploadAsync(owner, recipeId, oversized, "image/png", null);
@@ -85,6 +89,7 @@ public sealed class RecipeImageEndpointsTests(PostgresApiFactory factory)
         var images = await owner.GetFromJsonAsync<List<ImageResponse>>($"/api/v1/recipes/{recipeId}/images");
         Assert.NotNull(images);
         Assert.Empty(images);
+        Assert.False(Directory.Exists(Path.Combine(factory.StorageRoot, "recipes", recipeId.ToString())));
     }
 
     [Fact]
