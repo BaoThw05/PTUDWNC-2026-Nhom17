@@ -299,6 +299,7 @@ public sealed class RecipeStateMachineTests
         public void Remove<TEntity>(TEntity entity) where TEntity : class { }
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : CulinaryBlog.Domain.Common.BaseEntity { }
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => action();
     }
 
     private sealed class TestCurrentUser : ICurrentUser

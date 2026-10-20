@@ -19,6 +19,9 @@
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" />
     <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="MailKit" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
   </ItemGroup>
 
 </Project>

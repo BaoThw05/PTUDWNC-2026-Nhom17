@@ -152,12 +152,13 @@ public sealed class CategoryQueriesTests
         public IQueryable<Recipe> Recipes { get; } = recipes.Where(recipe => !recipe.IsDeleted).AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps { get; } = Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients { get; } = Enumerable.Empty<RecipeIngredient>().AsQueryable();
-        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages { get; } = Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => Recipes;
 
         public void Add<TEntity>(TEntity entity) where TEntity : class => throw new NotSupportedException();
         public void Remove<TEntity>(TEntity entity) where TEntity : class => throw new NotSupportedException();
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity => throw new NotSupportedException();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
