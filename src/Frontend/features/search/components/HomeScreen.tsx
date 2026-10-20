@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { ApiError } from "@/lib/api/client";
 import { getCategories, getRecipes } from "@/features/search/api/recipes";
@@ -27,7 +27,7 @@ export async function HomeScreen() {
 
   return (
     <div className={`${styles.screen} space-y-14`}>
-      <section aria-labelledby="home-title" className="grid gap-8 border-b border-black/10 pb-10 md:grid-cols-[1fr_1.05fr] md:items-center">
+      <section aria-labelledby="home-title" className="grid gap-8 border-b border-white/15 pb-10 md:grid-cols-[1fr_1.05fr] md:items-center">
         <div>
           <p className="mb-3 text-xs font-bold uppercase text-[var(--color-tomato)]">Công thức nấu ăn</p>
           <h1 id="home-title" className="max-w-xl font-serif text-4xl font-semibold leading-tight sm:text-5xl">
@@ -88,19 +88,19 @@ export async function HomeScreen() {
         )}
       </section>
 
-      <section aria-labelledby="categories-title" className="border-t border-black/10 pt-8">
+      <section aria-labelledby="categories-title" className="border-t border-white/15 pt-8">
         <div className="mb-5">
           <p className="text-xs font-bold uppercase text-[var(--color-tomato)]">Chọn theo khẩu vị</p>
           <h2 id="categories-title" className="mt-1 font-serif text-3xl font-semibold">Danh mục</h2>
         </div>
         {categoryResult.status === "rejected" ? (
-          <p className="border-y border-black/10 py-5 text-sm text-[var(--muted)]" role="status">{errorLabel(categoryResult.reason)}</p>
+          <p className="border-y border-white/15 py-5 text-sm text-[var(--muted)]" role="status">{errorLabel(categoryResult.reason)}</p>
         ) : categories.length === 0 ? (
-          <p className="border-y border-black/10 py-5 text-sm text-[var(--muted)]">Chưa có danh mục.</p>
+          <p className="border-y border-white/15 py-5 text-sm text-[var(--muted)]">Chưa có danh mục.</p>
         ) : (
           <ul className={styles.categoryGrid}>
             {categories.map((category) => (
-              <li key={category.id} className="border-t border-black/10 py-4">
+              <li key={category.id} className="border-t border-white/15 py-4">
                 <Link className="font-serif text-lg font-semibold hover:text-[var(--color-leaf)]" href={`/categories/${encodeURIComponent(category.slug)}`}>
                   {category.name}
                 </Link>
