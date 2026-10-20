@@ -9,6 +9,7 @@ public sealed record ArchiveRecipeCommand(Guid Id) : IRequest;
 
 public sealed class ArchiveRecipeCommandHandler(
     IAppDbContext db,
+    ICacheInvalidator cache,
     IRecipeAuthorizationHandler authorizationHandler) : IRequestHandler<ArchiveRecipeCommand>
 {
     public async Task Handle(ArchiveRecipeCommand request, CancellationToken cancellationToken)
@@ -38,5 +39,6 @@ public sealed class ArchiveRecipeCommandHandler(
         recipe.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+        await cache.InvalidateAsync(["recipes"], cancellationToken);
     }
 }

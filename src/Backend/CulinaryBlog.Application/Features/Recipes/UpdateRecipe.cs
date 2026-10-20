@@ -49,6 +49,7 @@ public sealed class UpdateRecipeCommandValidator : AbstractValidator<UpdateRecip
 
 public sealed class UpdateRecipeCommandHandler(
     IAppDbContext db,
+    ICacheInvalidator cache,
     IRecipeAuthorizationHandler authorizationHandler,
     ICategoryValidator categoryValidator) : IRequestHandler<UpdateRecipeCommand>
 {
@@ -117,5 +118,6 @@ public sealed class UpdateRecipeCommandHandler(
         db.SetOriginalVersion(recipe, request.Version);
 
         await db.SaveChangesAsync(cancellationToken);
+        await cache.InvalidateAsync(["recipes"], cancellationToken);
     }
 }

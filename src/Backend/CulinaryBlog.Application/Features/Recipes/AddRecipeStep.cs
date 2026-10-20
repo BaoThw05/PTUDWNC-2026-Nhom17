@@ -27,6 +27,7 @@ public sealed class AddRecipeStepCommandValidator : AbstractValidator<AddRecipeS
 
 public sealed class AddRecipeStepCommandHandler(
     IAppDbContext db,
+    ICacheInvalidator cache,
     IRecipeAuthorizationHandler authorizationHandler) : IRequestHandler<AddRecipeStepCommand, Guid>
 {
     public async Task<Guid> Handle(AddRecipeStepCommand request, CancellationToken cancellationToken)
@@ -60,6 +61,7 @@ public sealed class AddRecipeStepCommandHandler(
         recipe.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+        await cache.InvalidateAsync(["recipes"], cancellationToken);
 
         return step.Id;
     }
