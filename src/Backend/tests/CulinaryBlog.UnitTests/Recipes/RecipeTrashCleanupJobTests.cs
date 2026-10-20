@@ -102,6 +102,9 @@ public sealed class RecipeTrashCleanupJobTests
         public Task UploadAsync(Stream content, string key, string contentType, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
+        public Task<Stream> OpenReadAsync(string key, CancellationToken cancellationToken = default) =>
+            Task.FromResult<Stream>(new MemoryStream());
+
         public Task DeleteAsync(string key, CancellationToken cancellationToken = default) =>
             Task.CompletedTask;
 
@@ -144,5 +147,6 @@ public sealed class RecipeTrashCleanupJobTests
 
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity { }
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => Task.FromResult(1);
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => action();
     }
 }
