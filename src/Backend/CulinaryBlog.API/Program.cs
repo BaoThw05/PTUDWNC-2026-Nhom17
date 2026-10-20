@@ -3,11 +3,13 @@ using CulinaryBlog.API.Endpoints;
 using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
 using CulinaryBlog.Application;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure;
 using Hangfire;
 using CulinaryBlog.API.Observability;
 using Scalar.AspNetCore;
 using Serilog;
+using Microsoft.AspNetCore.OutputCaching;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,26 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointModules();
 builder.Services.AddAuthApi(builder.Configuration);
 
+var redisConnection = builder.Configuration.GetConnectionString("Redis");
+builder.Services.AddOutputCache(options =>
+{
+    options.AddPolicy("public-recipes", policy => policy
+        .Expire(TimeSpan.FromMinutes(5))
+        .SetVaryByQuery("*")
+        .Tag("recipes"));
+    options.AddPolicy("public-recipe-search", policy => policy
+        .Expire(TimeSpan.FromMinutes(1))
+        .SetVaryByQuery("*")
+        .Tag("recipes"));
+    options.AddPolicy("public-categories", policy => policy
+        .Expire(TimeSpan.FromMinutes(30))
+        .SetVaryByQuery("*")
+        .Tag("categories"));
+});
+if (!string.IsNullOrWhiteSpace(redisConnection))
+    builder.Services.AddStackExchangeRedisOutputCache(options => options.Configuration = redisConnection);
+builder.Services.AddSingleton<ICacheInvalidator, ApiOutputCacheInvalidator>();
+
 var app = builder.Build();
 
 // Ghi log request ở ngoài cùng để log đúng status sau khi exception đã được đổi thành Problem Details.
@@ -32,6 +54,7 @@ app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseOutputCache();
 
 if (app.Environment.IsDevelopment())
 {
@@ -52,3 +75,12 @@ app.MapHealthChecks("/health/ready");
 app.MapEndpointModules();
 
 app.Run();
+
+internal sealed class ApiOutputCacheInvalidator(IOutputCacheStore outputCacheStore) : ICacheInvalidator
+{
+    public async Task InvalidateAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
+    {
+        foreach (var tag in tags.Distinct(StringComparer.Ordinal))
+            await outputCacheStore.EvictByTagAsync(tag, cancellationToken);
+    }
+}
