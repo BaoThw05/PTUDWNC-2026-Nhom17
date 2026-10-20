@@ -7,11 +7,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace CulinaryBlog.IntegrationTests.Auth;
 
-/// <summary>Việc 1.19: vượt hạn mức trả 429 kèm Retry-After.</summary>
+/// <summary>Việc 1.19: vượt hạn mức trả 429 kèm Retry-After; phân vùng theo IP client thật sau proxy.</summary>
 public sealed class RateLimitingTests(RateLimitingTests.LowLimitFactory factory)
     : IClassFixture<RateLimitingTests.LowLimitFactory>
 {
     private const int CredentialsLimit = 2;
+    private const string ProxyIp = "172.18.0.10";
 
     [Fact]
     public async Task Login_OverLimit_Returns429WithRetryAfter()
@@ -49,13 +50,36 @@ public sealed class RateLimitingTests(RateLimitingTests.LowLimitFactory factory)
         Assert.Equal(HttpStatusCode.UnprocessableEntity, otherIp.StatusCode);
     }
 
-    private static Task<HttpResponseMessage> LoginFromAsync(HttpClient client, string ip)
+    [Fact]
+    public async Task Login_ThroughProxyChain_PartitionsByOriginalClientIp()
+    {
+        using var client = factory.CreateClient();
+
+        // Giống đường Tunnel: client → cloudflared (172.18.0.3) → nginx → Next.js (172.18.0.10) → API.
+        for (var attempt = 0; attempt < CredentialsLimit; attempt++)
+        {
+            await LoginFromAsync(client, ProxyIp, "203.0.113.1, 172.18.0.3");
+        }
+
+        var blocked = await LoginFromAsync(client, ProxyIp, "203.0.113.1, 172.18.0.3");
+        var otherClient = await LoginFromAsync(client, ProxyIp, "203.0.113.2, 172.18.0.3");
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, otherClient.StatusCode);
+    }
+
+    private static Task<HttpResponseMessage> LoginFromAsync(HttpClient client, string ip, string? forwardedFor = null)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, $"{AuthApi.BasePath}/login")
         {
             Content = JsonContent.Create(new { email = string.Empty, password = string.Empty }),
         };
         request.Headers.Add(LowLimitFactory.ClientIpHeader, ip);
+        if (forwardedFor is not null)
+        {
+            request.Headers.Add("X-Forwarded-For", forwardedFor);
+        }
+
         return client.SendAsync(request);
     }
 
@@ -69,6 +93,7 @@ public sealed class RateLimitingTests(RateLimitingTests.LowLimitFactory factory)
             {
                 var settings = base.Settings;
                 settings["RateLimiting:CredentialsPermitLimit"] = CredentialsLimit.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                settings["RateLimiting:TrustedProxyNetworks:0"] = "172.16.0.0/12";
                 return settings;
             }
         }
