@@ -70,6 +70,17 @@ services:
       FileStorage__S3__AccessKey: ${MINIO_ROOT_USER:?copy .env.example to .env first}
       FileStorage__S3__SecretKey: ${MINIO_ROOT_PASSWORD:?copy .env.example to .env first}
       FileStorage__S3__BucketName: ${MINIO_BUCKET:?copy .env.example to .env first}
+      # Dải mạng Docker để API tin X-Forwarded-For từ nginx/web/cloudflared (rate limit theo IP thật).
+      RateLimiting__TrustedProxyNetworks__0: 172.16.0.0/12
+      RateLimiting__TrustedProxyNetworks__1: 192.168.0.0/16
+      # Khóa JWT cố định để phiên đăng nhập không mất khi container khởi động lại (trống → khóa tạm ở Development).
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-}
+      Seed__Auth__AdminPassword: ${SEED_ADMIN_PASSWORD:-}
+      # Trong container "localhost" là chính API; email đi tới service mailpit.
+      Smtp__Host: mailpit
+      Smtp__Port: 1025
+      # Link trong email đặt lại mật khẩu trỏ về địa chỉ người dùng mở web (localhost hoặc link Tunnel).
+      Frontend__BaseUrl: ${AUTH_URL:?set AUTH_URL in .env first}
 
   web:
     build:
