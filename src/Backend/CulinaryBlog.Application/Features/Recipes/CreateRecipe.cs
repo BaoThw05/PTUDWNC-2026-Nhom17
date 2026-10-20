@@ -62,6 +62,7 @@ public sealed class CreateRecipeCommandValidator : AbstractValidator<CreateRecip
 
 public sealed class CreateRecipeCommandHandler(
     IAppDbContext db,
+    ICacheInvalidator cache,
     ICurrentUser currentUser,
     ICategoryValidator categoryValidator) : IRequestHandler<CreateRecipeCommand, Guid>
 {
@@ -156,6 +157,7 @@ public sealed class CreateRecipeCommandHandler(
 
         db.Add(recipe);
         await db.SaveChangesAsync(cancellationToken);
+        await cache.InvalidateAsync(["recipes"], cancellationToken);
 
         return recipe.Id;
     }
