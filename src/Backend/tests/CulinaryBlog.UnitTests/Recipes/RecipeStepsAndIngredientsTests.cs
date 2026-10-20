@@ -25,7 +25,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
         var db = new FakeAppDbContext([recipe], [step1]);
-        var handler = new AddRecipeStepCommandHandler(db, _authHandler);
+        var handler = new AddRecipeStepCommandHandler(db, TestCache.Instance, _authHandler);
 
         var step2Id = await handler.Handle(new AddRecipeStepCommand
         {
@@ -47,7 +47,7 @@ public sealed class RecipeStepsAndIngredientsTests
         _currentUser.UserId = StrangerId;
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new AddRecipeStepCommandHandler(db, _authHandler);
+        var handler = new AddRecipeStepCommandHandler(db, TestCache.Instance, _authHandler);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
             handler.Handle(new AddRecipeStepCommand
@@ -66,7 +66,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var step = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "Cũ" };
         var db = new FakeAppDbContext([recipe], [step]);
-        var handler = new UpdateRecipeStepCommandHandler(db, _authHandler);
+        var handler = new UpdateRecipeStepCommandHandler(db, TestCache.Instance, _authHandler);
 
         await handler.Handle(new UpdateRecipeStepCommand
         {
@@ -95,7 +95,7 @@ public sealed class RecipeStepsAndIngredientsTests
         };
         var onlyStep = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "Duy nhất" };
         var db = new FakeAppDbContext([recipe], [onlyStep]);
-        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeStepCommandHandler(db, TestCache.Instance, _authHandler);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new DeleteRecipeStepCommand(recipe.Id, onlyStep.Id), CancellationToken.None));
@@ -112,7 +112,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
         var step3 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 3, Description = "B3" };
         var db = new FakeAppDbContext([recipe], [step1, step2, step3]);
-        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeStepCommandHandler(db, TestCache.Instance, _authHandler);
 
         await handler.Handle(new DeleteRecipeStepCommand(recipe.Id, step2.Id), CancellationToken.None);
 
@@ -131,7 +131,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var ing1 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Muối", OrderIndex = 0 };
         var db = new FakeAppDbContext([recipe], null, [ing1]);
-        var handler = new AddRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new AddRecipeIngredientCommandHandler(db, TestCache.Instance, _authHandler);
 
         var ing2Id = await handler.Handle(new AddRecipeIngredientCommand
         {
@@ -154,7 +154,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var ing = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Đường", Quantity = 10, Unit = "g", OrderIndex = 0 };
         var db = new FakeAppDbContext([recipe], null, [ing]);
-        var handler = new UpdateRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new UpdateRecipeIngredientCommandHandler(db, TestCache.Instance, _authHandler);
 
         await handler.Handle(new UpdateRecipeIngredientCommand
         {
@@ -179,7 +179,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var ing1 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Hành tím", OrderIndex = 1 };
         var ing2 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Tỏi", OrderIndex = 2 };
         var db = new FakeAppDbContext([recipe], null, [ing0, ing1, ing2]);
-        var handler = new DeleteRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeIngredientCommandHandler(db, TestCache.Instance, _authHandler);
 
         await handler.Handle(new DeleteRecipeIngredientCommand(recipe.Id, ing1.Id), CancellationToken.None);
 
@@ -189,6 +189,12 @@ public sealed class RecipeStepsAndIngredientsTests
         Assert.Equal(0, remaining[0].OrderIndex);
         Assert.Equal(1, remaining[1].OrderIndex);
         Assert.Equal(ing2.Id, remaining[1].Id);
+    }
+
+    private sealed class TestCache : ICacheInvalidator
+    {
+        public static TestCache Instance { get; } = new();
+        public Task InvalidateAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default) => Task.CompletedTask;
     }
 
     private sealed class FakeAppDbContext(
