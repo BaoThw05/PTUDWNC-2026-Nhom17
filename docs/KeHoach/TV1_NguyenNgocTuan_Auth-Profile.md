@@ -135,13 +135,18 @@
 | Google Cloud Console cấu hình mất thời gian | 1.21 chưa xong T6 16/10 | Chuyển 1.21 sang sau 25/10 (mục đầu tiên trong danh sách cắt giảm) |
 
 **Checklist tự kiểm tra trước CN 25/10:**
-- [ ] Mật khẩu hash bằng Identity; bảng `RefreshTokens` chỉ có hash
-- [ ] Không có token/mật khẩu trong log Seq
-- [ ] Không có secret trong Git (JWT key, Google secret, SMTP)
-- [ ] Sai mật khẩu 5 lần → khóa 15 phút; tài khoản `IsActive = false` không đăng nhập được
-- [ ] Refresh xoay vòng đúng; dùng lại token cũ sau 30 giây → thu hồi family
-- [ ] Logout xong refresh bằng token cũ → 401
-- [ ] Rate limit trả 429 kèm `Retry-After`
-- [ ] Mọi lỗi auth trả Problem Details có `code`
+- [x] Mật khẩu hash bằng Identity; bảng `RefreshTokens` chỉ có hash
+- [x] Không có token/mật khẩu trong log Seq
+- [x] Không có secret trong Git (JWT key, Google secret, SMTP)
+- [x] Sai mật khẩu 5 lần → khóa 15 phút; tài khoản `IsActive = false` không đăng nhập được
+- [x] Refresh xoay vòng đúng; dùng lại token cũ sau 30 giây → thu hồi family
+- [x] Logout xong refresh bằng token cũ → 401
+- [x] Rate limit trả 429 kèm `Retry-After`
+- [x] Mọi lỗi auth trả Problem Details có `code`
 - [ ] Email chào mừng xuất hiện trong Mailpit
 - [ ] SRS v1.1 phần 3.1 và 8.1 khớp với OpenAPI thực tế
+
+**Kết quả rà soát 1.23 (20/10):**
+- Đã kiểm: entity `RefreshToken` chỉ có `TokenHash`/`ReplacedByTokenHash`; mọi `Log*` của module auth chỉ ghi `UserId`/`FamilyId`; không có `.env`, khóa JWT hay Google secret trong Git (chỉ có mật khẩu mẫu `change_me_*` và tài khoản Author test trong `appsettings.Development.json`); không bật CORS (trình duyệt chỉ gọi cùng origin qua proxy); cookie phiên do Auth.js đặt HttpOnly, SameSite=Lax, Secure khi chạy HTTPS qua Tunnel. Các dòng còn lại có integration test tương ứng.
+- Đã sửa: rate limit sau chuỗi proxy Tunnel (`ForwardLimit = null` + `TrustedProxyNetworks` trong compose); compose thiếu `Jwt__SigningKey` (phiên mất khi API khởi động lại), `Smtp__Host` (container gửi email tới `localhost`), `Frontend__BaseUrl` (link đặt lại mật khẩu sai địa chỉ khi demo); trang `/auth/reset-password` đặt `referrer: no-referrer` để token trên URL không lọt qua Referer.
+- Còn lưu ý: compose chạy API ở `Development` nên Scalar/OpenAPI mở công khai qua Tunnel trong lúc demo; Hangfire dashboard được nginx bảo vệ bằng basic auth.

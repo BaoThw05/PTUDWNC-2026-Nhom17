@@ -340,6 +340,71 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task ForgotPassword_UnknownEmail_Returns204()
+    {
+        var response = await _client.PostAsJsonAsync($"{BasePath}/forgot-password", new { email = NewEmail() });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ForgotPassword_InvalidEmail_Returns422()
+    {
+        var response = await _client.PostAsJsonAsync($"{BasePath}/forgot-password", new { email = "not-an-email" });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_ValidToken_Returns204AndRevokesEverySession()
+    {
+        var email = NewEmail();
+        var auth = await ReadAuthAsync(await RegisterAsync(_client, email));
+        var token = await CreateResetTokenAsync(email);
+        const string newPassword = "Reset@67890";
+
+        var response = await _client.PostAsJsonAsync(
+            $"{BasePath}/reset-password",
+            new { userId = auth.User.Id, token, newPassword });
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await RefreshAsync(_client, auth.RefreshToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await LoginAsync(_client, email, StrongPassword)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await LoginAsync(_client, email, newPassword)).StatusCode);
+    }
+
+    [Fact]
+    public async Task ResetPassword_InvalidToken_Returns422ResetTokenInvalid()
+    {
+        var auth = await RegisterNewAsync();
+
+        var response = await _client.PostAsJsonAsync(
+            $"{BasePath}/reset-password",
+            new { userId = auth.User.Id, token = "invalid-token", newPassword = "Reset@67890" });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.ResetTokenInvalid, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task ResetPassword_UnknownUser_Returns422ResetTokenInvalid()
+    {
+        var response = await _client.PostAsJsonAsync(
+            $"{BasePath}/reset-password",
+            new { userId = Guid.NewGuid(), token = "invalid-token", newPassword = "Reset@67890" });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.ResetTokenInvalid, await ReadErrorCodeAsync(response));
+    }
+
+    private async Task<string> CreateResetTokenAsync(string email)
+    {
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        return await users.GeneratePasswordResetTokenAsync((await users.FindByEmailAsync(email))!);
+    }
+
     private async Task<AuthResponse> RegisterNewAsync() => await ReadAuthAsync(await RegisterAsync(_client, NewEmail()));
 
     private async Task SetActiveAsync(string email, bool isActive)

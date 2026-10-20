@@ -106,6 +106,7 @@ internal sealed class IdentityUserAccountService(
 
         EnsureSucceeded(result);
     }
+
     public async Task<UserAccount> UpdateFullNameAsync(
         Guid userId,
         string fullName,

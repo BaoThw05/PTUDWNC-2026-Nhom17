@@ -6,7 +6,8 @@ import { ResetPasswordForm } from "@/features/auth/components/ResetPasswordForm"
 import { FORGOT_PASSWORD_PATH } from "@/features/auth/constants";
 import { authErrorMessage } from "@/features/auth/errors";
 
-export const metadata: Metadata = { title: "Đặt lại mật khẩu" };
+// URL chứa token đặt lại mật khẩu: không gửi kèm trong Referer khi rời trang.
+export const metadata: Metadata = { title: "Đặt lại mật khẩu", referrer: "no-referrer" };
 
 export default async function ResetPasswordPage({ searchParams }: PageProps<"/auth/reset-password">) {
   const { userId, token } = await searchParams;
