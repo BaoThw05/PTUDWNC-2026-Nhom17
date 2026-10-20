@@ -37,6 +37,7 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
             return Results.Ok(await sender.Send(query, cancellationToken));
         })
         .WithName("ListRecipes")
+        .CacheOutput("public-recipes")
         .WithSummary("List published recipes for public browsing")
         .ProducesValidationProblem();
 
@@ -63,6 +64,7 @@ internal sealed class RecipeSearchEndpoints : IEndpointModule
             return Results.Ok(await sender.Send(query, cancellationToken));
         })
         .WithName("SearchRecipes")
+        .CacheOutput("public-recipe-search")
         .WithSummary("Search published recipes using Vietnamese accent normalization and trigram matching")
         .ProducesValidationProblem();
     }

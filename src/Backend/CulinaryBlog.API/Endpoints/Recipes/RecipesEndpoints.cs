@@ -37,6 +37,7 @@ internal sealed class RecipesEndpoints : IEndpointModule
             return Results.Ok(recipe);
         })
         .WithName("GetRecipeBySlug")
+        .CacheOutput("public-recipes")
         .WithSummary("Xem chi tiết công thức công khai theo slug (FR-RCP-005)");
 
         recipes.MapPut("/{id:guid}", async (Guid id, UpdateRecipeCommand command, IMediator mediator) =>
