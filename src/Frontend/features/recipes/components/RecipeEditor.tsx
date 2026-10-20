@@ -50,9 +50,9 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   const [draggedStepIdx, setDraggedStepIdx] = useState<number | null>(null);
   const [dragOverStepIdx, setDragOverStepIdx] = useState<number | null>(null);
 
-  const loadRecipe = useCallback(async () => {
+  const loadRecipe = useCallback(async (showLoading = false) => {
     try {
-      setIsLoading(true);
+      if (showLoading) setIsLoading(true);
       setErrorMessage(null);
       setConcurrencyConflict(false);
       const data = await getRecipeById(recipeId);
@@ -67,7 +67,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
     } catch (err: unknown) {
       setErrorMessage((err as Error).message || "Không thể tải thông tin công thức.");
     } finally {
-      setIsLoading(false);
+      if (showLoading) setIsLoading(false);
     }
   }, [recipeId]);
 
@@ -214,11 +214,18 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
     newSteps[currentIndex] = newSteps[targetIndex];
     newSteps[targetIndex] = temp;
 
+    const reordered = newSteps.map((s, idx) => ({ ...s, stepNumber: idx + 1 }));
+    setRecipe({
+      ...recipe,
+      steps: reordered,
+    });
+
     try {
-      await reorderRecipeSteps(recipeId, newSteps.map((s) => s.id));
-      await loadRecipe();
+      await reorderRecipeSteps(recipeId, reordered.map((s) => s.id));
+      await loadRecipe(false);
     } catch (err: unknown) {
       setErrorMessage((err as Error).message || "Không thể sắp xếp lại các bước.");
+      await loadRecipe(false);
     }
   };
 
@@ -235,23 +242,24 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
     newSteps.splice(targetIndex, 0, draggedItem);
 
     // Cập nhật tạm thời để UI phản hồi mượt mà ngay lập tức
+    const reordered = newSteps.map((s, idx) => ({ ...s, stepNumber: idx + 1 }));
     setRecipe({
       ...recipe,
-      steps: newSteps.map((s, idx) => ({ ...s, stepNumber: idx + 1 })),
+      steps: reordered,
     });
     setDraggedStepIdx(null);
     setDragOverStepIdx(null);
 
     try {
-      await reorderRecipeSteps(recipeId, newSteps.map((s) => s.id));
-      await loadRecipe();
+      await reorderRecipeSteps(recipeId, reordered.map((s) => s.id));
+      await loadRecipe(false);
     } catch (err: unknown) {
       setErrorMessage((err as Error).message || "Không thể sắp xếp lại các bước.");
-      await loadRecipe();
+      await loadRecipe(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !recipe) {
     return (
       <div className="py-20 text-center text-sm text-zinc-500">
         Đang tải dữ liệu công thức...
@@ -302,7 +310,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </div>
             <button
               type="button"
-              onClick={loadRecipe}
+              onClick={() => void loadRecipe(true)}
               className="rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-500"
             >
               🔄 Tải lại dữ liệu mới nhất
