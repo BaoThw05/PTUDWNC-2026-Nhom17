@@ -1,5 +1,4 @@
-import { HealthStatus } from "@/components/HealthStatus";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { HomeScreen } from "@/features/search/components/HomeScreen";
 import { buildPageMetadata } from "@/features/search/seo/metadata";
 
 export const metadata = buildPageMetadata({
@@ -8,14 +7,8 @@ export const metadata = buildPageMetadata({
   path: "/",
 });
 
+export const revalidate = 3600;
+
 export default function HomePage() {
-  return (
-    <PlaceholderPage
-      title="Trang chủ"
-      owner="TV4"
-      requirements="FR-RCP-001 (công thức mới nhất, danh mục nổi bật)"
-    >
-      <HealthStatus />
-    </PlaceholderPage>
-  );
+  return <HomeScreen />;
 }

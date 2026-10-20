@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CategoryIndexPage } from "@/features/categories/components/CategoryIndexPage";
 import { CategoryDetailPage, loadCategory } from "@/features/categories/components/CategoryDetailPage";
+import { buildPageMetadata } from "@/features/search/seo/metadata";
 
 export const revalidate = 3600;
 
-// Các URL được tạo và cache khi truy cập lần đầu; build không cần API đang chạy.
 export function generateStaticParams() {
   return [];
 }
@@ -24,16 +24,18 @@ function parseRoute(segments: string[] | undefined): Route {
 export async function generateMetadata({ params }: PageProps<"/categories/[[...segments]]">): Promise<Metadata> {
   const route = parseRoute((await params).segments);
   if (!route) {
-    return {
+    return buildPageMetadata({
       title: "Danh mục món ăn",
       description: "Khám phá công thức nấu ăn theo từng danh mục.",
-    };
+      path: "/categories",
+    });
   }
   const { category } = await loadCategory(route.slug, 1);
-  return {
+  return buildPageMetadata({
     title: category.name,
     description: category.description ?? `Khám phá công thức thuộc danh mục ${category.name}.`,
-  };
+    path: `/categories/${encodeURIComponent(route.slug)}`,
+  });
 }
 
 export default async function CategoriesPage({ params }: PageProps<"/categories/[[...segments]]">) {
