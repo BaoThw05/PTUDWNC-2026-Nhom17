@@ -21,7 +21,7 @@ public sealed class RegisterCommandHandler(IUserAccountService users, AuthSessio
             new NewUserAccount(email, request.FullName.Trim(), request.UserName.Trim(), request.Password),
             cancellationToken);
 
-        // TODO(TV1): đưa WelcomeEmailJob vào hàng đợi khi TV3 bàn giao IBackgroundJobService (việc 1.15).
+        // TODO(TV1): IWelcomeEmailJob đã sẵn sàng; chỉ còn thiếu IBackgroundJobService (TV3, 3.07) để enqueue thay vì gọi trực tiếp (việc 1.15).
         return await sessions.StartAsync(user, cancellationToken);
     }
 }

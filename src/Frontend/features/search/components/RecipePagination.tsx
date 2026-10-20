@@ -16,7 +16,7 @@ export function RecipePagination({ page, totalPages, query }: RecipePaginationPr
   if (totalPages <= 1) return null;
 
   return (
-    <nav aria-label="Phân trang công thức" className="flex items-center justify-between border-t border-black/10 pt-5">
+    <nav aria-label="Phân trang công thức" className="flex items-center justify-between border-t border-white/15 pt-5">
       {page > 1 ? (
         <Link className="text-sm font-semibold text-[var(--color-leaf)] underline-offset-4 hover:underline" href={pageHref(query, page - 1)}>
           Trang trước

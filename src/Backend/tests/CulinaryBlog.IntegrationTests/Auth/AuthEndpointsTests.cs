@@ -73,6 +73,32 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
     }
 
     [Fact]
+    public async Task Register_InvalidEmail_Returns422()
+    {
+        var response = await RegisterAsync(_client, "not-an-email");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Login_UnknownEmail_Returns401WithSameCodeAsWrongPassword()
+    {
+        var response = await LoginAsync(_client, NewEmail(), StrongPassword);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.InvalidCredentials, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Login_EmptyBody_Returns422()
+    {
+        var response = await LoginAsync(_client, "", "");
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Login_SeededAdmin_ReturnsAdminAndAuthorRoles()
     {
         var response = await LoginAsync(_client, PostgresApiFactory.AdminEmail, PostgresApiFactory.AdminPassword);
@@ -211,6 +237,36 @@ public sealed class AuthEndpointsTests(PostgresApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.Equal(AuthErrorCodes.RefreshTokenExpired, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Refresh_UnknownToken_Returns401Invalid()
+    {
+        var response = await RefreshAsync(_client, "not-a-real-token");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.RefreshTokenInvalid, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task Refresh_DisabledAccount_Returns403()
+    {
+        var email = NewEmail();
+        var auth = await ReadAuthAsync(await RegisterAsync(_client, email));
+        await SetActiveAsync(email, isActive: false);
+
+        var response = await RefreshAsync(_client, auth.RefreshToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal(AuthErrorCodes.AccountDisabled, await ReadErrorCodeAsync(response));
+    }
+
+    [Fact]
+    public async Task UpdateProfile_WithoutAccessToken_Returns401()
+    {
+        var response = await _client.PatchAsJsonAsync($"{BasePath}/me", new { fullName = "Tên Mới" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

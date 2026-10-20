@@ -50,7 +50,7 @@ export async function RecipesScreen({ searchParams }: { searchParams: SearchPara
 
   return (
     <div className={`${styles.screen} space-y-8`}>
-      <header className="border-b border-black/10 pb-6">
+      <header className="border-b border-white/15 pb-6">
         <p className="text-xs font-bold uppercase text-[var(--color-tomato)]">Khám phá</p>
         <h1 className="mt-2 font-serif text-4xl font-semibold">Công thức</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">Lọc theo nguyên liệu thời gian và khẩu phần phù hợp.</p>

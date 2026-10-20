@@ -2,6 +2,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\CulinaryBlog.Application\CulinaryBlog.Application.csproj" />
+    <ProjectReference Include="..\..\CulinaryBlog.Infrastructure\CulinaryBlog.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
   </ItemGroup>
 
 </Project>

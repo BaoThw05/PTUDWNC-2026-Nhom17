@@ -35,7 +35,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           )}
         </div>
         <div className="flex items-start justify-between gap-3 pt-4">
-          <h2 className="font-serif text-xl font-semibold leading-snug text-[var(--foreground)] group-hover:text-[var(--color-leaf)]">
+          <h2 className="font-sans text-xl font-semibold leading-snug text-[var(--foreground)] group-hover:text-[var(--color-leaf)]">
             {recipe.title}
           </h2>
           <span className="shrink-0 text-sm font-medium text-[var(--color-tomato)]">
@@ -46,7 +46,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           {recipe.description}
         </p>
       </Link>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-black/10 pt-3 text-xs text-[var(--muted)]">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/15 pt-3 text-xs text-[var(--muted)]">
         <span>{difficultyLabel(recipe.difficulty)}</span>
         <span>{recipe.servings} khẩu phần</span>
       </div>

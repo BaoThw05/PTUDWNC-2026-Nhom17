@@ -15,4 +15,4 @@ Module khác cần khóa ngoại tới người dùng thì dùng `Guid` và cấ
 ## Còn lại
 
 - `WelcomeEmailJob` + gửi mail qua Mailpit (1.15) — chờ `IBackgroundJobService` của TV3.
-- Job dọn refresh token hết hạn quá 30 ngày (1.20) — chờ Hangfire của TV3.
+- `RefreshTokenCleanupJob` (1.20) đã có — chỉ còn đăng ký recurring hằng ngày qua `IBackgroundJobService` của TV3.

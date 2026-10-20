@@ -25,7 +25,9 @@ public sealed class AddRecipeStepCommandValidator : AbstractValidator<AddRecipeS
     }
 }
 
-public sealed class AddRecipeStepCommandHandler(IAppDbContext db) : IRequestHandler<AddRecipeStepCommand, Guid>
+public sealed class AddRecipeStepCommandHandler(
+    IAppDbContext db,
+    IRecipeAuthorizationHandler authorizationHandler) : IRequestHandler<AddRecipeStepCommand, Guid>
 {
     public async Task<Guid> Handle(AddRecipeStepCommand request, CancellationToken cancellationToken)
     {
@@ -33,8 +35,15 @@ public sealed class AddRecipeStepCommandHandler(IAppDbContext db) : IRequestHand
             ?? throw new NotFoundException(
                 $"Không tìm thấy công thức có id '{request.RecipeId}'", RecipeErrorCodes.RecipeNotFound);
 
-        // Tự đánh lại số bước (FR-RCP-010): số thứ tự tiếp theo = số bước hiện có + 1
-        var nextStepNumber = db.RecipeSteps.Count(s => s.RecipeId == request.RecipeId) + 1;
+        // Quyết định S-11 & 2.13: Chỉ tác giả hoặc Admin mới có quyền thêm bước
+        authorizationHandler.EnsureCanModify(recipe);
+
+        // Tự đánh số bước (FR-RCP-010): số thứ tự tiếp theo = max(StepNumber) + 1
+        var maxNumber = db.RecipeSteps
+            .Where(s => s.RecipeId == request.RecipeId)
+            .Select(s => (int?)s.StepNumber)
+            .Max() ?? 0;
+        var nextStepNumber = maxNumber + 1;
 
         var step = new RecipeStep
         {
