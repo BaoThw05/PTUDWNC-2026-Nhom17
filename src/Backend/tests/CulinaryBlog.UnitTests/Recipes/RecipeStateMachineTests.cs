@@ -12,6 +12,7 @@ public sealed class RecipeStateMachineTests
     private static readonly Guid StrangerId = Guid.NewGuid();
     private readonly TestCurrentUser _currentUser = new();
     private readonly RecipeAuthorizationHandler _authHandler;
+    private readonly FakeCacheInvalidator _cacheInvalidator = new();
 
     public RecipeStateMachineTests()
     {
@@ -23,7 +24,7 @@ public sealed class RecipeStateMachineTests
     {
         _currentUser.UserId = AuthorId;
         var db = new FakeAppDbContext();
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(new PublishRecipeCommand(Guid.NewGuid()), CancellationToken.None));
@@ -42,7 +43,7 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Draft
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
             handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None));
@@ -63,7 +64,7 @@ public sealed class RecipeStateMachineTests
             PublishedAt = publishedTime
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
@@ -82,7 +83,7 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Archived
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None));
@@ -101,7 +102,7 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Draft
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None));
@@ -127,13 +128,16 @@ public sealed class RecipeStateMachineTests
             Description = "Bước làm đầu tiên"
         };
         var db = new FakeAppDbContext([recipe], [step]);
-        var handler = new PublishRecipeCommandHandler(db, _authHandler);
+        var handler = new PublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new PublishRecipeCommand(recipe.Id), CancellationToken.None);
 
         Assert.Equal(RecipeStatus.Published, recipe.Status);
         Assert.NotNull(recipe.PublishedAt);
         Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains("categories", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -147,11 +151,14 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Published
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new UnpublishRecipeCommandHandler(db, _authHandler);
+        var handler = new UnpublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
         Assert.Equal(RecipeStatus.Draft, recipe.Status);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains("categories", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -165,7 +172,7 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Draft
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new UnpublishRecipeCommandHandler(db, _authHandler);
+        var handler = new UnpublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None);
 
@@ -183,7 +190,7 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Archived
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new UnpublishRecipeCommandHandler(db, _authHandler);
+        var handler = new UnpublishRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new UnpublishRecipeCommand(recipe.Id), CancellationToken.None));
@@ -198,13 +205,17 @@ public sealed class RecipeStateMachineTests
         var draft = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString(), Status = RecipeStatus.Draft };
         var published = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString(), Status = RecipeStatus.Published };
         var db = new FakeAppDbContext([draft, published]);
-        var handler = new ArchiveRecipeCommandHandler(db, _authHandler);
+        var handler = new ArchiveRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new ArchiveRecipeCommand(draft.Id), CancellationToken.None);
         await handler.Handle(new ArchiveRecipeCommand(published.Id), CancellationToken.None);
 
         Assert.Equal(RecipeStatus.Archived, draft.Status);
         Assert.Equal(RecipeStatus.Archived, published.Status);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{draft.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{published.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains("categories", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -218,11 +229,14 @@ public sealed class RecipeStateMachineTests
             Status = RecipeStatus.Archived
         };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new UnarchiveRecipeCommandHandler(db, _authHandler);
+        var handler = new UnarchiveRecipeCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new UnarchiveRecipeCommand(recipe.Id), CancellationToken.None);
 
         Assert.Equal(RecipeStatus.Draft, recipe.Status);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains("categories", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -279,6 +293,53 @@ public sealed class RecipeStateMachineTests
         Assert.Single(result.Ingredients);
     }
 
+    [Fact]
+    public async Task UpdateRecipe_WhenValid_UpdatesAndInvalidatesCache()
+    {
+        _currentUser.UserId = AuthorId;
+        var recipe = new Recipe
+        {
+            Id = Guid.NewGuid(),
+            Title = "Bún bò Huế",
+            Slug = "bun-bo-hue",
+            Description = "Mô tả cũ",
+            PrepTimeMinutes = 20,
+            CookTimeMinutes = 60,
+            Servings = 4,
+            Difficulty = Difficulty.Medium,
+            Status = RecipeStatus.Published,
+            PublishedAt = DateTimeOffset.UtcNow,
+            AuthorId = AuthorId.ToString()
+        };
+        var db = new FakeAppDbContext([recipe]);
+        var handler = new UpdateRecipeCommandHandler(
+            db, _authHandler, new FakeCategoryValidator(), _cacheInvalidator);
+
+        await handler.Handle(new UpdateRecipeCommand
+        {
+            Id = recipe.Id,
+            Title = "Bún bò Huế đặc biệt",
+            Description = "Mô tả mới",
+            PrepTimeMinutes = 25,
+            CookTimeMinutes = 70,
+            Servings = 5,
+            Difficulty = Difficulty.Hard,
+            Version = 1
+        }, CancellationToken.None);
+
+        Assert.Equal("Bún bò Huế đặc biệt", recipe.Title);
+        Assert.Equal("Mô tả mới", recipe.Description);
+        Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains("categories", _cacheInvalidator.InvalidatedTags);
+    }
+
+    private sealed class FakeCategoryValidator : ICategoryValidator
+    {
+        public Task<bool> ExistsAsync(Guid id, CancellationToken ct = default) => Task.FromResult(true);
+    }
+
     private sealed class FakeAppDbContext(
         IEnumerable<Recipe>? recipes = null,
         IEnumerable<RecipeStep>? steps = null,
@@ -288,11 +349,11 @@ public sealed class RecipeStateMachineTests
         private readonly List<RecipeStep> _steps = [.. (steps ?? [])];
         private readonly List<RecipeIngredient> _ingredients = [.. (ingredients ?? [])];
 
-        public IQueryable<CulinaryBlog.Domain.Entities.Category> Categories => Enumerable.Empty<CulinaryBlog.Domain.Entities.Category>().AsQueryable();
+        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
         public IQueryable<Recipe> Recipes => _recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
-        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _recipes.AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class { }
@@ -308,5 +369,16 @@ public sealed class RecipeStateMachineTests
         public string? IpAddress => "127.0.0.1";
         public string? Role { get; set; }
         public bool IsInRole(string role) => string.Equals(Role, role, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed class FakeCacheInvalidator : ICacheInvalidator
+    {
+        public List<string> InvalidatedTags { get; } = [];
+
+        public Task InvalidateAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
+        {
+            InvalidatedTags.AddRange(tags);
+            return Task.CompletedTask;
+        }
     }
 }
