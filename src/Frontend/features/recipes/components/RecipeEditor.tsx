@@ -46,6 +46,10 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   const [newStepDesc, setNewStepDesc] = useState("");
   const [newStepDuration, setNewStepDuration] = useState<string>("");
 
+  // Drag and drop state cho các bước (Task 2.22)
+  const [draggedStepIdx, setDraggedStepIdx] = useState<number | null>(null);
+  const [dragOverStepIdx, setDragOverStepIdx] = useState<number | null>(null);
+
   const loadRecipe = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -215,6 +219,35 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
       await loadRecipe();
     } catch (err: unknown) {
       setErrorMessage((err as Error).message || "Không thể sắp xếp lại các bước.");
+    }
+  };
+
+  // Kéo thả sắp xếp lại các bước (Task 2.22)
+  const handleDropStep = async (targetIndex: number) => {
+    if (draggedStepIdx === null || draggedStepIdx === targetIndex || !recipe) {
+      setDraggedStepIdx(null);
+      setDragOverStepIdx(null);
+      return;
+    }
+
+    const newSteps = [...recipe.steps];
+    const [draggedItem] = newSteps.splice(draggedStepIdx, 1);
+    newSteps.splice(targetIndex, 0, draggedItem);
+
+    // Cập nhật tạm thời để UI phản hồi mượt mà ngay lập tức
+    setRecipe({
+      ...recipe,
+      steps: newSteps.map((s, idx) => ({ ...s, stepNumber: idx + 1 })),
+    });
+    setDraggedStepIdx(null);
+    setDragOverStepIdx(null);
+
+    try {
+      await reorderRecipeSteps(recipeId, newSteps.map((s) => s.id));
+      await loadRecipe();
+    } catch (err: unknown) {
+      setErrorMessage((err as Error).message || "Không thể sắp xếp lại các bước.");
+      await loadRecipe();
     }
   };
 
@@ -436,18 +469,70 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
       {/* PHẦN 3: CÁC BƯỚC THỰC HIỆN */}
       <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-          Các bước thực hiện
-        </h2>
+        <div>
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+            Các bước thực hiện
+          </h2>
+          <p className="text-xs text-zinc-500 mt-0.5">
+            💡 Bạn có thể kéo thả biểu tượng <span className="font-bold">⠿</span> hoặc dùng nút ↑ ↓ để thay đổi thứ tự các bước.
+          </p>
+        </div>
 
         {/* Danh sách các bước */}
         <div className="space-y-3">
           {recipe.steps.map((st, index) => (
-            <div key={st.id} className="rounded-lg border border-zinc-200 p-3 space-y-1 dark:border-zinc-800">
+            <div
+              key={st.id}
+              draggable
+              onDragStart={(e) => {
+                const target = e.target as HTMLElement;
+                if (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "BUTTON") {
+                  e.preventDefault();
+                  return;
+                }
+                setDraggedStepIdx(index);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+                if (dragOverStepIdx !== index) {
+                  setDragOverStepIdx(index);
+                }
+              }}
+              onDragLeave={() => {
+                if (dragOverStepIdx === index) {
+                  setDragOverStepIdx(null);
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                handleDropStep(index);
+              }}
+              onDragEnd={() => {
+                setDraggedStepIdx(null);
+                setDragOverStepIdx(null);
+              }}
+              className={`rounded-lg border p-3 space-y-1 transition-all duration-150 ${
+                draggedStepIdx === index
+                  ? "opacity-40 scale-[0.98] border-dashed border-emerald-500 bg-emerald-50/20"
+                  : dragOverStepIdx === index
+                  ? "border-2 border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20"
+                  : "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
+              }`}
+            >
               <div className="flex items-center justify-between">
-                <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
-                  Bước {st.stepNumber}: {st.title} {st.durationMinutes && `(${st.durationMinutes} phút)`}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 select-none text-base px-0.5"
+                    title="Kéo thả để sắp xếp"
+                  >
+                    ⠿
+                  </span>
+                  <span className="font-bold text-sm text-zinc-900 dark:text-zinc-100">
+                    Bước {st.stepNumber}: {st.title} {st.durationMinutes && `(${st.durationMinutes} phút)`}
+                  </span>
+                </div>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
@@ -476,7 +561,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
                   </button>
                 </div>
               </div>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">{st.description}</p>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 pl-6">{st.description}</p>
             </div>
           ))}
         </div>
