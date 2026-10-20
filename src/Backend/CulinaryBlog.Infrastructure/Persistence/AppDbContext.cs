@@ -13,15 +13,19 @@ namespace CulinaryBlog.Infrastructure.Persistence;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options), IAppDbContext
 {
+    public DbSet<Category> Categories => Set<Category>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<Recipe> Recipes => Set<Recipe>();
     public DbSet<RecipeStep> RecipeSteps => Set<RecipeStep>();
     public DbSet<RecipeIngredient> RecipeIngredients => Set<RecipeIngredient>();
+    public DbSet<RecipeImage> RecipeImages => Set<RecipeImage>();
 
+    IQueryable<Category> IAppDbContext.Categories => Categories;
     IQueryable<Recipe> IAppDbContext.Recipes => Recipes;
     IQueryable<RecipeStep> IAppDbContext.RecipeSteps => RecipeSteps;
     IQueryable<RecipeIngredient> IAppDbContext.RecipeIngredients => RecipeIngredients;
+    IQueryable<RecipeImage> IAppDbContext.RecipeImages => RecipeImages;
     IQueryable<Recipe> IAppDbContext.RecipesIncludingDeleted => Recipes.IgnoreQueryFilters();
 
     public new void Add<TEntity>(TEntity entity) where TEntity : class => Set<TEntity>().Add(entity);
@@ -34,6 +38,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.HasPostgresExtension("citext");
 
         // Module đặt IEntityTypeConfiguration<T> trong thư mục Infrastructure/<Module>/ nên không cần sửa file này.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

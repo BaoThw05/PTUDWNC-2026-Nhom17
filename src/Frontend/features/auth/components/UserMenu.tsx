@@ -31,6 +31,8 @@ export function UserMenu() {
       {session.user.roles.includes("Admin") && (
         <Link href={ADMIN_USERS_PATH} className="hover:underline">
           Quản trị
+        <Link href="/dashboard/categories" className="hover:underline">
+          Quản lý danh mục
         </Link>
       )}
       <Link href={PROFILE_PATH} className="font-medium hover:underline">
