@@ -38,6 +38,7 @@ internal static class AuthInfrastructureRegistration
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         services.AddSingleton<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
         services.AddScoped<IDataSeeder, AuthDataSeeder>();
+        services.AddHostedService<AuthRecurringJobsRegistration>();
 
         return services;
     }

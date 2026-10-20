@@ -1,5 +1,6 @@
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Application.Features.Auth.Common;
+using CulinaryBlog.Application.Features.Auth.PasswordResetEmail;
 using CulinaryBlog.Application.Features.Auth.RefreshTokenCleanup;
 using CulinaryBlog.Application.Features.Auth.WelcomeEmail;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,5 +13,6 @@ internal static class AuthFeatureRegistration
         services
             .AddScoped<AuthSessionIssuer>()
             .AddScoped<IWelcomeEmailJob, WelcomeEmailJob>()
+            .AddScoped<IPasswordResetEmailJob, PasswordResetEmailJob>()
             .AddScoped<RefreshTokenCleanupJob>();
 }

@@ -6,4 +6,5 @@ public enum RefreshTokenRevokeReason
     Logout,
     ReuseDetected,
     PasswordChanged,
+    AccountDisabled,
 }

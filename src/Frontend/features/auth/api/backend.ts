@@ -1,5 +1,6 @@
 import { apiClient } from "@/lib/api/client";
-import type { AuthResponse, UserProfile } from "../types";
+import type { PagedResult } from "@/lib/api/types";
+import type { AdminUser, AuthResponse, UserProfile } from "../types";
 
 const AUTH_PATH = "/api/v1/auth";
 
@@ -39,4 +40,14 @@ export function revokeRefreshToken(refreshToken: string, accessToken?: string): 
 
 export function getProfile(accessToken: string): Promise<UserProfile> {
   return apiClient.get<UserProfile>(`${AUTH_PATH}/me`, { accessToken, cache: "no-store" });
+}
+
+export function listUsers(
+  accessToken: string,
+  { search, page }: { search?: string; page?: number },
+): Promise<PagedResult<AdminUser>> {
+  const query = new URLSearchParams();
+  if (search) query.set("search", search);
+  if (page && page > 1) query.set("page", String(page));
+  return apiClient.get<PagedResult<AdminUser>>(`/api/v1/admin/users?${query}`, { accessToken, cache: "no-store" });
 }
