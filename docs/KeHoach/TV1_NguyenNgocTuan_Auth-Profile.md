@@ -16,7 +16,7 @@
 ## 2. Quyết định áp dụng cho phần việc
 
 - **Kiến trúc (S-05):** Auth.js v5 dạng BFF. Auth.js giữ phiên trong cookie HttpOnly; bên trong phiên có access token (15 phút) và refresh token của backend. **Dự phòng:** nếu spike thất bại → backend đặt refresh token trong cookie HttpOnly (phương án B).
-- **Đăng ký:** body `{ email, password, displayName }`; không bắt buộc `userName` (Identity `UserName` = email); đăng ký xong tự đăng nhập.
+- **Đăng ký:** body `{ fullName, email, userName, password }` (khớp CR-04); đăng ký xong tự đăng nhập.
 - **Mật khẩu:** ≥ 8 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt (NFR-SEC-001), cấu hình trong `IdentityOptions.Password`.
 - **Đăng nhập:** `SignInManager.CheckPasswordSignInAsync(..., lockoutOnFailure: true)`; khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED`; sai thông tin → 401 thông báo chung.
 - **Refresh token (S-06):** 32 byte ngẫu nhiên, chỉ lưu SHA-256; bảng có `FamilyId`, `RevokedAt`, `RevokedReason`, `ReplacedByTokenHash`, `CreatedByIp`; xoay vòng mỗi lần refresh; token cũ dùng lại trong 30 giây → cấp mới; quá 30 giây → thu hồi cả family.
@@ -56,7 +56,7 @@
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 1.05 | **Spike** Auth.js v5: Credentials provider gọi một endpoint login giả trên .NET; thử refresh trong callback `jwt` | Ghi kết luận vào ADR S-05: giữ phương án C hay chuyển B | — | T4 16/09 | M |
-| 1.06 | Identity: `ApplicationUser` ở Infrastructure (`DisplayName`, `AvatarUrl`, `IsActive`, `CreatedAt`); `AddIdentityCore` + `AddSignInManager`; cấu hình mật khẩu và lockout; migration | Migration chạy trên PostgreSQL trong Docker; architecture test không báo Domain phụ thuộc Identity | TV2 khung solution (16/09), TV3 compose (17/09) | T7 19/09 | M |
+| 1.06 | Identity: `ApplicationUser` ở Infrastructure (`FullName`, `AvatarUrl`, `IsActive`, `CreatedAt`); `AddIdentityCore` + `AddSignInManager`; cấu hình mật khẩu và lockout; migration | Migration chạy trên PostgreSQL trong Docker; architecture test không báo Domain phụ thuộc Identity | TV2 khung solution (16/09), TV3 compose (17/09) | T7 19/09 | M |
 | 1.07 | `JwtService` (HS256, `JsonWebTokenHandler`, claims `sub`, `email`, `role`, `jti`); cấu hình JWT Bearer dùng chung; policy `AuthorPolicy`, `AdminPolicy`; `ICurrentUser` | Endpoint thử `[AuthorPolicy]` trả 401/403/200 đúng | 1.06 | T2 21/09 | M |
 | 1.08 | Seed Admin (role Admin + Author, mật khẩu lấy từ biến môi trường) và 3 Author test; `POST /auth/login` bản đầu (chưa có refresh) | **Bàn giao cho nhóm:** lấy được JWT qua Scalar để test endpoint cần đăng nhập | 1.07 | T3 22/09 | M |
 | 1.09 | Khung Auth.js trên Next.js: Credentials provider, session chứa `accessToken`, middleware bảo vệ `/dashboard/*` và `/profile`, hàm lấy token cho API client | **Bàn giao cho TV2, TV3:** vào được trang dashboard khi đã đăng nhập | 1.05, TV4 khung Next.js (18/09) | T6 25/09 | M |
@@ -69,7 +69,7 @@
 | 1.11 | `POST /auth/login` hoàn chỉnh: lockout, 423, `IsActive`, 401 thông báo chung | Test: đúng mật khẩu, sai mật khẩu, bị khóa sau 5 lần, tài khoản bị vô hiệu hóa | 1.10 | T3 29/09 | M |
 | 1.12 | Bảng `RefreshTokens` + `POST /auth/refresh`: xoay vòng, ân hạn 30 giây, phát hiện dùng lại → thu hồi family | Test: refresh hợp lệ, hết hạn, dùng lại trong 30 giây, dùng lại sau 30 giây | 1.11 | T6 02/10 | M |
 | 1.13 | `POST /auth/logout` (`AllowAnonymous`, thu hồi với lý do `Logout`) | Test: logout rồi refresh bằng token cũ → 401, không thu hồi family | 1.12 | T6 02/10 | M |
-| 1.14 | `GET /auth/me`, `PATCH /auth/me` (`displayName` 2–100 ký tự) | Test: xem, sửa hợp lệ, sửa sai định dạng → 422 | 1.08 | T7 03/10 | M |
+| 1.14 | `GET /auth/me`, `PATCH /auth/me` (`fullname` 2–100 ký tự) | Test: xem, sửa hợp lệ, sửa sai định dạng → 422 | 1.08 | T7 03/10 | M |
 | 1.15 | `WelcomeEmailJob`: `IEmailService` (MailKit) → Mailpit; template HTML có tên người dùng và link ứng dụng; enqueue sau khi commit | Đăng ký xong thấy email trong Mailpit; job lỗi thì retry theo cấu hình chung | TV3 Hangfire (22/09) | CN 04/10 | M |
 
 ### G2b — Frontend base (T2 05/10 → CN 11/10)
