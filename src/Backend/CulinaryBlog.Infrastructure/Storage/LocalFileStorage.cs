@@ -26,6 +26,13 @@ public sealed class LocalFileStorage : IFileStorage
         await content.CopyToAsync(destination, cancellationToken);
     }
 
+    public Task<Stream> OpenReadAsync(string key, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        Stream content = File.OpenRead(GetPath(key));
+        return Task.FromResult(content);
+    }
+
     public Task DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();

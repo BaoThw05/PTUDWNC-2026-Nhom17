@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 
 namespace CulinaryBlog.IntegrationTests.Infrastructure;
 
@@ -23,9 +24,13 @@ public class ApiFactory : WebApplicationFactory<Program>
     {
         builder.UseEnvironment("Testing");
 
-        foreach (var (key, value) in Settings)
+        var settings = Settings;
+        foreach (var (key, value) in settings)
         {
             builder.UseSetting(key, value);
         }
+
+        builder.ConfigureAppConfiguration((_, configuration) =>
+            configuration.AddInMemoryCollection(settings));
     }
 }

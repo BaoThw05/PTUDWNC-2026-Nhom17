@@ -31,6 +31,15 @@ public sealed class S3FileStorage : IFileStorage
         }, cancellationToken);
     }
 
+    public async Task<Stream> OpenReadAsync(string key, CancellationToken cancellationToken = default)
+    {
+        using var response = await _client.GetObjectAsync(_options.BucketName, StorageKey.Normalize(key), cancellationToken);
+        var content = new MemoryStream();
+        await response.ResponseStream.CopyToAsync(content, cancellationToken);
+        content.Position = 0;
+        return content;
+    }
+
     public async Task DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         await _client.DeleteObjectAsync(_options.BucketName, StorageKey.Normalize(key), cancellationToken);

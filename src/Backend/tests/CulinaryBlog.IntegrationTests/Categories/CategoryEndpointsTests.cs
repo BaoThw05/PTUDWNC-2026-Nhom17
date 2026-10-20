@@ -102,6 +102,43 @@ public sealed class CategoryEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.Conflict, deleted.StatusCode);
         Assert.Equal("CATEGORY_DELETE_HAS_RECIPES", await AuthApi.ReadErrorCodeAsync(deleted));
         Assert.Contains("1 công thức", await deleted.Content.ReadAsStringAsync());
+
+        using var stillExists = await admin.GetAsync($"/api/v1/categories/{category.Slug}");
+        Assert.Equal(HttpStatusCode.OK, stillExists.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeleteCategory_WithActiveRecipe_Returns409AndKeepsCategory()
+    {
+        using var admin = CreateClient(Roles.Admin);
+        using var author = CreateClient(Roles.Author);
+        using var created = await admin.PostAsJsonAsync("/api/v1/categories", new
+        {
+            name = $"Danh mục đang dùng {Guid.NewGuid():N}",
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var category = await created.Content.ReadFromJsonAsync<CategoryResponse>();
+        Assert.NotNull(category);
+
+        using var recipe = await author.PostAsJsonAsync("/api/v1/recipes", new
+        {
+            title = $"Công thức đang dùng {Guid.NewGuid():N}",
+            description = "Kiểm tra không xóa danh mục còn công thức",
+            prepTimeMinutes = 10,
+            cookTimeMinutes = 10,
+            servings = 2,
+            difficulty = 0,
+            categoryId = category.Id,
+        });
+        Assert.Equal(HttpStatusCode.Created, recipe.StatusCode);
+
+        using var deleted = await admin.DeleteAsync($"/api/v1/categories/{category.Id}");
+        Assert.Equal(HttpStatusCode.Conflict, deleted.StatusCode);
+        Assert.Equal("CATEGORY_DELETE_HAS_RECIPES", await AuthApi.ReadErrorCodeAsync(deleted));
+        Assert.Contains("1 công thức", await deleted.Content.ReadAsStringAsync());
+
+        using var stillExists = await admin.GetAsync($"/api/v1/categories/{category.Slug}");
+        Assert.Equal(HttpStatusCode.OK, stillExists.StatusCode);
     }
 
     private HttpClient CreateClient(string role)

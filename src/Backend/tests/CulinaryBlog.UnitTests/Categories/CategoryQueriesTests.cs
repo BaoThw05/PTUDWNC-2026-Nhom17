@@ -125,18 +125,18 @@ public sealed class CategoryQueriesTests
         DateTimeOffset? publishedAt = null,
         string authorId = "author-1",
         bool isDeleted = false) => new()
-    {
-        Id = Guid.NewGuid(),
-        Title = "Công thức thử nghiệm",
-        Slug = Guid.NewGuid().ToString("N"),
-        Description = "Mô tả thử nghiệm",
-        AuthorId = authorId,
-        CategoryId = categoryId,
-        Status = status,
-        PublishedAt = publishedAt,
-        CreatedAt = DateTimeOffset.UtcNow,
-        IsDeleted = isDeleted
-    };
+        {
+            Id = Guid.NewGuid(),
+            Title = "Công thức thử nghiệm",
+            Slug = Guid.NewGuid().ToString("N"),
+            Description = "Mô tả thử nghiệm",
+            AuthorId = authorId,
+            CategoryId = categoryId,
+            Status = status,
+            PublishedAt = publishedAt,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsDeleted = isDeleted
+        };
 
     private sealed class TestCurrentUser : ICurrentUser
     {
@@ -152,11 +152,13 @@ public sealed class CategoryQueriesTests
         public IQueryable<Recipe> Recipes { get; } = recipes.Where(recipe => !recipe.IsDeleted).AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps { get; } = Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients { get; } = Enumerable.Empty<RecipeIngredient>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages { get; } = Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => Recipes;
 
         public void Add<TEntity>(TEntity entity) where TEntity : class => throw new NotSupportedException();
         public void Remove<TEntity>(TEntity entity) where TEntity : class => throw new NotSupportedException();
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity => throw new NotSupportedException();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task ExecuteInTransactionAsync(Func<Task> action, CancellationToken cancellationToken = default) => throw new NotSupportedException();
     }
 }
