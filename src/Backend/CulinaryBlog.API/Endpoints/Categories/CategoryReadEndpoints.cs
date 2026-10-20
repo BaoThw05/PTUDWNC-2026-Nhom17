@@ -19,7 +19,8 @@ internal sealed class CategoryReadEndpoints : IEndpointModule
             var result = await mediator.Send(new GetCategoriesQuery(), cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("GetCategories");
+        .WithName("GetCategories")
+        .CacheOutput("public-categories");
 
         categories.MapGet("/{slug}", async (
             string slug,
@@ -36,6 +37,7 @@ internal sealed class CategoryReadEndpoints : IEndpointModule
                 cancellationToken);
             return Results.Ok(result);
         })
-        .WithName("GetCategoryBySlug");
+        .WithName("GetCategoryBySlug")
+        .CacheOutput("public-categories");
     }
 }
