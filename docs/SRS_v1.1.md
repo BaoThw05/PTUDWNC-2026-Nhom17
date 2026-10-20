@@ -48,12 +48,12 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-01 | S-01 | Phát hành SRS v1.1 dạng Markdown trong repo, kèm bảng Change Request và ADR | Toàn tài liệu | TV1 | — | 🔄 |
 | CR-02 | S-03 | Recipe xóa mềm vào thùng rác 30 ngày, có khôi phục; job định kỳ xóa thật và xóa ảnh; bảng con và Category xóa thật | FR-RCP-007, Chương 7 (Recipe) | TV2 | S-03 | ⬜ |
 | CR-03 | S-04 | Kiểm soát đồng thời bằng cột hệ thống `xmin` (`uint Version`); client gửi `version`, lệch → 409 | FR-RCP-004, Chương 7 | TV2 | S-04 | ⬜ |
-| CR-04 | S-05 | Xác thực theo mô hình BFF với Auth.js v5; đăng ký nhận `{ fullName, email, userName, password }` (khớp `SRS_..._GiaiPhap.md` bản 19/09) và đăng nhập luôn; Google: backend chỉ nhận `{ idToken }`, tự xác minh, tự sinh `userName` | FR-AUTH-001, FR-AUTH-003, 5.2, 5.3, 6.1 | TV1 | [ADR-001](./ADR/ADR-001-kien-truc-xac-thuc.md) | 🔄 |
-| CR-05 | S-06 | Refresh token 32 byte, chỉ lưu SHA-256; thêm `FamilyId`, `RevokedReason`; bỏ `IsRevoked`; xoay vòng mỗi lần refresh, dùng lại trong 30 giây vẫn đổi được, quá 30 giây thu hồi cả family | FR-AUTH-001, FR-AUTH-004, NFR-SEC-002, 7.8 | TV1 | [ADR-002](./ADR/ADR-002-refresh-token.md) | 🔄 |
-| CR-06 | S-05 | Đăng xuất `AllowAnonymous`, chỉ cần `refreshToken`, luôn trả 204; có access token thì chỉ thu hồi token của chính người đó | FR-AUTH-005 | TV1 | S-05 | ⬜ |
-| CR-07 | S-05 | Đăng nhập: khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED` (chỉ báo khi mật khẩu đúng); bỏ điều kiện "LockoutEnabled = false" | FR-AUTH-002 | TV1 | S-05 | ⬜ |
-  | CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | 🔄 |
-| CR-09 | S-15 | Rate limit theo endpoint: đăng nhập/đăng ký/Google 5 lần/phút theo IP, refresh 30 lần/phút, còn lại 100 lần/phút theo người dùng hoặc IP; 429 kèm `Retry-After`; đọc IP thật qua `X-Forwarded-For` từ proxy tin cậy | NFR-SEC-003 | TV1, TV4 | — | ⬜ |
+| CR-04 | S-05 | Xác thực theo mô hình BFF với Auth.js v5; đăng ký nhận `{ fullName, email, userName, password }` (khớp `SRS_..._GiaiPhap.md` bản 19/09) và đăng nhập luôn; Google: backend chỉ nhận `{ idToken }`, tự xác minh, tự sinh `userName` | FR-AUTH-001, FR-AUTH-003, 5.2, 5.3, 6.1 | TV1 | [ADR-001](./ADR/ADR-001-kien-truc-xac-thuc.md) | ✅ |
+| CR-05 | S-06 | Refresh token 32 byte, chỉ lưu SHA-256; thêm `FamilyId`, `RevokedReason`; bỏ `IsRevoked`; xoay vòng mỗi lần refresh, dùng lại trong 30 giây vẫn đổi được, quá 30 giây thu hồi cả family | FR-AUTH-001, FR-AUTH-004, NFR-SEC-002, 7.8 | TV1 | [ADR-002](./ADR/ADR-002-refresh-token.md) | ✅ |
+| CR-06 | S-05 | Đăng xuất `AllowAnonymous`, chỉ cần `refreshToken`, luôn trả 204; có access token thì chỉ thu hồi token của chính người đó | FR-AUTH-005 | TV1 | S-05 | ✅ |
+| CR-07 | S-05 | Đăng nhập: khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED` (chỉ báo khi mật khẩu đúng); bỏ điều kiện "LockoutEnabled = false" | FR-AUTH-002 | TV1 | S-05 | ✅ |
+  | CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | ✅ |
+| CR-09 | S-15 | Rate limit theo endpoint: đăng nhập/đăng ký/Google 5 lần/phút theo IP, refresh 30 lần/phút, còn lại 100 lần/phút theo người dùng hoặc IP; 429 kèm `Retry-After`; đọc IP thật qua `X-Forwarded-For` từ proxy tin cậy | NFR-SEC-003 | TV1, TV4 | — | ✅ |
 | CR-10 | S-10 | Hợp đồng API: không vỏ bọc response; danh sách trả `PagedResult`; 422 cho validation; lỗi theo Problem Details (RFC 9457) có `code`, `traceId`; `sort=-field`; đổi tên thống nhất (người dùng dùng `fullName` như FR-AUTH, xem CR-04, CR-08) | Chương 3, Chương 8, Phụ lục A, B | TV2 | S-10 | ⬜ |
 | CR-11 | S-10 | Bổ sung mã lỗi `AUTH_*` vào Phụ lục B theo `docs/api/error-codes.md` | Phụ lục B | TV1 | — | ✅ |
 | CR-12 | S-11 | Điều kiện publish chỉ cần ≥ 1 bước; nguyên liệu và ảnh bổ sung được sau khi publish | FR-RCP-005, FR-RCP-006 | TV2 | S-11 | ⬜ |
@@ -66,6 +66,7 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ⬜ |
 | CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ⬜ |
 | CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ⬜ |
+| CR-22 | S-17 | Bổ sung đổi mật khẩu (FR-AUTH-008), quên/đặt lại mật khẩu qua email (FR-AUTH-009) và quản trị người dùng cho Admin (FR-AUTH-010); đổi/đặt lại mật khẩu và khóa tài khoản đều thu hồi mọi refresh token | 3.1, 8.1, Phụ lục B | TV1 | — | ✅ |
 
 ## Diễn giải câu trả lời của giảng viên (nhóm chốt 18/09/2026)
 
@@ -502,7 +503,7 @@ Chương này đặc tả chi tiết 27 Functional Requirements (FR) được nh
 
 ## 3.1. Module Xác thực và Quản lý Người dùng (FR-AUTH)
 
-Module này quản lý toàn bộ vòng đời xác thực người dùng: từ đăng ký, đăng nhập đa phương thức, duy trì phiên làm việc với cơ chế token rotation, đến quản lý hồ sơ cá nhân. Backend sử dụng ASP.NET Core Identity kết hợp JWT và OAuth 2.0.
+Module quản lý vòng đời tài khoản: đăng ký, đăng nhập (mật khẩu, Google), duy trì phiên bằng refresh token xoay vòng, hồ sơ cá nhân, đổi/đặt lại mật khẩu và quản trị người dùng. Backend dùng ASP.NET Core Identity + JWT HS256; frontend dùng Auth.js v5 theo mô hình BFF (phiên nằm trong cookie HttpOnly của Next.js, xem CR-04, ADR-001). Mọi lỗi trả Problem Details (RFC 9457) có trường `code` theo Phụ lục B. Các endpoint đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu giới hạn 5 lần/phút/IP; refresh 30 lần/phút; còn lại 100 lần/phút (CR-09).
 
 ### FR-AUTH-001: Đăng ký Tài khoản (User Registration)
 
@@ -510,17 +511,14 @@ Module này quản lý toàn bộ vòng đời xác thực người dùng: từ 
 |---|---|
 |**Tên yêu cầu**|Đăng ký Tài khoản Mới|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Khách (Guest / Anonymous User)|
+|**Tác nhân**|Khách (Guest)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have (Bắt buộc)|
-|**Mô tả**|Hệ thống cho phép người dùng chưa có tài khoản tạo một tài khoản<br>mới bằng cách cung cấp thông tin cơ bản. Sau khi đăng ký thành công,<br>người dùng tự động được gán role "Author" và nhận bộ token để truy<br>cập ngay lập tức (auto-login sau đăng ký). Hệ thống kích hoạt job gửi<br>email chào mừng bất đồng bộ qua Hangfire.|
-|**Điều kiện tiên quyết**|1. Người dùng chưa đăng nhập vào hệ thống. 2. Endpoint POST<br>/api/v1/auth/register đang hoạt động. 3. PostgreSQL database đang kết<br>nối thành công.|
-|**Luồng chính (Happy**<br>**Path)**|1. Người dùng (client) gửi HTTP POST đến /api/v1/auth/register với<br>JSON body: { "fullName": "...", "email": "...", "userName": "...",<br>"password": "..." }.<br>2. RegisterCommand được tạo và dispatch đến MediatR.<br>3. ValidationBehavior chạy RegisterCommandValidator: kiểm tra<br>fullName không rỗng, email đúng format, userName không chứa ký tự<br>đặc biệt, password tối thiểu 8 ký tự (1 chữ hoa, 1 chữ số, 1 ký tự đặc<br>biệt).<br>4. RegisterCommandHandler kiểm tra email chưa tồn tại trong<br>database (UserManager.FindByEmailAsync).<br>5. Tạo ApplicationUser mới qua factory method<br>ApplicationUser.Create(fullName, email, userName).<br>6. UserManager.CreateAsync(user, password) – ASP.NET Core<br>Identity tự hash password với PBKDF2.<br>7. UserManager.AddToRoleAsync(user, "Author") – gán role mặc định.<br>8. JwtService.GenerateAccessToken() – tạo JWT access token<br>(HS256, 15 phút).<br>9. JwtService.GenerateRefreshToken() – tạo refresh token ngẫu nhiên<br>(512-bit, 7 ngày).<br>10. Lưu RefreshToken vào bảng refresh_tokens trong database.<br>11. BackgroundJob.Enqueue<WelcomeEmailJob>() – đẩy job gửi<br>email chào mừng vào Hangfire queue (fire-and-forget).<br>12. Trả về HTTP 201 Created với AuthResponseDto: { accessToken,<br>refreshToken, expiresAt, user: { id, fullName, email, userName,<br>avatarUrl, roles } }.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Email đã tồn tại: Tại bước 4, nếu email đã được đăng ký → Throw<br>ConflictException → GlobalExceptionMiddleware trả về HTTP 409<br>Conflict với RFC 7807 body.<br>A2 – Password không đủ mạnh: Tại bước 3 hoặc 6,<br>UserManager.CreateAsync trả về IdentityError → Throw<br>ValidationException → HTTP 422 Unprocessable Entity với danh sách<br>lỗi chi tiết.<br>A3 – Dữ liệu đầu vào không hợp lệ: Tại bước 3, FluentValidation fail →<br>HTTP 422 với từng field lỗi (theo RFC 7807 ValidationProblemDetails).<br>A4 – Database không kết nối: EF Core ném DbUpdateException →<br>HTTP 500 Internal Server Error (GlobalExceptionMiddleware log lỗi,<br>không expose stack trace).|
-|**HTTP Method &**<br>**Endpoint**|POST  /api/v1/auth/register|
-|**Kết quả mong đợi**|Tài khoản mới được tạo trong database, role "Author" được gán,<br>refresh token được persist, email chào mừng được đẩy vào Hangfire<br>queue. Client nhận được access token và refresh token.|
-|**HTTP Status Code trả**<br>**về**|201 Created – Đăng ký thành công. 409 Conflict – Email đã tồn tại. 422<br>Unprocessable Entity – Dữ liệu không hợp lệ. 500 Internal Server Error<br>– Lỗi hệ thống.|
-
-<!-- PDF trang 17 -->
+|**Mô tả**|Khách tạo tài khoản bằng họ tên, email, tên đăng nhập và mật khẩu. Tài khoản mới có role `Author`, được đăng nhập ngay (nhận cặp token) và nhận email chào mừng qua Hangfire (FR-JOB-001).|
+|**Dữ liệu vào**|`{ fullName, email, userName, password }` — `fullName` 2–100 ký tự (sau khi bỏ khoảng trắng đầu/cuối); `email` đúng định dạng, ≤ 256; `userName` 3–50 ký tự, chỉ gồm chữ, số, `_`, `.`; `password` 8–128 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt (NFR-SEC-001).|
+|**Luồng chính**|1. Validator kiểm tra dữ liệu. 2. Tạo user bằng `UserManager`, gán role `Author`. 3. Phát refresh token (FR-AUTH-004). 4. Đưa `WelcomeEmailJob` vào hàng đợi Hangfire. 5. Trả 201 kèm `AuthResponse { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`.|
+|**Ngoại lệ**|Email đã dùng → 409 `AUTH_EMAIL_EXISTS`; userName đã dùng → 409 `AUTH_USERNAME_EXISTS`; dữ liệu sai → 422 `VALIDATION_ERROR` (lỗi theo từng trường); quá hạn mức → 429.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/register|
+|**HTTP Status Code trả về**|201, 409, 422, 429|
 
 ### FR-AUTH-002: Đăng nhập bằng Email/Mật khẩu (Local Login)
 
@@ -528,35 +526,27 @@ Module này quản lý toàn bộ vòng đời xác thực người dùng: từ 
 |---|---|
 |**Tên yêu cầu**|Đăng nhập bằng Email và Mật khẩu|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Tác giả đã đăng ký (Author) hoặc Quản trị viên (Admin)|
+|**Tác nhân**|Author / Admin|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have (Bắt buộc)|
-|**Mô tả**|Hệ thống cho phép người dùng đã có tài khoản đăng nhập bằng email<br>và mật khẩu. Mỗi lần đăng nhập thành công tạo ra một cặp access<br>token mới (JWT, 15 phút) và refresh token mới (7 ngày). Cơ chế Token<br>Rotation: refresh token cũ KHÔNG bị xóa ngay mà được đánh dấu đã<br>sử dụng (để phát hiện token reuse attack).|
-|**Điều kiện tiên quyết**|1. Người dùng đã có tài khoản hợp lệ trong hệ thống. 2. Tài khoản<br>chưa bị khóa (LockoutEnabled = false hoặc chưa đến lockout<br>deadline).|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi POST /api/v1/auth/login với body: { "email": "...",<br>"password": "..." }.<br>2. LoginCommand được dispatch qua MediatR.<br>3. ValidationBehavior kiểm tra email format và password không rỗng.<br>4. LoginCommandHandler tìm user:<br>UserManager.FindByEmailAsync(email).<br>5. Xác minh mật khẩu: UserManager.CheckPasswordAsync(user,<br>password) – so sánh với PBKDF2 hash.<br>6. Kiểm tra tài khoản không bị lockout:<br>UserManager.IsLockedOutAsync(user).<br>7. Tạo access token mới: JwtService.GenerateAccessToken(user,<br>roles).<br>8. Tạo refresh token mới: JwtService.GenerateRefreshToken(userId).<br>9. Lưu refresh token mới vào database.<br>10. Ghi nhận đăng nhập thành công:<br>UserManager.ResetAccessFailedCountAsync(user).<br>11. Trả về HTTP 200 OK với AuthResponseDto.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Tài khoản không tồn tại hoặc mật khẩu sai: HTTP 401<br>Unauthorized với message generic "Email hoặc mật khẩu không đúng"<br>(KHÔNG tiết lộ tài khoản có tồn tại hay không – tránh User<br>Enumeration Attack).<br>A2 – Tài khoản bị lockout: HTTP 423 Locked với thông báo thời gian<br>unlock còn lại.<br>A3 – Vượt quá số lần thử sai (5 lần): AccessFailedCount tăng lên, sau<br>5 lần → tài khoản bị lockout 15 phút (cấu hình qua LockoutOptions).|
-|**HTTP Method &**<br>**Endpoint**|POST  /api/v1/auth/login|
-|**Kết quả mong đợi**|Access token và refresh token mới được tạo và trả về. Refresh token<br>được lưu vào database.|
-|**HTTP Status Code trả**<br>**về**|200 OK – Đăng nhập thành công. 401 Unauthorized – Sai email/mật<br>khẩu. 422 Unprocessable Entity – Dữ liệu không hợp lệ. 423 Locked –<br>Tài khoản bị khóa.|
+|**Mô tả**|Đăng nhập bằng email và mật khẩu, nhận access token (JWT 15 phút) và refresh token (7 ngày).|
+|**Luồng chính**|1. Tìm user theo email. 2. `SignInManager.CheckPasswordSignInAsync(..., lockoutOnFailure: true)`. 3. Mật khẩu đúng và `IsActive = true` → phát cặp token mới, trả 200 kèm `AuthResponse { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`.|
+|**Ngoại lệ**|Email không tồn tại hoặc sai mật khẩu → 401 `AUTH_INVALID_CREDENTIALS` (cùng thông báo, không lộ tài khoản); sai 5 lần → khóa 15 phút, 423 `AUTH_ACCOUNT_LOCKED`; mật khẩu đúng nhưng `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED`; dữ liệu sai → 422; quá hạn mức → 429 (CR-07).|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/login|
+|**HTTP Status Code trả về**|200, 401, 403, 422, 423, 429|
 
-<!-- PDF trang 18 -->
-
-### FR-AUTH-003: Đăng nhập bằng Google OAuth 2.0
+### FR-AUTH-003: Đăng nhập bằng Google
 
 |**Mã yêu cầu**|FR-AUTH-003|
 |---|---|
-|**Tên yêu cầu**|Đăng nhập / Đăng ký bằng Google OAuth 2.0|
+|**Tên yêu cầu**|Đăng nhập / Đăng ký bằng Google|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Khách (Guest) – lần đầu / Người dùng đã đăng ký trước đó qua Google|
+|**Tác nhân**|Khách / người dùng đã liên kết Google|
 |**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
-|**Mô tả**|Hệ thống hỗ trợ đăng nhập qua tài khoản Google sử dụng OAuth 2.0<br>Authorization Code Flow với PKCE. Nếu đây là lần đăng nhập Google<br>đầu tiên, hệ thống tự động tạo tài khoản mới từ thông tin Google profile<br>(email, display name, avatar URL) và gán role "Author". Nếu email đã<br>tồn tại từ đăng ký thủ công trước đó, hệ thống liên kết Google login với<br>tài khoản hiện có.|
-|**Điều kiện tiên quyết**|1. Google OAuth 2.0 Credentials (ClientId, ClientSecret) đã được cấu<br>hình trong appsettings. 2. Redirect URI đã được đăng ký trong Google<br>Cloud Console. 3. Người dùng có tài khoản Google hợp lệ.|
-|**Luồng chính (Happy**<br>**Path)**|1. Frontend (Next.js) redirect người dùng đến Google Authorization<br>Endpoint với scopes: openid, email, profile.<br>2. Người dùng xác nhận cấp quyền trên Google Consent Screen.<br>3. Google redirect về callback URL (Next.js) với Authorization Code.<br>4. Auth.js v5 (Next.js) xử lý callback, lấy access token từ Google và lấy<br>profile.<br>5. Frontend gửi POST /api/v1/auth/google với Google<br>ExternalLoginInfo.<br>6. GoogleLoginCommandHandler tìm user bằng<br>UserManager.FindByLoginAsync("Google", providerKey).<br>7. Nếu chưa có tài khoản: kiểm tra email → nếu email chưa tồn tại thì<br>tạo ApplicationUser mới từ Google profile, gán role "Author" →<br>AddLoginAsync.<br>8. Nếu email đã tồn tại (đã đăng ký thủ công): liên kết Google login →<br>AddLoginAsync với tài khoản hiện có.<br>9. Tạo access token và refresh token, lưu vào database.<br>10. Trả về HTTP 200 OK với AuthResponseDto.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Google token không hợp lệ hoặc hết hạn: HTTP 401<br>Unauthorized.<br>A2 – Email Google bị revoke quyền: HTTP 400 Bad Request.<br>A3 – Google API không khả dụng: HTTP 502 Bad Gateway với<br>message thích hợp.|
-|**HTTP Method &**<br>**Endpoint**|POST  /api/v1/auth/google|
-|**Kết quả mong đợi**|Người dùng được đăng nhập (hoặc tự động đăng ký), nhận<br>AuthResponseDto. Tài khoản mới (nếu có) được tạo với role "Author".|
-|**HTTP Status Code trả**<br>**về**|200 OK – Đăng nhập/đăng ký thành công. 401 Unauthorized – Token<br>Google không hợp lệ. 400 Bad Request – Thiếu thông tin Google<br>profile.|
-
-<!-- PDF trang 19 -->
+|**Mô tả**|Auth.js (Next.js) thực hiện OAuth với Google và chuyển `id_token` cho backend; `ClientSecret` chỉ nằm ở Next.js. Backend tự xác minh `id_token` bằng `Google.Apis.Auth` (đúng `ClientId`).|
+|**Luồng chính**|1. Next.js gửi `{ idToken }`. 2. Backend xác minh token; yêu cầu `email_verified = true`. 3. Đã liên kết Google → đăng nhập. Email đã có tài khoản → liên kết Google vào tài khoản đó. Chưa có → tạo tài khoản role `Author`, `userName` sinh từ phần trước @ của email, `avatarUrl` lấy từ Google, gửi email chào mừng. 4. Trả 200 kèm `AuthResponse { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`.|
+|**Ngoại lệ**|Token sai/hết hạn → 401 `AUTH_GOOGLE_TOKEN_INVALID`; email Google chưa xác minh → 401 `AUTH_GOOGLE_EMAIL_UNVERIFIED`; tài khoản bị vô hiệu hóa → 403 `AUTH_ACCOUNT_DISABLED`; chưa cấu hình `ClientId` hoặc không gọi được Google → 502 `AUTH_GOOGLE_UNAVAILABLE`.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/google|
+|**HTTP Status Code trả về**|200, 401, 403, 422, 429, 502|
 
 ### FR-AUTH-004: Làm mới Access Token (Token Refresh)
 
@@ -564,17 +554,13 @@ Module này quản lý toàn bộ vòng đời xác thực người dùng: từ 
 |---|---|
 |**Tên yêu cầu**|Làm mới Access Token bằng Refresh Token|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Tác giả (Author) / Quản trị viên (Admin) – có refresh token hợp lệ|
+|**Tác nhân**|Author / Admin có refresh token|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have (Bắt buộc)|
-|**Mô tả**|Khi access token hết hạn (sau 15 phút), client sử dụng refresh token<br>còn hiệu lực để lấy cặp token mới mà không cần người dùng đăng<br>nhập lại. Cơ chế Token Rotation bắt buộc: mỗi lần refresh, refresh<br>token cũ bị vô hiệu hóa (IsRevoked = true, RevokedAt =<br>DateTime.UtcNow) và một refresh token MỚI được tạo ra. Đây là biện<br>pháp chống Refresh Token Reuse Attack.|
-|**Điều kiện tiên quyết**|1. Client có refresh token hợp lệ (chưa hết hạn, chưa bị revoke, chưa<br>bị thay thế). 2. Người dùng tương ứng vẫn còn tồn tại trong database<br>và chưa bị khóa.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi POST /api/v1/auth/refresh với body: { "refreshToken": "..."<br>}.<br>2. RefreshTokenCommand dispatch qua MediatR.<br>3. Handler tìm refresh token trong database: bao gồm User navigation<br>property.<br>4. Kiểm tra: token tồn tại, IsRevoked == false, ExpiresAt ><br>DateTime.UtcNow, user vẫn active.<br>5. Đánh dấu token cũ: IsRevoked = true, ReplacedByToken =<br>newToken, RevokedAt = DateTime.UtcNow.<br>6. Tạo access token mới cho user.<br>7. Tạo refresh token mới, lưu vào database.<br>8. Trả về HTTP 200 OK với AuthResponseDto chứa cặp token mới.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Refresh token không tìm thấy trong database: HTTP 401<br>Unauthorized.<br>A2 – Refresh token đã hết hạn: HTTP 401 Unauthorized, client phải<br>đăng nhập lại.<br>A3 – Refresh token đã bị revoke (Reuse Attack detected): HTTP 401<br>Unauthorized. LOG SECURITY ALERT với mức WARNING. Có thể<br>kích hoạt revoke toàn bộ refresh tokens của user đó (paranoid mode).<br>A4 – User bị xóa hoặc bị khóa sau khi token được cấp: HTTP 401<br>Unauthorized.|
-|**HTTP Method &**<br>**Endpoint**|POST  /api/v1/auth/refresh|
-|**Kết quả mong đợi**|Refresh token cũ bị invalidate. Access token mới (15 phút) và refresh<br>token mới (7 ngày) được tạo và trả về.|
-|**HTTP Status Code trả**<br>**về**|200 OK – Refresh thành công. 401 Unauthorized – Token không hợp<br>lệ, hết hạn hoặc đã bị revoke.|
-
-<!-- PDF trang 20 -->
+|**Mô tả**|Refresh token là 32 byte ngẫu nhiên, database chỉ lưu SHA-256 (`TokenHash`). Mỗi lần refresh, token cũ bị thu hồi với lý do `Rotated` và token mới cùng `FamilyId` được phát (CR-05, ADR-002). Auth.js tự gọi refresh khoảng 1 phút trước khi access token hết hạn.|
+|**Luồng chính**|1. Client gửi `{ refreshToken }`. 2. Tìm theo hash; còn hạn, chưa thu hồi, user còn hoạt động. 3. Thu hồi token cũ, phát cặp mới. 4. Trả 200 kèm `AuthResponse { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`.|
+|**Ngoại lệ**|Không tìm thấy → 401 `AUTH_REFRESH_TOKEN_INVALID`; hết hạn → 401 `AUTH_REFRESH_TOKEN_EXPIRED`; token đã xoay vòng được dùng lại trong 30 giây → vẫn cấp cặp mới (nhiều tab gọi cùng lúc); dùng lại sau 30 giây → ghi log cảnh báo bảo mật, thu hồi cả family, 401 `AUTH_REFRESH_TOKEN_REVOKED`; user bị vô hiệu hóa → 403 `AUTH_ACCOUNT_DISABLED`; quá hạn mức → 429.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/refresh|
+|**HTTP Status Code trả về**|200, 401, 403, 422, 429|
 
 ### FR-AUTH-005: Đăng xuất (Logout / Token Revocation)
 
@@ -582,17 +568,13 @@ Module này quản lý toàn bộ vòng đời xác thực người dùng: từ 
 |---|---|
 |**Tên yêu cầu**|Đăng xuất và Thu hồi Refresh Token|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Tác giả (Author) / Quản trị viên (Admin) đang đăng nhập|
-|**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Người dùng đăng xuất khỏi hệ thống. Vì JWT access token là stateless<br>(không thể revoke trực tiếp trước khi hết hạn), hành động logout chủ<br>yếu là revoke refresh token tương ứng trong database. Client có trách<br>nhiệm xóa access token khỏi bộ nhớ (localStorage/cookie) phía client.|
-|**Điều kiện tiên quyết**|1. Người dùng đang đăng nhập với access token hợp lệ trong<br>Authorization header. 2. Client gửi refresh token muốn revoke.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi POST /api/v1/auth/logout với Authorization: Bearer<br>{accessToken} header và body: { "refreshToken": "..." }.<br>2. Middleware xác thực JWT (UseAuthentication) xác minh access<br>token.<br>3. LogoutCommandHandler tìm refresh token trong database.<br>4. Nếu tìm thấy và thuộc về user hiện tại: đánh dấu IsRevoked = true,<br>RevokedAt = DateTime.UtcNow.<br>5. Lưu thay đổi vào database.<br>6. Trả về HTTP 204 No Content.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Refresh token không tìm thấy: Vẫn trả về HTTP 204 (idempotent<br>– không tiết lộ trạng thái).<br>A2 – Access token đã hết hạn: Vẫn cho phép logout nếu refresh token<br>hợp lệ; hoặc HTTP 401 nếu không cung cấp refresh token.|
-|**HTTP Method &**<br>**Endpoint**|POST  /api/v1/auth/logout|
-|**Kết quả mong đợi**|Refresh token bị đánh dấu IsRevoked = true trong database. Các lần<br>refresh tiếp theo với token này sẽ thất bại.|
-|**HTTP Status Code trả**<br>**về**|204 No Content – Đăng xuất thành công (hoặc token không tồn tại –<br>idempotent). 401 Unauthorized – Access token không hợp lệ.|
-
-<!-- PDF trang 21 -->
+|**Tác nhân**|Người dùng đang đăng nhập|
+|**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have (Bắt buộc)|
+|**Mô tả**|Endpoint `AllowAnonymous`: chỉ cần `refreshToken` trong body, vì access token có thể đã hết hạn lúc đăng xuất (CR-06). Auth.js gọi endpoint này phía server rồi xóa cookie phiên; access token còn hiệu lực đến khi hết 15 phút.|
+|**Luồng chính**|1. Client gửi `{ refreshToken }`. 2. Tìm theo hash; nếu có và chưa thu hồi → thu hồi với lý do `Logout` (chỉ token đó, không thu hồi cả family). 3. Trả 204.|
+|**Ngoại lệ**|Token không tồn tại hoặc đã thu hồi → vẫn 204 (idempotent, không lộ trạng thái).|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/logout|
+|**HTTP Status Code trả về**|204, 422|
 
 ### FR-AUTH-006: Xem Hồ sơ Cá nhân (View Profile)
 
@@ -600,33 +582,68 @@ Module này quản lý toàn bộ vòng đời xác thực người dùng: từ 
 |---|---|
 |**Tên yêu cầu**|Xem Hồ sơ Cá nhân|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Tác giả (Author) / Quản trị viên (Admin) đang đăng nhập|
+|**Tác nhân**|Người dùng đang đăng nhập|
 |**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
-|**Mô tả**|Trả về thông tin hồ sơ của người dùng hiện đang đăng nhập, dựa trên<br>UserId được trích xuất từ JWT claims. Không bao giờ trả về<br>PasswordHash hoặc SecurityStamp.|
-|**Điều kiện tiên quyết**|1. Người dùng đang đăng nhập với access token hợp lệ.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET /api/v1/auth/me với Authorization: Bearer<br>{accessToken}.<br>2. Middleware xác thực JWT, trích xuất UserId từ claim NameIdentifier.<br>3. GetCurrentUserQuery dispatch qua MediatR.<br>4. Handler tìm user: UserManager.FindByIdAsync(userId).<br>5. Map sang UserProfileDto: { id, fullName, email, userName,<br>avatarUrl, roles, emailConfirmed, createdAt }.<br>6. Trả về HTTP 200 OK với UserProfileDto.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – User đã bị xóa khỏi database sau khi token được cấp: HTTP 404<br>Not Found.|
-|**HTTP Method &**<br>**Endpoint**|GET  /api/v1/auth/me|
-|**Kết quả mong đợi**|Trả về thông tin hồ sơ đầy đủ của người dùng (không có thông tin nhạy<br>cảm như password hash).|
-|**HTTP Status Code trả**<br>**về**|200 OK – Thành công. 401 Unauthorized – Chưa đăng nhập. 404 Not Found – User không tồn tại.|
-
-<!-- PDF trang 22 -->
+|**Mô tả**|Trả hồ sơ của người dùng hiện tại (lấy `sub` trong JWT qua `ICurrentUser`): `UserProfile { id, email, userName, fullName, avatarUrl, roles, createdAt }`. Không trả hash mật khẩu, security stamp (CR-08).|
+|**Ngoại lệ**|Chưa đăng nhập → 401; user đã bị xóa → 404 `AUTH_USER_NOT_FOUND`.|
+|**HTTP Method & Endpoint**|GET /api/v1/auth/me|
+|**HTTP Status Code trả về**|200, 401, 404|
 
 ### FR-AUTH-007: Cập nhật Hồ sơ Cá nhân (Update Profile)
 
 |**Mã yêu cầu**|FR-AUTH-007|
 |---|---|
-|**Tên yêu cầu**|Cập nhật Hồ sơ Cá nhân|
+|**Tên yêu cầu**|Cập nhật Họ tên|
 |**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
-|**Tác nhân**|Tác giả (Author) / Quản trị viên (Admin) đang đăng nhập|
+|**Tác nhân**|Người dùng đang đăng nhập|
 |**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
-|**Mô tả**|Người dùng có thể cập nhật FullName và AvatarUrl của mình. Email và<br>UserName không thể thay đổi qua endpoint này (đây là quy trình riêng<br>có xác nhận OTP). Sử dụng PATCH (partial update) để chỉ cập nhật<br>các field được cung cấp.|
-|**Điều kiện tiên quyết**|1. Người dùng đang đăng nhập. 2. Dữ liệu mới phải hợp lệ (FullName<br>không rỗng, AvatarUrl là URL hợp lệ nếu cung cấp).|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi PATCH /api/v1/auth/me với body: { "fullName": "...",<br>"avatarUrl": "..." }.<br>2. UpdateProfileCommand dispatch qua MediatR, UserId lấy từ JWT<br>claims.<br>3. ValidationBehavior kiểm tra: fullName 2–100 ký tự, avatarUrl là URL<br>hợp lệ (nếu cung cấp).<br>4. Handler tìm user, cập nhật FullName và/hoặc AvatarUrl.<br>5. UserManager.UpdateAsync(user).<br>6. Trả về HTTP 200 OK với UserProfileDto đã cập nhật.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Dữ liệu không hợp lệ: HTTP 422 Unprocessable Entity.|
-|**HTTP Method &**<br>**Endpoint**|PATCH  /api/v1/auth/me|
-|**Kết quả mong đợi**|Hồ sơ người dùng được cập nhật trong database. Trả về hồ sơ mới.|
-|**HTTP Status Code trả**<br>**về**|200 OK – Cập nhật thành công. 401 Unauthorized – Chưa đăng nhập.<br>422 Unprocessable Entity – Dữ liệu không hợp lệ.|
+|**Mô tả**|Chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối). `avatarUrl` chỉ lấy từ Google; email và userName không đổi được trong v1 (bỏ OTP, CR-08). Frontend cập nhật luôn tên trong phiên Auth.js.|
+|**Dữ liệu vào**|`{ fullName }`|
+|**Ngoại lệ**|Chưa đăng nhập → 401; dữ liệu sai → 422 `VALIDATION_ERROR`.|
+|**HTTP Method & Endpoint**|PATCH /api/v1/auth/me|
+|**HTTP Status Code trả về**|200 kèm `UserProfile`, 401, 422|
+
+### FR-AUTH-008: Đổi Mật khẩu (Change Password)
+
+|**Mã yêu cầu**|FR-AUTH-008|
+|---|---|
+|**Tên yêu cầu**|Đổi Mật khẩu|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Người dùng đang đăng nhập|
+|**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
+|**Mô tả**|Đổi mật khẩu khi biết mật khẩu hiện tại; đổi xong thu hồi mọi refresh token của người dùng (đăng xuất mọi thiết bị) và frontend đưa về trang đăng nhập (CR-22).|
+|**Dữ liệu vào**|`{ currentPassword, newPassword }` — `newPassword` theo quy tắc NFR-SEC-001.|
+|**Ngoại lệ**|Chưa đăng nhập → 401; sai mật khẩu hiện tại → 422 (lỗi gắn vào trường `currentPassword`, tính vào số lần sai để khóa tài khoản); bị khóa → 423 `AUTH_ACCOUNT_LOCKED`.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/change-password|
+|**HTTP Status Code trả về**|204, 401, 422, 423|
+
+### FR-AUTH-009: Quên và Đặt lại Mật khẩu (Forgot / Reset Password)
+
+|**Mã yêu cầu**|FR-AUTH-009|
+|---|---|
+|**Tên yêu cầu**|Quên và Đặt lại Mật khẩu qua Email|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Khách|
+|**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
+|**Mô tả**|Người dùng nhập email, hệ thống gửi link đặt lại mật khẩu qua Hangfire. Link dạng `{Frontend:BaseUrl}/auth/reset-password?userId=...&token=...`, token do Identity sinh, hiệu lực 1 ngày, dùng được một lần (CR-22). Trang đặt lại mật khẩu không gửi URL trong Referer.|
+|**Luồng chính**|1. `POST /forgot-password { email }` → nếu tài khoản tồn tại và đang hoạt động thì đưa `PasswordResetEmailJob` vào hàng đợi; luôn trả 204. 2. Người dùng mở link, nhập mật khẩu mới. 3. `POST /reset-password { userId, token, newPassword }` → đặt mật khẩu mới, thu hồi mọi refresh token, trả 204.|
+|**Ngoại lệ**|`forgot-password`: email không tồn tại vẫn 204 (không lộ tài khoản), sai định dạng → 422. `reset-password`: token sai/hết hạn/đã dùng hoặc userId không tồn tại → 422 `AUTH_RESET_TOKEN_INVALID` (cùng mã); mật khẩu yếu → 422. Cả hai giới hạn 5 lần/phút/IP.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/forgot-password · POST /api/v1/auth/reset-password|
+|**HTTP Status Code trả về**|204, 422, 429|
+
+### FR-AUTH-010: Quản trị Người dùng [Admin]
+
+|**Mã yêu cầu**|FR-AUTH-010|
+|---|---|
+|**Tên yêu cầu**|Danh sách, Khóa/Mở và Gán vai trò Người dùng|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Admin|
+|**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
+|**Mô tả**|Admin xem danh sách người dùng (tìm theo email, tên đăng nhập hoặc họ tên; phân trang mặc định 20), khóa/mở tài khoản (`IsActive`) và gán vai trò (`Author`, `Admin`). Khóa tài khoản thì thu hồi mọi refresh token của người đó (CR-22). Màn hình `/admin/users`.|
+|**Dữ liệu vào**|`GET ?search=&page=&pageSize=`; `PATCH /{id} { isActive?, roles? }`|
+|**Ngoại lệ**|Không phải Admin → 403; admin tự khóa hoặc tự bỏ quyền Admin của mình → 403 `AUTH_ADMIN_SELF_LOCKOUT`; không tìm thấy user → 404 `AUTH_USER_NOT_FOUND`; dữ liệu sai → 422.|
+|**HTTP Method & Endpoint**|GET /api/v1/admin/users · PATCH /api/v1/admin/users/{id}|
+|**HTTP Status Code trả về**|200 (`PagedResult<AdminUser>` / `AdminUser`), 401, 403, 404, 422|
 
 ## 3.2. Module Quản lý Danh mục (FR-CAT)
 
@@ -1366,17 +1383,22 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 
 ## 8.1. Authentication Module (/auth)
 
-|**Method**|**Endpoint**|**Mô tả**|**Auth**|**Request**<br>**Body /**<br>**Params**|**Response**|
-|---|---|---|---|---|---|
-|POST|/auth/register|Đăng ký tài<br>khoản mới|Không|{ email,<br>password,<br>displayName }|201: { userId,<br>email,<br>displayName<br>} 400:<br>validation<br>errors 409:<br>email đã tồn<br>tại|
-|POST|/auth/login|Đăng nhập<br>email/password|Không|{ email,<br>password }|200: {<br>accessToken,<br>refreshToken,<br>expiresIn }<br>401: sai<br>credentials<br>429: quá giới<br>hạn rate limit|
-|POST|/auth/google|Đăng nhập<br>Google OAuth|Không|{ idToken } —<br>ID Token từ<br>Google Sign-<br>In JS SDK|200: {<br>accessToken,<br>refreshToken,<br>expiresIn }<br>400: invalid<br>token|
-|POST|/auth/refresh|Làm mới<br>Access Token|Không (dùng<br>refreshToken)|{ refreshToken<br>}|200: {<br>accessToken,<br>refreshToken,<br>expiresIn }<br>401: token<br>hết hạn / bị<br>revoke|
-|POST|/auth/logout|Đăng xuất,<br>revoke Refresh<br>Token|Bearer JWT|{ refreshToken<br>}|204: No<br>Content 401:<br>Unauthorized|
-|GET|/auth/me|Lấy thông tin<br>user hiện tại|Bearer JWT|—|200: { id,<br>email,<br>displayName,<br>avatarUrl,<br>bio, roles }<br>401:<br>Unauthorized|
-|PATCH|/auth/me|Cập nhật<br>profile người<br>dùng|Bearer JWT|{<br>displayName?,<br>avatarUrl?,<br>bio? }|200: { id,<br>email,<br>displayName,<br>avatarUrl, bio<br>} 400:<br>validation<br>401:<br>Unauthorized|
+Đường dẫn tính từ `/api/v1`. `AuthResponse = { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`; `UserProfile = { id, email, userName, fullName, avatarUrl, roles, createdAt }`; `AdminUser = UserProfile + isActive`. Mã lỗi xem Phụ lục B.
 
-<!-- PDF trang 61 -->
+|**Method**|**Endpoint**|**Mô tả**|**Auth**|**Request Body / Params**|**Response**|
+|---|---|---|---|---|---|
+|POST|/auth/register|Đăng ký, tự đăng nhập|Không|{ fullName, email, userName, password }|201: AuthResponse · 409 · 422 · 429|
+|POST|/auth/login|Đăng nhập email/mật khẩu|Không|{ email, password }|200: AuthResponse · 401 · 403 · 422 · 423 · 429|
+|POST|/auth/google|Đăng nhập Google|Không|{ idToken }|200: AuthResponse · 401 · 403 · 422 · 429 · 502|
+|POST|/auth/refresh|Làm mới token (xoay vòng)|Không|{ refreshToken }|200: AuthResponse · 401 · 403 · 422 · 429|
+|POST|/auth/logout|Thu hồi refresh token|Không|{ refreshToken }|204 · 422|
+|GET|/auth/me|Hồ sơ người dùng hiện tại|Bearer|—|200: UserProfile · 401 · 404|
+|PATCH|/auth/me|Đổi họ tên|Bearer|{ fullName }|200: UserProfile · 401 · 422|
+|POST|/auth/change-password|Đổi mật khẩu, thu hồi mọi phiên|Bearer|{ currentPassword, newPassword }|204 · 401 · 422 · 423|
+|POST|/auth/forgot-password|Gửi email đặt lại mật khẩu|Không|{ email }|204 (luôn) · 422 · 429|
+|POST|/auth/reset-password|Đặt lại mật khẩu bằng token|Không|{ userId, token, newPassword }|204 · 422 · 429|
+|GET|/admin/users|Danh sách người dùng|Bearer + Admin|?search&page&pageSize|200: PagedResult&lt;AdminUser&gt; · 401 · 403|
+|PATCH|/admin/users/{id}|Khóa/mở, gán vai trò|Bearer + Admin|{ isActive?, roles? }|200: AdminUser · 401 · 403 · 404 · 422|
 
 ## 8.2. Categories Module (/categories)
 
