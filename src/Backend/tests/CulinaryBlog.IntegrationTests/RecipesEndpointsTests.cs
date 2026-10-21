@@ -390,4 +390,418 @@ public sealed class RecipesEndpointsTests(PostgresApiFactory factory)
         Assert.NotNull(restoredDetail);
         Assert.Equal(RecipeStatus.Published, restoredDetail.Status);
     }
+
+    private async Task<Guid> CreateSimpleRecipeAsync(HttpClient client, string title = "Công thức mẫu test")
+    {
+        var payload = new
+        {
+            Title = $"{title} {Guid.NewGuid():N}",
+            Description = "Mô tả công thức mẫu phục vụ kiểm thử integration",
+            PrepTimeMinutes = 15,
+            CookTimeMinutes = 30,
+            Servings = 4,
+            Difficulty = Difficulty.Easy
+        };
+        var resp = await client.PostAsJsonAsync("/api/v1/recipes", payload);
+        resp.EnsureSuccessStatusCode();
+        var doc = await resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        return doc!.RootElement.GetProperty("id").GetGuid();
+    }
+
+    // ── Task 2.23: Kiểm thử mã lỗi 401 Unauthorized ──────────────────────────────
+    [Fact]
+    public async Task Endpoints_WithoutAuth_Return401Unauthorized()
+    {
+        using var authorClient = await CreateAuthorClientAsync();
+        var recipeId = await CreateSimpleRecipeAsync(authorClient);
+
+        using var guestClient = factory.CreateClient();
+
+        var validUpdatePayload = new
+        {
+            Title = "Tiêu đề hợp lệ dài",
+            Description = "Mô tả hợp lệ dài",
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 20,
+            Servings = 2,
+            Difficulty = Difficulty.Easy,
+            Version = 1u
+        };
+
+        // 1. /me/recipes yêu cầu xác thực
+        var meResp = await guestClient.GetAsync("/api/v1/me/recipes");
+        Assert.Equal(HttpStatusCode.Unauthorized, meResp.StatusCode);
+
+        // 2. PUT /recipes/{id} yêu cầu xác thực
+        var putResp = await guestClient.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", validUpdatePayload);
+        Assert.Equal(HttpStatusCode.Unauthorized, putResp.StatusCode);
+
+        // 3. DELETE /recipes/{id} yêu cầu xác thực
+        var deleteResp = await guestClient.DeleteAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.Unauthorized, deleteResp.StatusCode);
+
+        // 4. POST /recipes/{id}/publish yêu cầu xác thực
+        var publishResp = await guestClient.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.Unauthorized, publishResp.StatusCode);
+
+        // 5. POST /recipes/{id}/steps yêu cầu xác thực
+        var addStepResp = await guestClient.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "B1",
+            Description = "Mô tả bước hợp lệ",
+            DurationMinutes = 10
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, addStepResp.StatusCode);
+
+        // 6. PUT /recipes/{id}/steps/order yêu cầu xác thực
+        var reorderResp = await guestClient.PutAsJsonAsync($"/api/v1/recipes/{recipeId}/steps/order", new { StepIds = new[] { Guid.NewGuid() } });
+        Assert.Equal(HttpStatusCode.Unauthorized, reorderResp.StatusCode);
+
+        // 7. POST /recipes/{id}/ingredients yêu cầu xác thực
+        var addIngResp = await guestClient.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/ingredients", new
+        {
+            Name = "Muối",
+            Quantity = (decimal?)10,
+            Unit = "g"
+        });
+        Assert.Equal(HttpStatusCode.Unauthorized, addIngResp.StatusCode);
+    }
+
+    // ── Task 2.23: Kiểm thử mã lỗi 403 Forbidden ────────────────────────────────
+    [Fact]
+    public async Task Stranger_ModifyingRecipeOrChildEntities_Returns403Forbidden()
+    {
+        using var authorClient = await CreateAuthorClientAsync();
+        using var strangerClient = await CreateAuthorClientAsync();
+
+        var recipeId = await CreateSimpleRecipeAsync(authorClient);
+
+        // Tác giả thêm 1 bước và 1 nguyên liệu
+        var addStepResp = await authorClient.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước ban đầu",
+            Description = "Chi tiết bước thực hiện",
+            DurationMinutes = 10
+        });
+        var stepDoc = await addStepResp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var stepId = stepDoc!.RootElement.GetProperty("id").GetGuid();
+
+        var addIngResp = await authorClient.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/ingredients", new
+        {
+            Name = "Đường cát",
+            Quantity = (decimal?)100,
+            Unit = "g"
+        });
+        var ingDoc = await addIngResp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var ingId = ingDoc!.RootElement.GetProperty("id").GetGuid();
+
+        // 1. Người lạ sửa bước -> 403
+        var strangerUpdateStep = await strangerClient.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/{stepId}",
+            new { Title = "Người lạ sửa bước", Description = "Mô tả sửa bước", DurationMinutes = 5 });
+        Assert.Equal(HttpStatusCode.Forbidden, strangerUpdateStep.StatusCode);
+
+        // 2. Người lạ xóa bước -> 403
+        var strangerDeleteStep = await strangerClient.DeleteAsync($"/api/v1/recipes/{recipeId}/steps/{stepId}");
+        Assert.Equal(HttpStatusCode.Forbidden, strangerDeleteStep.StatusCode);
+
+        // 3. Người lạ sắp xếp lại bước -> 403
+        var strangerReorder = await strangerClient.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/order",
+            new { StepIds = new[] { stepId } });
+        Assert.Equal(HttpStatusCode.Forbidden, strangerReorder.StatusCode);
+
+        // 4. Người lạ sửa nguyên liệu -> 403
+        var strangerUpdateIng = await strangerClient.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/ingredients/{ingId}",
+            new { Name = "Đường phèn", Quantity = (decimal?)50, Unit = "g" });
+        Assert.Equal(HttpStatusCode.Forbidden, strangerUpdateIng.StatusCode);
+
+        // 5. Người lạ xóa nguyên liệu -> 403
+        var strangerDeleteIng = await strangerClient.DeleteAsync($"/api/v1/recipes/{recipeId}/ingredients/{ingId}");
+        Assert.Equal(HttpStatusCode.Forbidden, strangerDeleteIng.StatusCode);
+
+        // 6. Người lạ lưu trữ bài viết -> 403
+        var strangerArchive = await strangerClient.PatchAsync($"/api/v1/recipes/{recipeId}/archive", null);
+        Assert.Equal(HttpStatusCode.Forbidden, strangerArchive.StatusCode);
+
+        // 7. Người lạ xóa bài viết -> 403
+        var strangerDeleteRecipe = await strangerClient.DeleteAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.Forbidden, strangerDeleteRecipe.StatusCode);
+
+        // Tác giả xóa bài viết vào thùng rác
+        var authorDeleteRecipe = await authorClient.DeleteAsync($"/api/v1/recipes/{recipeId}");
+        Assert.Equal(HttpStatusCode.NoContent, authorDeleteRecipe.StatusCode);
+
+        // 8. Người lạ khôi phục bài viết -> 403
+        var strangerRestore = await strangerClient.PostAsync($"/api/v1/recipes/{recipeId}/restore", null);
+        Assert.Equal(HttpStatusCode.Forbidden, strangerRestore.StatusCode);
+    }
+
+    // ── Task 2.23: Kiểm thử mã lỗi 404 NotFound ─────────────────────────────────
+    [Fact]
+    public async Task OperationsOnNonExistentEntities_Return404NotFound()
+    {
+        using var client = await CreateAuthorClientAsync();
+        var fakeId = Guid.NewGuid();
+
+        var validUpdatePayload = new
+        {
+            Title = "Không tồn tại bài viết",
+            Description = "Mô tả đầy đủ hợp lệ",
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 20,
+            Servings = 2,
+            Difficulty = Difficulty.Easy,
+            Version = 1u
+        };
+
+        // 1. GET /recipes/{id} với ID không tồn tại -> 404
+        var getResp = await client.GetAsync($"/api/v1/recipes/{fakeId}");
+        Assert.Equal(HttpStatusCode.NotFound, getResp.StatusCode);
+
+        // 2. PUT /recipes/{id} với ID không tồn tại -> 404
+        var putResp = await client.PutAsJsonAsync($"/api/v1/recipes/{fakeId}", validUpdatePayload);
+        Assert.Equal(HttpStatusCode.NotFound, putResp.StatusCode);
+
+        // 3. DELETE /recipes/{id} với ID không tồn tại -> 404
+        var deleteResp = await client.DeleteAsync($"/api/v1/recipes/{fakeId}");
+        Assert.Equal(HttpStatusCode.NotFound, deleteResp.StatusCode);
+
+        // 4. POST /recipes/{fakeId}/steps với Recipe ID không tồn tại -> 404
+        var addStepResp = await client.PostAsJsonAsync($"/api/v1/recipes/{fakeId}/steps", new
+        {
+            Title = "B1",
+            Description = "Mô tả hợp lệ",
+            DurationMinutes = 10
+        });
+        Assert.Equal(HttpStatusCode.NotFound, addStepResp.StatusCode);
+
+        // 5. POST /recipes/{fakeId}/ingredients với Recipe ID không tồn tại -> 404
+        var addIngResp = await client.PostAsJsonAsync($"/api/v1/recipes/{fakeId}/ingredients", new
+        {
+            Name = "Muối",
+            Quantity = (decimal?)10,
+            Unit = "g"
+        });
+        Assert.Equal(HttpStatusCode.NotFound, addIngResp.StatusCode);
+
+        // 6. PUT /recipes/{fakeId}/steps/order với Recipe ID không tồn tại -> 404
+        var reorderResp = await client.PutAsJsonAsync($"/api/v1/recipes/{fakeId}/steps/order", new { StepIds = new[] { fakeId } });
+        Assert.Equal(HttpStatusCode.NotFound, reorderResp.StatusCode);
+
+        // Tạo 1 recipe hợp lệ để test thao tác trên step / ingredient giả
+        var recipeId = await CreateSimpleRecipeAsync(client);
+        var fakeChildId = Guid.NewGuid();
+
+        // 7. PUT /recipes/{id}/steps/{stepId} với Step ID không tồn tại -> 404
+        var updateFakeStepResp = await client.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/{fakeChildId}",
+            new { Title = "Sửa bước giả", Description = "Mô tả bước hợp lệ", DurationMinutes = 5 });
+        Assert.Equal(HttpStatusCode.NotFound, updateFakeStepResp.StatusCode);
+
+        // 8. DELETE /recipes/{id}/steps/{stepId} với Step ID không tồn tại -> 404
+        var deleteFakeStepResp = await client.DeleteAsync($"/api/v1/recipes/{recipeId}/steps/{fakeChildId}");
+        Assert.Equal(HttpStatusCode.NotFound, deleteFakeStepResp.StatusCode);
+
+        // 9. PUT /recipes/{id}/ingredients/{ingId} với Ingredient ID không tồn tại -> 404
+        var updateFakeIngResp = await client.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/ingredients/{fakeChildId}",
+            new { Name = "Sửa gia vị giả", Quantity = (decimal?)10, Unit = "g" });
+        Assert.Equal(HttpStatusCode.NotFound, updateFakeIngResp.StatusCode);
+
+        // 10. DELETE /recipes/{id}/ingredients/{ingId} với Ingredient ID không tồn tại -> 404
+        var deleteFakeIngResp = await client.DeleteAsync($"/api/v1/recipes/{recipeId}/ingredients/{fakeChildId}");
+        Assert.Equal(HttpStatusCode.NotFound, deleteFakeIngResp.StatusCode);
+    }
+
+    // ── Task 2.23: Kiểm thử mã lỗi 409 Conflict (Concurrency) ───────────────────
+    [Fact]
+    public async Task UpdateRecipe_ParallelUpdatesWithSameVersion_CausesConcurrencyConflict409()
+    {
+        using var client = await CreateAuthorClientAsync();
+        var recipeId = await CreateSimpleRecipeAsync(client, "Món bò xào hành tây");
+
+        // Lấy version ban đầu
+        var getResp = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var recipe = await getResp.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(recipe);
+        var initialVersion = recipe.Version;
+
+        // Lần cập nhật 1: Thành công với version ban đầu
+        var update1 = new
+        {
+            Title = "Món bò xào hành tây cập nhật lần 1",
+            Description = "Mô tả 1",
+            PrepTimeMinutes = 15,
+            CookTimeMinutes = 20,
+            Servings = 4,
+            Difficulty = Difficulty.Medium,
+            Version = initialVersion
+        };
+        var resp1 = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", update1);
+        Assert.Equal(HttpStatusCode.NoContent, resp1.StatusCode);
+
+        // Lần cập nhật 2: Sử dụng lại initialVersion cũ (stale version) -> 409 CONCURRENCY_CONFLICT
+        var update2 = new
+        {
+            Title = "Món bò xào hành tây cập nhật lần 2",
+            Description = "Mô tả 2",
+            PrepTimeMinutes = 15,
+            CookTimeMinutes = 20,
+            Servings = 4,
+            Difficulty = Difficulty.Medium,
+            Version = initialVersion
+        };
+        var resp2 = await client.PutAsJsonAsync($"/api/v1/recipes/{recipeId}", update2);
+        Assert.Equal(HttpStatusCode.Conflict, resp2.StatusCode);
+
+        var conflictDoc = await resp2.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.NotNull(conflictDoc);
+        Assert.Equal("CONCURRENCY_CONFLICT", conflictDoc.RootElement.GetProperty("code").GetString());
+    }
+
+    // ── Task 2.23: Kiểm thử mã lỗi 422 UnprocessableEntity (Business Rules) ──────
+    [Fact]
+    public async Task Recipe_BusinessRuleViolations_Return422UnprocessableEntity()
+    {
+        using var client = await CreateAuthorClientAsync();
+
+        // 1. Tạo recipe với CategoryId = Guid.Empty không hợp lệ -> 422 CATEGORY_INVALID
+        var invalidCategoryPayload = new
+        {
+            Title = "Công thức với danh mục sai",
+            Description = "Mô tả hợp lệ",
+            PrepTimeMinutes = 10,
+            CookTimeMinutes = 20,
+            Servings = 2,
+            Difficulty = Difficulty.Easy,
+            CategoryId = Guid.Empty
+        };
+        var invalidCatResp = await client.PostAsJsonAsync("/api/v1/recipes", invalidCategoryPayload);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, invalidCatResp.StatusCode);
+
+        // Tạo 1 recipe hợp lệ nhưng chưa có bước nào
+        var recipeId = await CreateSimpleRecipeAsync(client);
+
+        // 2. Xuất bản recipe có 0 bước -> 422 RECIPE_PUBLISH_INCOMPLETE
+        var publishNoStepsResp = await client.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, publishNoStepsResp.StatusCode);
+        var publishNoStepsDoc = await publishNoStepsResp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.Equal(RecipeErrorCodes.PublishIncomplete, publishNoStepsDoc!.RootElement.GetProperty("code").GetString());
+
+        // Chuyển bài viết sang Archived
+        var archiveResp = await client.PatchAsync($"/api/v1/recipes/{recipeId}/archive", null);
+        Assert.Equal(HttpStatusCode.NoContent, archiveResp.StatusCode);
+
+        // 3. Xuất bản bài viết khi đang ở trạng thái Archived -> 422 INVALID_STATE_TRANSITION
+        var publishArchivedResp = await client.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, publishArchivedResp.StatusCode);
+        var publishArchivedDoc = await publishArchivedResp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.Equal(RecipeErrorCodes.InvalidStateTransition, publishArchivedDoc!.RootElement.GetProperty("code").GetString());
+
+        // 4. Hủy xuất bản bài viết khi đang ở trạng thái Archived -> 422 INVALID_STATE_TRANSITION
+        var unpublishArchivedResp = await client.PostAsync($"/api/v1/recipes/{recipeId}/unpublish", null);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, unpublishArchivedResp.StatusCode);
+        var unpublishArchivedDoc = await unpublishArchivedResp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        Assert.Equal(RecipeErrorCodes.InvalidStateTransition, unpublishArchivedDoc!.RootElement.GetProperty("code").GetString());
+
+        // Khôi phục về Draft để tiếp tục các kiểm thử bước tiếp theo
+        var unarchiveResp = await client.PatchAsync($"/api/v1/recipes/{recipeId}/unarchive", null);
+        Assert.Equal(HttpStatusCode.NoContent, unarchiveResp.StatusCode);
+
+        // Thêm 2 bước để test sắp xếp sai thứ tự
+        var step1Resp = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước 1",
+            Description = "Mô tả bước 1",
+            DurationMinutes = 5
+        });
+        var step1Doc = await step1Resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var step1Id = step1Doc!.RootElement.GetProperty("id").GetGuid();
+
+        var step2Resp = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước 2",
+            Description = "Mô tả bước 2",
+            DurationMinutes = 5
+        });
+        var step2Doc = await step2Resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var step2Id = step2Doc!.RootElement.GetProperty("id").GetGuid();
+
+        // 5. Sắp xếp lại bước với danh sách chứa ID trùng lặp -> 422 INVALID_STEP_ORDER
+        var duplicateOrderResp = await client.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/order",
+            new { StepIds = new[] { step1Id, step1Id } });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, duplicateOrderResp.StatusCode);
+
+        // 6. Sắp xếp lại bước với số lượng ID không khớp với recipe -> 422 INVALID_STEP_ORDER
+        var mismatchedCountResp = await client.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/order",
+            new { StepIds = new[] { step1Id } });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, mismatchedCountResp.StatusCode);
+    }
+
+    // ── Task 2.22 & 2.23: Integration test sắp xếp bước thực hiện (PUT /steps/order) ──
+    [Fact]
+    public async Task ReorderRecipeSteps_ValidOrder_ReordersStepsAndReturns204NoContent()
+    {
+        using var client = await CreateAuthorClientAsync();
+        var recipeId = await CreateSimpleRecipeAsync(client, "Công thức kiểm thử sắp xếp bước");
+
+        // Tạo 3 bước đầy đủ title và description
+        var s1Resp = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước Sơ chế",
+            Description = "Sơ chế nguyên liệu sạch sẽ",
+            DurationMinutes = 10
+        });
+        var s1Doc = await s1Resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var s1Id = s1Doc!.RootElement.GetProperty("id").GetGuid();
+
+        var s2Resp = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước Tẩm ướp",
+            Description = "Tẩm ướp gia vị đậm đà",
+            DurationMinutes = 20
+        });
+        var s2Doc = await s2Resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var s2Id = s2Doc!.RootElement.GetProperty("id").GetGuid();
+
+        var s3Resp = await client.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            Title = "Bước Nấu nướng",
+            Description = "Nấu chín đều thơm ngon",
+            DurationMinutes = 30
+        });
+        var s3Doc = await s3Resp.Content.ReadFromJsonAsync<JsonDocument>(JsonOptions);
+        var s3Id = s3Doc!.RootElement.GetProperty("id").GetGuid();
+
+        // Đảo thứ tự: [Bước 3, Bước 1, Bước 2]
+        var newOrder = new[] { s3Id, s1Id, s2Id };
+        var reorderResp = await client.PutAsJsonAsync(
+            $"/api/v1/recipes/{recipeId}/steps/order",
+            new { StepIds = newOrder });
+        Assert.Equal(HttpStatusCode.NoContent, reorderResp.StatusCode);
+
+        // Kiểm tra chi tiết bài viết: Thứ tự các bước phải cập nhật tương ứng
+        var detailResp = await client.GetAsync($"/api/v1/recipes/{recipeId}");
+        var detail = await detailResp.Content.ReadFromJsonAsync<RecipeDto>(JsonOptions);
+        Assert.NotNull(detail);
+        Assert.Equal(3, detail.Steps.Count);
+
+        // Sắp xếp danh sách trả về theo StepNumber để assert
+        var orderedSteps = detail.Steps.OrderBy(s => s.StepNumber).ToList();
+        Assert.Equal(s3Id, orderedSteps[0].Id);
+        Assert.Equal(1, orderedSteps[0].StepNumber);
+        Assert.Equal("Bước Nấu nướng", orderedSteps[0].Title);
+
+        Assert.Equal(s1Id, orderedSteps[1].Id);
+        Assert.Equal(2, orderedSteps[1].StepNumber);
+        Assert.Equal("Bước Sơ chế", orderedSteps[1].Title);
+
+        Assert.Equal(s2Id, orderedSteps[2].Id);
+        Assert.Equal(3, orderedSteps[2].StepNumber);
+        Assert.Equal("Bước Tẩm ướp", orderedSteps[2].Title);
+    }
 }
