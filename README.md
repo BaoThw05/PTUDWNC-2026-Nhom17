@@ -12,6 +12,7 @@ Tài liệu nằm trong `docs/`:
 - [Kế hoạch tổng và kế hoạch từng người](./docs/KeHoach/)
 - [Ai phụ trách thư mục nào](./docs/OWNERSHIP.md)
 - [Bảng mã lỗi API](./docs/api/error-codes.md)
+- [Sao lưu và khôi phục bản demo](./docs/backup-restore.md)
 
 ## Mục lục
 
