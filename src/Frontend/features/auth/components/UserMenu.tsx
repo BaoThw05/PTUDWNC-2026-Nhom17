@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { LOGIN_PATH, PROFILE_PATH, REGISTER_PATH } from "../constants";
+import { ADMIN_USERS_PATH, LOGIN_PATH, PROFILE_PATH, REGISTER_PATH } from "../constants";
 import { SignOutButton } from "./SignOutButton";
 
 // Đọc phiên ở phía client để header không làm mọi trang phải render động.
@@ -29,6 +29,8 @@ export function UserMenu() {
   return (
     <div className="flex items-center gap-3">
       {session.user.roles.includes("Admin") && (
+        <Link href={ADMIN_USERS_PATH} className="hover:underline">
+          Quản trị
         <Link href="/dashboard/categories" className="hover:underline">
           Quản lý danh mục
         </Link>
