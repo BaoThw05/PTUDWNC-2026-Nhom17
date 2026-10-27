@@ -8,7 +8,7 @@ export const revalidate = 3600;
 
 type PublishedRecipe = {
   slug: string;
-  status?: string | number;
+  status: string | number;
   publishedAt?: string | null;
   updatedAt?: string | null;
 };
@@ -29,9 +29,7 @@ async function getPublishedRecipes(): Promise<PublishedRecipe[]> {
     recipes.push(...result.items);
   }
 
-  return recipes.filter((recipe) =>
-    recipe.status === undefined || recipe.status === 1 || recipe.status === "Published",
-  );
+  return recipes.filter((recipe) => recipe.status === 1 || recipe.status === "Published");
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
