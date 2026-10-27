@@ -1,11 +1,16 @@
 .screen {
-  --color-leaf: #2e654b;
-  --color-leaf-dark: #214c37;
-  --color-tomato: #bd503a;
-  --color-tomato-dark: #963c2c;
-  --muted: #64716a;
-  --surface-green: #e8f0ea;
-  --surface-red: #fff0eb;
+  --foreground: #171717;
+  --color-leaf: #176b4b;
+  --color-leaf-dark: #12583d;
+  --color-tomato: #be123c;
+  --color-tomato-dark: #9f1239;
+  --muted: #52525b;
+  --surface-green: #ecfdf5;
+  --surface-red: #fff1f2;
+  color: #171717;
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1.5rem;
 }
 
 .recipeCard {
@@ -58,7 +63,7 @@
 .featureMedia {
   position: relative;
   overflow: hidden;
-  background: var(--surface-green);
+  background: #f4f4f5;
   aspect-ratio: 4 / 3;
 }
 
@@ -106,8 +111,8 @@
   display: flex;
   min-height: 48px;
   width: 100%;
-  border: 1px solid rgb(23 32 27 / 20%);
-  background: #fff;
+  border: 1px solid rgb(0 0 0 / 16%);
+  background: #ffffff;
 }
 
 .recipeSearchForm:focus-within {
@@ -122,13 +127,13 @@
   border: 0;
   background: transparent;
   padding: 0 14px;
-  color: #17201b;
+  color: #171717;
   font-size: 14px;
   outline: 0;
 }
 
 .recipeSearchForm input::placeholder {
-  color: #64716a;
+  color: #71717a;
   opacity: 1;
 }
 
@@ -172,7 +177,7 @@
 
 .loadingMedia {
   aspect-ratio: 4 / 3;
-  background: linear-gradient(100deg, #edf0ed 20%, #f7f8f6 38%, #edf0ed 58%);
+  background: linear-gradient(100deg, #f4f4f5 20%, #e4e4e7 38%, #f4f4f5 58%);
   background-size: 200% 100%;
   animation: shimmer 1.3s ease-in-out infinite;
 }
@@ -180,14 +185,14 @@
 .loadingLine {
   height: 12px;
   margin-top: 14px;
-  background: #edf0ed;
+  background: #e4e4e7;
 }
 
 .loadingLineShort {
   width: 62%;
   height: 10px;
   margin-top: 10px;
-  background: #edf0ed;
+  background: #e4e4e7;
 }
 
 @keyframes shimmer {
