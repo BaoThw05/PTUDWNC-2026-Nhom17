@@ -16,7 +16,7 @@
 ## 2. Quyết định áp dụng cho phần việc
 
 - **Kiến trúc (S-05):** Auth.js v5 dạng BFF. Auth.js giữ phiên trong cookie HttpOnly; bên trong phiên có access token (15 phút) và refresh token của backend. **Dự phòng:** nếu spike thất bại → backend đặt refresh token trong cookie HttpOnly (phương án B).
-- **Đăng ký:** body `{ email, password, displayName }`; không bắt buộc `userName` (Identity `UserName` = email); đăng ký xong tự đăng nhập.
+- **Đăng ký:** body `{ fullName, email, userName, password }` (khớp CR-04); đăng ký xong tự đăng nhập.
 - **Mật khẩu:** ≥ 8 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt (NFR-SEC-001), cấu hình trong `IdentityOptions.Password`.
 - **Đăng nhập:** `SignInManager.CheckPasswordSignInAsync(..., lockoutOnFailure: true)`; khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED`; sai thông tin → 401 thông báo chung.
 - **Refresh token (S-06):** 32 byte ngẫu nhiên, chỉ lưu SHA-256; bảng có `FamilyId`, `RevokedAt`, `RevokedReason`, `ReplacedByTokenHash`, `CreatedByIp`; xoay vòng mỗi lần refresh; token cũ dùng lại trong 30 giây → cấp mới; quá 30 giây → thu hồi cả family.
@@ -56,7 +56,7 @@
 | Mã | Công việc | Kết quả bàn giao / tiêu chí xong | Phụ thuộc | Deadline | Mức |
 |---|---|---|---|---|---|
 | 1.05 | **Spike** Auth.js v5: Credentials provider gọi một endpoint login giả trên .NET; thử refresh trong callback `jwt` | Ghi kết luận vào ADR S-05: giữ phương án C hay chuyển B | — | T4 16/09 | M |
-| 1.06 | Identity: `ApplicationUser` ở Infrastructure (`DisplayName`, `AvatarUrl`, `IsActive`, `CreatedAt`); `AddIdentityCore` + `AddSignInManager`; cấu hình mật khẩu và lockout; migration | Migration chạy trên PostgreSQL trong Docker; architecture test không báo Domain phụ thuộc Identity | TV2 khung solution (16/09), TV3 compose (17/09) | T7 19/09 | M |
+| 1.06 | Identity: `ApplicationUser` ở Infrastructure (`FullName`, `AvatarUrl`, `IsActive`, `CreatedAt`); `AddIdentityCore` + `AddSignInManager`; cấu hình mật khẩu và lockout; migration | Migration chạy trên PostgreSQL trong Docker; architecture test không báo Domain phụ thuộc Identity | TV2 khung solution (16/09), TV3 compose (17/09) | T7 19/09 | M |
 | 1.07 | `JwtService` (HS256, `JsonWebTokenHandler`, claims `sub`, `email`, `role`, `jti`); cấu hình JWT Bearer dùng chung; policy `AuthorPolicy`, `AdminPolicy`; `ICurrentUser` | Endpoint thử `[AuthorPolicy]` trả 401/403/200 đúng | 1.06 | T2 21/09 | M |
 | 1.08 | Seed Admin (role Admin + Author, mật khẩu lấy từ biến môi trường) và 3 Author test; `POST /auth/login` bản đầu (chưa có refresh) | **Bàn giao cho nhóm:** lấy được JWT qua Scalar để test endpoint cần đăng nhập | 1.07 | T3 22/09 | M |
 | 1.09 | Khung Auth.js trên Next.js: Credentials provider, session chứa `accessToken`, middleware bảo vệ `/dashboard/*` và `/profile`, hàm lấy token cho API client | **Bàn giao cho TV2, TV3:** vào được trang dashboard khi đã đăng nhập | 1.05, TV4 khung Next.js (18/09) | T6 25/09 | M |
@@ -69,7 +69,7 @@
 | 1.11 | `POST /auth/login` hoàn chỉnh: lockout, 423, `IsActive`, 401 thông báo chung | Test: đúng mật khẩu, sai mật khẩu, bị khóa sau 5 lần, tài khoản bị vô hiệu hóa | 1.10 | T3 29/09 | M |
 | 1.12 | Bảng `RefreshTokens` + `POST /auth/refresh`: xoay vòng, ân hạn 30 giây, phát hiện dùng lại → thu hồi family | Test: refresh hợp lệ, hết hạn, dùng lại trong 30 giây, dùng lại sau 30 giây | 1.11 | T6 02/10 | M |
 | 1.13 | `POST /auth/logout` (`AllowAnonymous`, thu hồi với lý do `Logout`) | Test: logout rồi refresh bằng token cũ → 401, không thu hồi family | 1.12 | T6 02/10 | M |
-| 1.14 | `GET /auth/me`, `PATCH /auth/me` (`displayName` 2–100 ký tự) | Test: xem, sửa hợp lệ, sửa sai định dạng → 422 | 1.08 | T7 03/10 | M |
+| 1.14 | `GET /auth/me`, `PATCH /auth/me` (`fullname` 2–100 ký tự) | Test: xem, sửa hợp lệ, sửa sai định dạng → 422 | 1.08 | T7 03/10 | M |
 | 1.15 | `WelcomeEmailJob`: `IEmailService` (MailKit) → Mailpit; template HTML có tên người dùng và link ứng dụng; enqueue sau khi commit | Đăng ký xong thấy email trong Mailpit; job lỗi thì retry theo cấu hình chung | TV3 Hangfire (22/09) | CN 04/10 | M |
 
 ### G2b — Frontend base (T2 05/10 → CN 11/10)
@@ -135,13 +135,23 @@
 | Google Cloud Console cấu hình mất thời gian | 1.21 chưa xong T6 16/10 | Chuyển 1.21 sang sau 25/10 (mục đầu tiên trong danh sách cắt giảm) |
 
 **Checklist tự kiểm tra trước CN 25/10:**
-- [ ] Mật khẩu hash bằng Identity; bảng `RefreshTokens` chỉ có hash
-- [ ] Không có token/mật khẩu trong log Seq
-- [ ] Không có secret trong Git (JWT key, Google secret, SMTP)
-- [ ] Sai mật khẩu 5 lần → khóa 15 phút; tài khoản `IsActive = false` không đăng nhập được
-- [ ] Refresh xoay vòng đúng; dùng lại token cũ sau 30 giây → thu hồi family
-- [ ] Logout xong refresh bằng token cũ → 401
-- [ ] Rate limit trả 429 kèm `Retry-After`
-- [ ] Mọi lỗi auth trả Problem Details có `code`
+- [x] Mật khẩu hash bằng Identity; bảng `RefreshTokens` chỉ có hash
+- [x] Không có token/mật khẩu trong log Seq
+- [x] Không có secret trong Git (JWT key, Google secret, SMTP)
+- [x] Sai mật khẩu 5 lần → khóa 15 phút; tài khoản `IsActive = false` không đăng nhập được
+- [x] Refresh xoay vòng đúng; dùng lại token cũ sau 30 giây → thu hồi family
+- [x] Logout xong refresh bằng token cũ → 401
+- [x] Rate limit trả 429 kèm `Retry-After`
+- [x] Mọi lỗi auth trả Problem Details có `code`
 - [ ] Email chào mừng xuất hiện trong Mailpit
-- [ ] SRS v1.1 phần 3.1 và 8.1 khớp với OpenAPI thực tế
+- [x] SRS v1.1 phần 3.1 và 8.1 khớp với OpenAPI thực tế
+
+**Kết quả rà soát 1.23 (20/10):**
+- Đã kiểm: entity `RefreshToken` chỉ có `TokenHash`/`ReplacedByTokenHash`; mọi `Log*` của module auth chỉ ghi `UserId`/`FamilyId`; không có `.env`, khóa JWT hay Google secret trong Git (chỉ có mật khẩu mẫu `change_me_*` và tài khoản Author test trong `appsettings.Development.json`); không bật CORS (trình duyệt chỉ gọi cùng origin qua proxy); cookie phiên do Auth.js đặt HttpOnly, SameSite=Lax, Secure khi chạy HTTPS qua Tunnel. Các dòng còn lại có integration test tương ứng.
+- Đã sửa: rate limit sau chuỗi proxy Tunnel (`ForwardLimit = null`). Đề xuất cho TV3 trên nhánh `2312793/compose-auth-config` (file dùng chung): `TrustedProxyNetworks`; compose thiếu `Jwt__SigningKey` (phiên mất khi API khởi động lại), `Smtp__Host` (container gửi email tới `localhost`), `Frontend__BaseUrl` (link đặt lại mật khẩu sai địa chỉ khi demo); trang `/auth/reset-password` đặt `referrer: no-referrer` để token trên URL không lọt qua Referer.
+- 27/10: đối chiếu 8.1 với `AuthEndpoints.cs`/`AdminUsersEndpoints.cs`: 12/12 route và body request khớp. Mục "Email chào mừng trong Mailpit" cần mở Mailpit kiểm tay khi chạy compose.
+- Còn lưu ý: compose chạy API ở `Development` nên Scalar/OpenAPI mở công khai qua Tunnel trong lúc demo; Hangfire dashboard được nginx bảo vệ bằng basic auth.
+
+**Tiến độ G4 (27/10):**
+- 1.22: E2E Playwright đăng ký + đăng nhập chạy 4/4 trên Chromium (mock API, nhánh `2312793/1.22-e2e-auth` gộp với `main`). Lỗi của nhánh TV4 cần sửa khi merge: `playwright.config.ts` dùng `baseURL` cổng 3000 nhưng server chạy 3100; `package-lock.json` thiếu `@playwright/test`. CI backend trên `main` đang lỗi restore NU1902/NU1903 (`System.Security.Cryptography.Pkcs`), chờ PR #55 của TV3.
+- 1.24: đã đưa bàn giao của TV3 (PR #57) vào 3.2, FR-RCP-008, 3.5, FR-JOB-002, 5.3, 6.5, 7.5, 7.6, 8.2, 8.4, Phụ lục B; đóng CR-13, CR-14. Còn chờ phần TV2 (CR-02, 03, 10, 12, 15, 20) và TV4 (CR-16 → 19, 21), hạn T5 29/10.
