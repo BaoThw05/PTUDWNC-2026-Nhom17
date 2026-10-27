@@ -52,13 +52,13 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-05 | S-06 | Refresh token 32 byte, chỉ lưu SHA-256; thêm `FamilyId`, `RevokedReason`; bỏ `IsRevoked`; xoay vòng mỗi lần refresh, dùng lại trong 30 giây vẫn đổi được, quá 30 giây thu hồi cả family | FR-AUTH-001, FR-AUTH-004, NFR-SEC-002, 7.8 | TV1 | [ADR-002](./ADR/ADR-002-refresh-token.md) | ✅ |
 | CR-06 | S-05 | Đăng xuất `AllowAnonymous`, chỉ cần `refreshToken`, luôn trả 204; có access token thì chỉ thu hồi token của chính người đó | FR-AUTH-005 | TV1 | S-05 | ✅ |
 | CR-07 | S-05 | Đăng nhập: khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED` (chỉ báo khi mật khẩu đúng); bỏ điều kiện "LockoutEnabled = false" | FR-AUTH-002 | TV1 | S-05 | ✅ |
-  | CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | ✅ |
+| CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | ✅ |
 | CR-09 | S-15 | Rate limit theo endpoint: đăng nhập/đăng ký/Google 5 lần/phút theo IP, refresh 30 lần/phút, còn lại 100 lần/phút theo người dùng hoặc IP; 429 kèm `Retry-After`; đọc IP thật qua `X-Forwarded-For` từ proxy tin cậy | NFR-SEC-003 | TV1, TV4 | — | ✅ |
 | CR-10 | S-10 | Hợp đồng API: không vỏ bọc response; danh sách trả `PagedResult`; 422 cho validation; lỗi theo Problem Details (RFC 9457) có `code`, `traceId`; `sort=-field`; đổi tên thống nhất (người dùng dùng `fullName` như FR-AUTH, xem CR-04, CR-08) | Chương 3, Chương 8, Phụ lục A, B | TV2 | S-10 | ⬜ |
 | CR-11 | S-10 | Bổ sung mã lỗi `AUTH_*` vào Phụ lục B theo `docs/api/error-codes.md` | Phụ lục B | TV1 | — | ✅ |
 | CR-12 | S-11 | Điều kiện publish chỉ cần ≥ 1 bước; nguyên liệu và ảnh bổ sung được sau khi publish | FR-RCP-005, FR-RCP-006 | TV2 | S-11 | ⬜ |
-| CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ⬜ |
-| CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ⬜ |
+| CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ✅ |
+| CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ✅ |
 | CR-15 | S-13 | Ghim MediatR 12.5.0 (MIT); `ApplicationUser` nằm ở Infrastructure, Domain không dùng NuGet; có architecture test | 2.5, 6.2, NFR-MAINT-004 | TV2 | S-13 | ⬜ |
 | CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | S-07 | ⬜ |
 | CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | S-08 | ⬜ |
@@ -647,7 +647,7 @@ Module quản lý vòng đời tài khoản: đăng ký, đăng nhập (mật kh
 
 ## 3.2. Module Quản lý Danh mục (FR-CAT)
 
-Module quản lý danh mục (Category) phân loại công thức nấu ăn. Danh mục được tạo và duy trì bởi Admin; Author và Guest chỉ có quyền đọc. Mỗi danh mục có Slug duy nhất phục vụ URL thân thiện SEO. Danh mục được cache với IMemoryCache (TTL 1 giờ) vì thay đổi ít thường xuyên.
+Module quản lý danh mục (Category) phân loại công thức nấu ăn. Danh mục được tạo và duy trì bởi Admin; Author và Guest chỉ có quyền đọc. Mỗi danh mục có Slug duy nhất phục vụ URL thân thiện SEO. Hiện chưa có cache đọc cho danh mục; các lệnh ghi gọi `ICacheInvalidator` để sẵn chỗ nối cache theo CR-16.
 
 ### FR-CAT-001: Xem Danh sách Danh mục
 
@@ -657,12 +657,12 @@ Module quản lý danh mục (Category) phân loại công thức nấu ăn. Dan
 |**Nhóm chức năng**|Module Quản lý Danh mục (FR-CAT)|
 |**Tác nhân**|Tất cả (Guest / Author / Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Trả về danh sách tất cả danh mục công thức hiện có trong hệ thống,<br>kèm số lượng công thức đã xuất bản (Published) trong mỗi danh mục.<br>Kết quả được cache với IMemoryCache (TTL 60 phút) và sắp xếp theo<br>Name tăng dần.|
+|**Mô tả**|Trả về danh sách tất cả danh mục, kèm số công thức Published trong mỗi danh mục. Sắp xếp theo `orderIndex` tăng dần, sau đó `name` tăng dần.|
 |**Điều kiện tiên quyết**|1. Ít nhất một danh mục tồn tại trong database (hoặc trả về mảng rỗng).<br>2. Không yêu cầu xác thực.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET /api/v1/categories.<br>2. GetCategoriesQuery dispatch qua MediatR.<br>3. Handler kiểm tra IMemoryCache với key "categories:all".<br>4. Cache hit: trả về dữ liệu từ cache.<br>5. Cache miss: query database<br>(IUnitOfWork.Categories.GetAllWithRecipeCount()), map sang<br>CategoryDto[].<br>6. Lưu vào IMemoryCache với TTL 60 phút (sliding expiration).<br>7. Trả về HTTP 200 OK với CategoryDto[].|
+|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET /api/v1/categories.<br>2. GetCategoriesQuery dispatch qua MediatR.<br>3. Handler query database, đếm công thức Published theo danh mục.<br>4. Trả về HTTP 200 OK với mảng CategoryDto.|
 |**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Không có danh mục nào: HTTP 200 OK với mảng rỗng [].|
 |**HTTP Method &**<br>**Endpoint**|GET  /api/v1/categories|
-|**Kết quả mong đợi**|Mảng CategoryDto[] với các field: { id, name, slug, description,<br>recipeCount }. Kết quả được serve từ cache khi có.|
+|**Kết quả mong đợi**|Mảng `{ id, name, slug, description, imageUrl, orderIndex, recipeCount }`.|
 |**HTTP Status Code trả**<br>**về**|200 OK – Thành công (kể cả khi trống).|
 
 <!-- PDF trang 23 -->
@@ -677,8 +677,8 @@ Module quản lý danh mục (Category) phân loại công thức nấu ăn. Dan
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
 |**Mô tả**|Trả về thông tin chi tiết của một danh mục cụ thể (theo Slug) kèm danh<br>sách phân trang các công thức đã xuất bản (Published) thuộc danh<br>mục đó. Guest chỉ thấy Published recipes; Author thấy thêm Draft<br>recipes của chính mình trong danh mục.|
 |**Điều kiện tiên quyết**|1. Danh mục với slug tương ứng phải tồn tại. 2. Không yêu cầu xác<br>thực.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET /api/v1/categories/{slug}?page=1&pageSize=12.<br>2. GetCategoryBySlugQuery dispatch qua MediatR.<br>3. Handler tìm category theo slug:<br>_unitOfWork.Categories.GetBySlugAsync(slug).<br>4. Query recipes thuộc category với Status == Published (+ Draft của<br>currentUser nếu đã đăng nhập).<br>5. Apply pagination (OFFSET-based: SKIP (page-1)*pageSize TAKE<br>pageSize).<br>6. Map sang CategoryDetailDto kèm<br>PagedResult<RecipeSummaryDto>.<br>7. Trả về HTTP 200 OK.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Slug không tồn tại: HTTP 404 Not Found với RFC 7807 body.|
+|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET /api/v1/categories/{slug}?page=1&pageSize=12 (`page` mặc định 1, `pageSize` mặc định 12, tối đa 50; không có `sortBy`).<br>2. GetCategoryBySlugQuery dispatch qua MediatR.<br>3. Handler tìm category theo slug.<br>4. Query recipes thuộc category với Status == Published (+ Draft của người đang đăng nhập).<br>5. Phân trang OFFSET.<br>6. Trả về HTTP 200 OK.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Slug không tồn tại: HTTP 404 `CATEGORY_NOT_FOUND` (Problem Details RFC 9457).|
 |**HTTP Method &**<br>**Endpoint**|GET  /api/v1/categories/{slug}?page={n}&pageSize={n}|
 |**Kết quả mong đợi**|{ category: CategoryDto, recipes: { items: RecipeSummaryDto[],<br>totalCount, page, pageSize, totalPages } }|
 |**HTTP Status Code trả**<br>**về**|200 OK – Thành công. 404 Not Found – Slug không tồn tại.|
@@ -693,12 +693,12 @@ Module quản lý danh mục (Category) phân loại công thức nấu ăn. Dan
 |**Nhóm chức năng**|Module Quản lý Danh mục (FR-CAT)|
 |**Tác nhân**|Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Admin tạo danh mục công thức mới. Slug được tự động sinh từ Name<br>(slugify: chuyển sang chữ thường, bỏ dấu, thay khoảng trắng bằng "-").<br>Nếu Slug đã tồn tại, hệ thống thêm suffix số (e.g., "mon-chinh-2"). Sau<br>khi tạo, cache danh mục (IMemoryCache key "categories:all") bị<br>invalidate.|
+|**Mô tả**|Admin tạo danh mục công thức mới. Slug được tự động sinh từ Name (chữ thường, bỏ dấu, thay khoảng trắng bằng "-"); trùng slug thì thêm hậu tố số (ví dụ "mon-chinh-2"). Tên là duy nhất, không phân biệt hoa/thường.|
 |**Điều kiện tiên quyết**|1. Người dùng đang đăng nhập với role Admin. 2. Name chưa tồn tại<br>trong database.|
-|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi POST /api/v1/categories với Authorization: Bearer<br>{adminJwt} và body: { "name": "...", "description": "..." }.<br>2. RequireAuthorization("Admin") middleware kiểm tra role.<br>3. CreateCategoryCommand dispatch qua MediatR.<br>4. ValidationBehavior: name 2–50 ký tự, không chứa HTML.<br>5. SlugHelper.Generate(name) tạo slug.<br>6. Kiểm tra slug chưa tồn tại. Nếu trùng, thêm "-2", "-3",... cho đến khi<br>unique.<br>7. Category.Create(name, slug, description) tạo entity.<br>8. _unitOfWork.Categories.AddAsync(entity).<br>9. _unitOfWork.SaveChangesAsync().<br>10. MemoryCache.Remove("categories:all") – invalidate cache.<br>11. Trả về HTTP 201 Created với CategoryDto và Location header.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Thiếu role Admin: HTTP 403 Forbidden.<br>A2 – Dữ liệu không hợp lệ: HTTP 422.|
+|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi POST /api/v1/categories với body `{ name, description?, imageUrl?, orderIndex? }`.<br>2. Policy Admin kiểm tra quyền.<br>3. CreateCategoryCommand dispatch qua MediatR.<br>4. ValidationBehavior: `name` 2–100 ký tự, không chứa HTML; `description` ≤ 2000; `imageUrl` ≤ 500; `orderIndex` ≥ 0.<br>5. Kiểm tra tên chưa tồn tại; sinh slug duy nhất.<br>6. Lưu entity, gọi `ICacheInvalidator`.<br>7. Trả về HTTP 201 Created với CategoryDto và header Location.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Thiếu role Admin: HTTP 403 Forbidden.<br>A2 – Dữ liệu không hợp lệ: HTTP 422.<br>A3 – Tên đã tồn tại: HTTP 409 `CATEGORY_NAME_EXISTS`.|
 |**HTTP Method &**<br>**Endpoint**|POST  /api/v1/categories|
-|**Kết quả mong đợi**|Danh mục mới được tạo trong database. Cache danh mục bị xóa.<br>Location header trỏ đến /api/v1/categories/{newSlug}.|
+|**Kết quả mong đợi**|Danh mục mới được tạo trong database.<br>Location header trỏ đến /api/v1/categories/{newSlug}.|
 |**HTTP Status Code trả**<br>**về**|201 Created – Tạo thành công. 403 Forbidden – Không có quyền<br>Admin. 409 Conflict – Name đã tồn tại. 422 Unprocessable Entity – Dữ<br>liệu không hợp lệ.|
 
 <!-- PDF trang 25 -->
@@ -711,12 +711,12 @@ Module quản lý danh mục (Category) phân loại công thức nấu ăn. Dan
 |**Nhóm chức năng**|Module Quản lý Danh mục (FR-CAT)|
 |**Tác nhân**|Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Admin cập nhật Name và/hoặc Description của danh mục. Slug<br>KHÔNG thay đổi khi đổi tên (để tránh broken links). Sau khi cập nhật,<br>cache bị invalidate.|
+|**Mô tả**|Admin cập nhật `name`, `description`, `imageUrl`, `orderIndex` của danh mục. Slug KHÔNG thay đổi khi đổi tên (tránh hỏng link).|
 |**Điều kiện tiên quyết**|1. Admin đang đăng nhập. 2. Danh mục với ID tương ứng tồn tại.|
-|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi PUT /api/v1/categories/{id} với body: { "name": "...",<br>"description": "..." }.<br>2. Kiểm tra role Admin.<br>3. UpdateCategoryCommand dispatch qua MediatR.<br>4. Tìm category theo ID, cập nhật Name và Description.<br>5. Lưu thay đổi, invalidate cache.<br>6. Trả về HTTP 200 OK với CategoryDto đã cập nhật.|
+|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi PUT /api/v1/categories/{id} với body `{ name, description?, imageUrl?, orderIndex? }`.<br>2. Kiểm tra role Admin.<br>3. UpdateCategoryCommand dispatch qua MediatR (validation như FR-CAT-003).<br>4. Tìm category theo ID, cập nhật, gọi `ICacheInvalidator`.<br>5. Trả về HTTP 200 OK với CategoryDto đã cập nhật.|
 |**Luồng thay thế /**<br>**Ngoại lệ**|A1 – ID không tồn tại: HTTP 404.<br>A2 – Thiếu role Admin: HTTP 403.|
 |**HTTP Method &**<br>**Endpoint**|PUT  /api/v1/categories/{id:guid}|
-|**Kết quả mong đợi**|Thông tin danh mục được cập nhật. Cache invalidated.|
+|**Kết quả mong đợi**|Thông tin danh mục được cập nhật.|
 |**HTTP Status Code trả**<br>**về**|200 OK – Cập nhật thành công. 403 Forbidden. 404 Not Found. 422<br>Unprocessable Entity.|
 
 ### FR-CAT-005: Xóa Danh mục [Admin]
@@ -727,10 +727,10 @@ Module quản lý danh mục (Category) phân loại công thức nấu ăn. Dan
 |**Nhóm chức năng**|Module Quản lý Danh mục (FR-CAT)|
 |**Tác nhân**|Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
-|**Mô tả**|Admin xóa một danh mục. Quy tắc nghiệp vụ: KHÔNG được xóa danh<br>mục còn chứa công thức (dù là Published hay Draft). Admin phải<br>chuyển tất cả công thức sang danh mục khác trước khi xóa. Đây là soft<br>constraint để bảo vệ toàn vẹn dữ liệu.|
+|**Mô tả**|Admin **xóa vật lý** một danh mục (CR-02: Category xóa thật). KHÔNG được xóa danh mục còn công thức tham chiếu, kể cả công thức đã xóa mềm trong thùng rác.|
 |**Điều kiện tiên quyết**|1. Admin đang đăng nhập. 2. Danh mục tồn tại và không còn công thức<br>nào.|
-|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi DELETE /api/v1/categories/{id}.<br>2. Kiểm tra role Admin.<br>3. DeleteCategoryCommand dispatch.<br>4. Đếm số recipe trong category: nếu > 0 → Throw<br>ConflictException("Danh mục còn chứa {count} công thức.").<br>5. Xóa entity, lưu thay đổi, invalidate cache.<br>6. Trả về HTTP 204 No Content.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Danh mục có recipe: HTTP 409 Conflict với thông báo số lượng<br>recipe.<br>A2 – ID không tồn tại: HTTP 404.|
+|**Luồng chính (Happy**<br>**Path)**|1. Admin gửi DELETE /api/v1/categories/{id}.<br>2. Kiểm tra role Admin.<br>3. DeleteCategoryCommand dispatch.<br>4. Còn công thức tham chiếu → 409 `CATEGORY_DELETE_HAS_RECIPES`.<br>5. Xóa entity, lưu thay đổi, gọi `ICacheInvalidator`.<br>6. Trả về HTTP 204 No Content.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Danh mục có recipe: HTTP 409 `CATEGORY_DELETE_HAS_RECIPES`.<br>A2 – ID không tồn tại: HTTP 404.|
 |**HTTP Method &**<br>**Endpoint**|DELETE  /api/v1/categories/{id:guid}|
 |**Kết quả mong đợi**|Danh mục bị xóa khỏi database. HTTP 204 được trả về.|
 |**HTTP Status Code trả**<br>**về**|204 No Content – Xóa thành công. 403 Forbidden. 404 Not Found. 409<br>Conflict – Danh mục còn recipe.|
@@ -869,7 +869,7 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 
 <!-- PDF trang 32 -->
 
-### FR-RCP-008: Quản lý Ảnh Công thức (Upload / Set Primary / Delete)
+### FR-RCP-008: Quản lý Ảnh Công thức (Upload / Cập nhật / Delete)
 
 |**Mã yêu cầu**|FR-RCP-008|
 |---|---|
@@ -877,13 +877,13 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm chức năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tác giả sở hữu / Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Author quản lý ảnh minh họa cho công thức của mình. Upload dùng<br>multipart/form-data. Ảnh được lưu trên MinIO với path:<br>recipes/{recipeId}/{uuid}.{ext}. Ảnh đầu tiên tự động được đặt làm ảnh<br>chính (IsPrimary = true). Hỗ trợ 3 thao tác: Upload (POST), đặt ảnh<br>chính (PATCH primary), Xóa (DELETE). Validation bắt buộc: MIME<br>type (image/jpeg, image/png, image/webp, image/avif) và kích thước tối<br>đa 5MB.|
+|**Mô tả**|Author quản lý ảnh minh họa cho công thức của mình qua `IFileStorage` (S3/MinIO hoặc Local). Database chỉ lưu **object key**, URL công khai được dựng khi trả DTO. Key ảnh gốc: `recipes/{recipeId}/{imageId}/original.{ext}`. Ảnh đầu tiên tự động là ảnh chính. Chỉ nhận JPEG, PNG, WebP (không AVIF, CR-13), tối đa 5 MiB, MIME phải khớp chữ ký file.|
 |**Điều kiện tiên quyết**|1. Author/Admin đang đăng nhập. 2. Recipe tồn tại và người dùng có<br>quyền.|
-|**Luồng chính (Happy**<br>**Path)**|--- UPLOAD ---<br>1. POST /api/v1/recipes/{id}/images với multipart/form-data chứa field<br>"file".<br>2. Validate MIME type: chỉ chấp nhận image/jpeg, image/png,<br>image/webp, image/avif.<br>3. Validate kích thước: file.Length <= 5*1024*1024 bytes (5MB).<br>4. Validate magic bytes: đọc 4 bytes đầu để xác nhận định dạng thực<br>sự (JPEG: FF D8 FF; PNG: 89 50 4E 47).<br>5. IFileStorageService.UploadAsync(file, "recipes/{id}") → trả về URL<br>công khai.<br>6. RecipeImage.Create(url, altText, isPrimary: !recipe.Images.Any()) →<br>thêm vào recipe.<br>7. SaveChangesAsync(), invalidate cache.<br>8. HTTP 201 Created với { url, isPrimary }.<br>--- SET PRIMARY IMAGE ---<br>9. PATCH /api/v1/recipes/{id}/images/{imageId}/primary.<br>10. Tìm image theo imageId, đặt IsPrimary = true, đặt tất cả ảnh khác<br>IsPrimary = false.<br>11. HTTP 200 OK.<br>--- DELETE IMAGE ---<br>12. DELETE /api/v1/recipes/{id}/images/{imageId}.<br>13. Xóa entity khỏi database.<br>14. BackgroundJob.Enqueue xóa file trên MinIO.<br>15. Nếu ảnh bị xóa là IsPrimary và còn ảnh khác: tự động đặt ảnh đầu<br>tiên còn lại làm primary.<br>16. HTTP 204 No Content.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – MIME type không hợp lệ: HTTP 400 Bad Request.<br>A2 – File vượt quá 5MB: HTTP 400 với message "Kích thước file vượt<br>quá giới hạn 5MB.".<br>A3 – Magic bytes không khớp MIME type: HTTP 400 "File không hợp<br>lệ.".<br>A4 – MinIO không khả dụng: HTTP 503 Service Unavailable.|
-|**HTTP Method &**<br>**Endpoint**|POST /api/v1/recipes/{id}/images  \|  PATCH<br>/api/v1/recipes/{id}/images/{imgId}/primary  \|  DELETE<br>/api/v1/recipes/{id}/images/{imgId}|
-|**Kết quả mong đợi**|Ảnh được upload lên MinIO, URL lưu vào database. IsPrimary được<br>quản lý chính xác.|
-|**HTTP Status Code trả**<br>**về**|Upload: 201 Created. Set Primary: 200 OK. Delete: 204 No Content.<br>400 Bad Request – File không hợp lệ. 403/404 – Lỗi quyền/không tìm<br>thấy.|
+|**Luồng chính (Happy**<br>**Path)**|--- UPLOAD ---<br>1. POST /api/v1/recipes/{recipeId}/images, multipart: `file`, `altText?`.<br>2. Kiểm tra quyền sở hữu, kích thước ≤ 5 MiB, MIME + chữ ký file.<br>3. `IFileStorage.UploadAsync(stream, key, contentType)`.<br>4. Tạo RecipeImage (IsPrimary nếu là ảnh đầu tiên), lưu DB.<br>5. Enqueue FR-JOB-002 (resize).<br>6. HTTP 201 với `{ imageId, originalUrl, mediumUrl, thumbnailUrl, altText, isPrimary, orderIndex }`.<br>--- DANH SÁCH ---<br>7. GET /api/v1/recipes/{recipeId}/images → 200.<br>--- CẬP NHẬT (đặt ảnh chính, altText, thứ tự) ---<br>8. PATCH /api/v1/recipes/{recipeId}/images/{imageId} body `{ altText?, isPrimary?, orderIndex? }` → 200. Không có route `/primary` riêng.<br>--- XÓA ---<br>9. DELETE /api/v1/recipes/{recipeId}/images/{imageId}: xóa DB rồi enqueue xóa cả prefix trên storage.<br>10. Nếu xóa ảnh chính: chọn ảnh còn lại có `orderIndex` thấp nhất (sau đó `id`) làm ảnh chính.<br>11. HTTP 204 No Content.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – File quá 5 MiB: HTTP 413 `FILE_SIZE_EXCEEDED`.<br>A2 – Loại file/chữ ký không hợp lệ hoặc không khớp: HTTP 415 `FILE_TYPE_NOT_ALLOWED`.<br>A3 – Storage không khả dụng: HTTP 503 `STORAGE_UNAVAILABLE`.<br>A4 – Ảnh không thuộc recipe: HTTP 404 `IMAGE_NOT_FOUND`.<br>A5 – `altText` > 500 ký tự hoặc `orderIndex` âm: HTTP 422 `IMAGE_ALT_TEXT_INVALID` / `IMAGE_ORDER_INVALID`.<br>A6 – Bỏ ảnh chính mà chưa chọn ảnh thay thế: HTTP 422 `IMAGE_PRIMARY_REQUIRED`.|
+|**HTTP Method &**<br>**Endpoint**|POST · GET /api/v1/recipes/{recipeId}/images  \|  PATCH · DELETE /api/v1/recipes/{recipeId}/images/{imageId}|
+|**Kết quả mong đợi**|Ảnh được lưu trên object storage, database lưu object key. Mỗi recipe có tối đa một ảnh chính (unique partial index).|
+|**HTTP Status Code trả**<br>**về**|Upload: 201. Danh sách/Cập nhật: 200. Xóa: 204. 403/404 – quyền/không tìm thấy. 413, 415, 422, 503 như trên.|
 
 <!-- PDF trang 33 -->
 
@@ -957,21 +957,21 @@ Ba FR còn lại của module Search được tích hợp sẵn vào FR-RCP-001 
 
 <!-- PDF trang 37 -->
 
-Module xử lý tất cả thao tác với file binary trên hệ thống lưu trữ đối tượng (Object Storage) MinIO S3-compatible. Abstraction layer IFileStorageService cho phép swap implementation (MinIO ↔ AWS S3 ↔ local filesystem) mà không cần thay đổi Application Layer.
+Module xử lý file binary trên object storage tương thích S3 (MinIO chạy trong Docker; CR-14). Abstraction `IFileStorage` (Application) có các hàm `UploadAsync(Stream, key, contentType)`, `OpenReadAsync`, `DeleteAsync(key)`, `DeleteByPrefixAsync(prefix)`, `GetPublicUrl(key)`; triển khai chọn bằng cấu hình `FileStorage:Provider` (S3 hoặc Local). Database chỉ lưu object key; URL công khai dựng từ `FileStorage:PublicBaseUrl`, trình duyệt đọc ảnh qua đường dẫn `/media/` của Nginx. Không có upload trực tiếp từ trình duyệt hay presigned URL.
 
 |**Mã FR**|**Tên**|**Mô tả**|**Ràng buộc kỹ thuật**|
 |---|---|---|---|
-|FR-<br>FILE-<br>001|Upload File<br>lên MinIO|IFileStorageService.UploadAsync(IFormFile,<br>folder, ct) → string (public URL). Tạo unique<br>filename = {folder}/{Guid.NewGuid()}{ext} để<br>ngăn path traversal. Preserve MIME type<br>gốc.|Max size: 5MB. MIME:<br>JPEG/PNG/WebP/AVIF.<br>Magic bytes validation.<br>Bucket: "culinary-blog".<br>Policy: public-read.|
-|FR-<br>FILE-<br>002|Xóa File<br>khỏi MinIO|IFileStorageService.DeleteAsync(fileUrl, ct).<br>Trích xuất object name từ URL, gọi<br>RemoveObjectAsync(). Thường được gọi từ<br>Hangfire background job (fire-and-forget)<br>sau khi xóa recipe.|Nếu object không tồn tại<br>trên MinIO → không<br>throw exception<br>(idempotent). Lỗi kết nối<br>MinIO → Hangfire retry<br>tối đa 3 lần.|
+|FR-FILE-001|Upload file|`IFileStorage.UploadAsync(stream, key, contentType)`. Key do server sinh (`recipes/{recipeId}/{imageId}/original.{ext}`), không lấy tên file của người dùng.|Tối đa 5 MiB. Chỉ JPEG/PNG/WebP, kiểm tra chữ ký file (CR-13).|
+|FR-FILE-002|Xóa file|`DeleteAsync(key)` / `DeleteByPrefixAsync(prefix)`, gọi từ Hangfire sau khi xóa ảnh hoặc xóa vĩnh viễn recipe.|Idempotent: object không tồn tại thì không lỗi. Lỗi kết nối → Hangfire retry theo cấu hình chung.|
 
 ## 3.6. Module Background Jobs (FR-JOB)
 
-Module xử lý các tác vụ nền không đồng bộ sử dụng Hangfire. Hangfire chạy in-process trong .NET API và sử dụng PostgreSQL làm persistent storage cho job queue. Dashboard quản lý jobs tại /hangfire (chỉ Admin). Hỗ trợ 3 loại job: Fire-and-forget (chạy ngay), Delayed (chạy sau N giây/phút) và Recurring (lịch cron).
+Module xử lý các tác vụ nền không đồng bộ sử dụng Hangfire. Hangfire chạy in-process trong .NET API và sử dụng PostgreSQL làm persistent storage cho job queue. Dashboard trong API chỉ bật ở Development; bản chạy Compose xuất `/hangfire` qua Nginx với Basic Auth. Hỗ trợ 3 loại job: Fire-and-forget (chạy ngay), Delayed (chạy sau N giây/phút) và Recurring (lịch cron).
 
 |**Mã FR**|**Tên Job**|**Loại**|**Trigger**|**Mô tả**|**Retry Policy**|
 |---|---|---|---|---|---|
 |FR-<br>JOB-<br>001|Welcome<br>Email Job|Fire-and-<br>forget|Sau FR-AUTH-001 thành<br>công<br>(BackgroundJob.Enqueue)|Gửi email HTML<br>chào mừng đến<br>địa chỉ email vừa<br>đăng ký. Email<br>template bao gồm:<br>tên người dùng,<br>link kích hoạt email<br>(nếu cần), link đến<br>ứng dụng.|Tự động retry<br>3 lần với<br>exponential<br>backoff (1<br>phút, 5 phút,<br>30 phút). Sau 3<br>lần fail →<br>chuyển sang<br>Failed state,<br>log error.|
-|FR-<br>JOB-<br>002|Image Resize<br>/ Thumbnail<br>Job|Fire-and-<br>forget|Sau FR-RCP-008 upload<br>ảnh thành công|Tạo thumbnail<br>(300x300px) và<br>medium image<br>(800x600px) từ<br>ảnh gốc. Lưu cả 3<br>phiên bản lên<br>MinIO. Cập nhật<br>URLs vào<br>database.|Retry 3 lần.<br>Nếu fail: ảnh<br>gốc vẫn hiển<br>thị, chỉ thiếu<br>thumbnail.|
+|FR-<br>JOB-<br>002|Image Resize<br>/ Thumbnail<br>Job|Fire-and-<br>forget|Sau FR-RCP-008 upload<br>ảnh thành công|SkiaSharp tạo `thumb.webp` 300×300 (crop giữa) và `medium.webp` rộng tối đa 800 px giữ tỉ lệ, không phóng lớn ảnh nhỏ; WebP chất lượng 85. Lưu `ThumbnailKey`/`MediumKey` (không lưu URL).|Ảnh không decode được: ghi `IsProcessingFailed`/`ProcessingError` rồi kết thúc, không retry. Lỗi hạ tầng: retry chung 3 lần (60/300/1800 giây); ảnh gốc vẫn hiển thị.|
 |FR-<br>JOB-<br>003|Sitemap<br>Generation<br>Job|Recurring|Hàng ngày lúc 02:00 AM<br>UTC (cron: "0 2 * * *")|Tạo file<br>sitemap.xml chứa<br>URL tất cả<br>Published recipes,<br>categories và<br>pages tĩnh. Upload<br>sitemap.xml lên<br>MinIO hoặc lưu<br>vào wwwroot. Gửi<br>thông báo đến<br>Google Search<br>Console (ping).|Retry 2 lần nếu<br>fail. Log kết<br>quả (số URL<br>trong sitemap)<br>qua Serilog.|
 
 <!-- PDF trang 38 -->
@@ -1130,12 +1130,12 @@ Backend cung cấp RESTful API theo chuẩn JSON. Toàn bộ endpoints được 
 
 |**Dịch vụ**|**Mục đích**|**Giao thức / SDK**|**Cấu hình / Secrets**|
 |---|---|---|---|
-|Google OAuth 2.0|Đăng nhập / đăng ký bằng tài khoản Google|OAuth 2.0 Authorization Code + PKCE.<br>Redirect URI: /api/v1/auth/google/callback.<br>Scopes: openid, email, profile.|GoogleClientId, GoogleClie[…]<br>(User Secrets / env var). G[…]<br>Console → OAuth 2.0 Clie[…]|
-|MinIO (S3-compatible)|Lưu trữ file ảnh công thức|AWS SDK for .NET (AWSSDK.S3).<br>Endpoint override cho MinIO. Presigned URL cho direct browser upload (optional).|MinIO__Endpoint, MinIO__[…]<br>MinIO__SecretKey,<br>MinIO__BucketName. Doc[…]<br>minio:9000.|
-|Hangfire|Background job processing|Nuget: Hangfire.Core, Hangfire.AspNetCore, Hangfire.PostgreSql. In-process server.<br>Dashboard: /hangfire (Admin only, policy-protected).|Dùng chung ConnectionSt[…]<br>PostgreSQL. HANGFIRE_[…]<br>hangfire.|
+|Google Sign-In|Đăng nhập / đăng ký bằng tài khoản Google (FR-AUTH-003)|Auth.js (Next.js) thực hiện OAuth với Google; backend chỉ nhận `{ idToken }` tại POST /api/v1/auth/google và tự xác minh bằng `Google.Apis.Auth`. Scopes: openid, email, profile.|Next.js: `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` (secret chỉ ở Next.js). Backend: `Authentication__Google__ClientId`. Đặt trong `.env`/User Secrets, không commit.|
+|MinIO (S3-compatible)|Lưu trữ file ảnh công thức|`AWSSDK.S3` với ServiceUrl trỏ tới MinIO. Không dùng presigned URL / upload trực tiếp từ trình duyệt.|`FileStorage__Provider`, `FileStorage__PublicBaseUrl`, `FileStorage__S3__ServiceUrl`, `__AccessKey`, `__SecretKey`, `__BucketName`. Trình duyệt đọc ảnh qua `/media/` của Nginx.|
+|Hangfire|Background job processing|Hangfire.AspNetCore + Hangfire.PostgreSql, server chạy trong API.|Dùng chung PostgreSQL của ứng dụng. Dashboard: Development trong API; Compose xuất `/hangfire` qua Nginx với Basic Auth.|
 |Serilog + Seq|Structured logging & log aggregation|Serilog.Sinks.Console (JSON), Serilog.Sinks.File, Serilog.Sinks.Seq.<br>HTTP ingest API.|Seq__ServerUrl = http://se[…]<br>(Docker). Production: Elas[…]<br>Monitor.|
 |OpenTelemetry|Distributed tracing & metrics|OpenTelemetry .NET SDK. OTLP exporter.<br>Tracing: HttpClient, EF Core, AspNetCore.|OTEL_EXPORTER_OTLP[…]<br>Development: Seq OTLP.<br>[…] Grafana Tempo / Jaeger.|
-|SMTP / Email|Gửi welcome email (FR-JOB-001)|MailKit (IEmailSender). Kết nối qua SMTP với TLS.|Smtp__Host, Smtp__Port,<br>Smtp__Username, Smtp__[…]<br>Development: Mailhog (Do[…]|
+|SMTP / Email|Gửi email chào mừng (FR-JOB-001) và email đặt lại mật khẩu (FR-AUTH-009)|MailKit qua `IEmailSender`.|`Smtp__Host`, `Smtp__Port`, `Smtp__Username`, `Smtp__Password`, `Smtp__From`. Development: Mailpit (SMTP 1025, giao diện 8025).|
 |Google Search Console|Ping sitemap update|HTTP GET:<br>https://www.google.com/ping?sitemap={url}|Không cần API key. Gọi tr[…]<br>003.|
 
 > **Ghi chú chuyển đổi:** trong PDF gốc, bảng này bị tràn lề phải nên một phần chữ ở cuối dòng đã bị cắt mất (không thể khôi phục từ PDF). Vị trí bị cắt được đánh dấu `[…]`.
@@ -1214,22 +1214,19 @@ Hệ thống sử dụng PostgreSQL 16 với EF Core Code First. Tất cả enti
 
 ## 6.5. Triển khai – Docker Compose
 
-Toàn bộ hệ thống được containerized với Docker Compose. Development dùng dockercompose.yml, Production dùng docker-compose.prod.yml với optimized build + secrets management.
+Toàn bộ hệ thống chạy bằng một file `docker-compose.yml` (không có `docker-compose.prod.yml`). Nginx là điểm vào duy nhất qua `${APP_PORT}:80`; API và web không publish cổng ra host. Phiên bản image được ghim (MinIO ghim theo digest). Cổng của các dịch vụ hạ tầng lấy từ `.env` (xem `.env.example`).
 
-<!-- PDF trang 52 -->
-
-|**Service**|**Image**|**Port**<br>**(host:container)**|**Volume / Dependency**|
-|---|---|---|---|
-|nginx|nginx:alpine|80:80, 443:443|Depends: api, frontend<br>Volume: ./nginx/nginx.conf,<br>./ssl/|
-|api|culinaryblog-api<br>(Dockerfile)|5000:8080|Depends: postgres, redis,<br>minio Env file: .env.production|
-|frontend|culinaryblog-web<br>(Dockerfile)|3000:3000|Depends: api|
-|postgres|postgres:16-alpine|5432:5432|Volume:<br>pgdata:/var/lib/postgresql/data<br>Env: POSTGRES_DB, USER,<br>PASSWORD|
-|redis|redis:7-alpine|6379:6379|Volume: redisdata:/data<br>Command: redis-server --<br>appendonly yes|
-|minio|minio/minio:latest|9000:9000,<br>9001:9001<br>(Console)|Volume: miniodata:/data<br>Command: server /data --<br>console-address :9001|
-|seq|datalust/seq:latest|5341:80|Volume: seqdata:/data Dev<br>only — không deploy<br>production|
-|mailhog|mailhog/mailhog|8025:8025 (UI),<br>1025:1025<br>(SMTP)|Dev only — test email|
-
-<!-- PDF trang 53 -->
+|**Service**|**Vai trò**|**Ghi chú**|
+|---|---|---|
+|nginx|Điểm vào duy nhất|`/` → web, `/api` → api, `/media/` → MinIO, `/hangfire` (Basic Auth qua `hangfire-auth`)|
+|api|.NET 10 API + Hangfire server|Phụ thuộc postgres, redis, minio|
+|web|Next.js|Gọi API qua mạng nội bộ|
+|postgres|PostgreSQL 16|Volume `pgdata`|
+|redis|Redis 7, có mật khẩu|Volume `redisdata`|
+|minio, minio-init|Object storage S3 + job tạo bucket|Volume `miniodata`|
+|seq|Log tập trung|Volume `seqdata`; chỉ dùng cho dev/demo|
+|mailpit|SMTP giả lập + giao diện xem email|Thay Mailhog|
+|cloudflared|Cloudflare Tunnel đưa bản demo ra Internet|Profile `demo`; `CLOUDFLARE_TUNNEL_TOKEN` chỉ đặt ở `.env` local (CR-14)|
 
 # 7. Mô hình Dữ liệu
 
@@ -1294,46 +1291,22 @@ Các bước thực hiện chi tiết của một Recipe, được sắp xếp t
 |**Column**|**Kiểu**|**Ràng buộc**|**Mô tả**|
 |---|---|---|---|
 |Id|uuid|PK (BaseEntity)|UUID khóa chính.|
-|RecipeId|uuid|NOT NULL, FK →<br>Recipes.Id, ON<br>DELETE CASCADE|Khóa ngoại. Cascade delete:<br>xóa Recipe → xóa tất cả<br>Steps.|
-|StepNumber|integer|NOT NULL, CHECK ><br>0|Thứ tự bước (1, 2, 3...).<br>UNIQUE cùng RecipeId<br>(composite unique).|
-|Title|varchar(200)|NOT NULL|Tên bước ngắn gọn (ví dụ: "Sơ<br>chế nguyên liệu").|
-|Description|text|NOT NULL|Mô tả chi tiết bước thực hiện.|
-|TimerMinutes|integer|NULL, CHECK >= 0|Thời gian cần cho bước này<br>(phút). NULL nếu không áp<br>dụng.|
-|ImageUrl|varchar(500)|NULL|URL ảnh minh họa bước (trên<br>MinIO). Nullable.|
-
-## 7.4. RecipeIngredient
-
-|**Column**|**Kiểu**|**Ràng buộc**|**Mô tả**|
-|---|---|---|---|
-|Id|uuid|PK (BaseEntity)|UUID khóa chính.|
-|RecipeId|uuid|NOT NULL, FK →<br>Recipes.Id, ON<br>DELETE CASCADE|Khóa ngoại với cascade<br>delete.|
-|Name|varchar(200)|NOT NULL|Tên nguyên liệu (ví dụ: "Thịt<br>bò thăn").|
-|Quantity|decimal(10,3)|NULL|Số lượng (ví dụ: 500). Nullable<br>cho "nguyên liệu vừa đủ".|
-|Unit|varchar(50)|NULL|Đơn vị đo lường (gram, ml,<br>thìa canh, quả...). Nullable.|
-|Notes|varchar(500)|NULL|Ghi chú tùy chọn (ví dụ: "thái<br>lát mỏng"). Nullable.|
-|OrderIndex|integer|NOT NULL,<br>DEFAULT 0|Thứ tự hiển thị trong danh<br>sách nguyên liệu.|
-
-<!-- PDF trang 57 -->
-
-## 7.5. RecipeImage
-
-|**Column**|**Kiểu**|**Ràng buộc**|**Mô tả**|
-|---|---|---|---|
-|Id|uuid|PK (BaseEntity)|UUID khóa chính.|
-|RecipeId|uuid|NOT NULL, FK →<br>Recipes.Id, ON<br>DELETE CASCADE|Khóa ngoại với cascade delete.|
-|OriginalUrl|varchar(500)|NOT NULL|URL ảnh gốc trên MinIO (ví dụ:<br>.../recipes/{recipeId}/{guid}.jpg).|
-|MediumUrl|varchar(500)|NULL|URL ảnh medium 800×600<br>(sinh bởi FR-JOB-002).<br>Nullable khi job chưa chạy.|
-|ThumbnailUrl|varchar(500)|NULL|URL ảnh thumbnail 300×300<br>(sinh bởi FR-JOB-002).<br>Nullable.|
-|AltText|varchar(200)|NULL|Alt text cho accessibility.<br>Nullable.|
-|IsPrimary|boolean|NOT NULL,<br>DEFAULT false|Ảnh chính (hiển thị đầu tiên).<br>Chỉ có 1 ảnh IsPrimary=true /<br>Recipe.|
-|OrderIndex|integer|NOT NULL,<br>DEFAULT 0|Thứ tự hiển thị gallery.|
+|RecipeId|uuid|NOT NULL, FK → Recipes.Id, ON DELETE CASCADE|Khóa ngoại.|
+|OriginalKey|varchar(500)|NOT NULL|Object key ảnh gốc (`recipes/{recipeId}/{imageId}/original.{ext}`).|
+|MediumKey|varchar(500)|NULL|Key ảnh medium (rộng tối đa 800 px), sinh bởi FR-JOB-002.|
+|ThumbnailKey|varchar(500)|NULL|Key ảnh thumbnail 300×300, sinh bởi FR-JOB-002.|
+|IsProcessingFailed|boolean|NOT NULL, DEFAULT false|Resize thất bại do ảnh không decode được.|
+|ProcessingError|varchar(500)|NULL|Lý do resize thất bại.|
+|AltText|varchar(500)|NULL|Alt text cho accessibility.|
+|IsPrimary|boolean|NOT NULL, DEFAULT false|Ảnh chính. Unique partial index: tối đa 1 ảnh chính / recipe.|
+|OrderIndex|integer|NOT NULL, DEFAULT 0|Thứ tự hiển thị gallery.|
 
 ## 7.6. Category
 
 |**Column**|**Kiểu**|**Ràng buộc**|**Mô tả**|
 |---|---|---|---|
 |Id|uuid|PK (BaseEntity)|UUID khóa chính.|
-|Name|varchar(100)|NOT NULL, UNIQUE|Tên danh mục (ví dụ: "Món<br>khai vị").|
+|Name|citext (≤ 100)|NOT NULL, UNIQUE (không phân biệt hoa/thường)|Tên danh mục (ví dụ: "Món<br>khai vị").|
 |Slug|varchar(120)|NOT NULL, UNIQUE,<br>IDX_Category_Slug|URL-friendly name. Sinh từ<br>Name.|
 |Description|text|NULL|Mô tả danh mục. Nullable.|
 |ImageUrl|varchar(500)|NULL|URL ảnh đại diện category.<br>Nullable.|
@@ -1404,11 +1377,11 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 
 |**Method**|**Endpoint**|**Mô tả**|**Auth / Role**|**Request**|**Response**|
 |---|---|---|---|---|---|
-|GET|/categories|Lấy danh sách tất cả categories|Không|—|200: [{ id, name, slug, description, imageUrl, recipeCount }]|
-|GET|/categories/{slug}|Lấy chi tiết category + danh sách recipes|Không|?page=1&pageSize=10&sortBy=...|200: { category, recipes: PagedResult }<br>404: Category not found|
-|POST|/categories|Tạo category mới|Bearer + Admin|{ name, description?, imageUrl? }|201: { id, name, slug, description }<br>400: validation<br>403: Forbidden<br>409: name đã tồn tại|
-|PUT|/categories/{id}|Cập nhật category|Bearer + Admin|{ name, description?, imageUrl?, orderIndex? }|200: category updated<br>400/403/404|
-|DELETE|/categories/{id}|Xóa category (soft delete)|Bearer + Admin|—|204: No Content<br>403: Forbidden<br>404: Not found<br>409: Có recipes thuộc category này|
+|GET|/categories|Danh sách categories|Không|—|200: [{ id, name, slug, description, imageUrl, orderIndex, recipeCount }]|
+|GET|/categories/{slug}|Chi tiết category + recipes|Không (Author thấy thêm Draft của mình)|?page=1&pageSize=12 (tối đa 50)|200: { category, recipes: PagedResult } · 404 `CATEGORY_NOT_FOUND`|
+|POST|/categories|Tạo category|Bearer + Admin|{ name, description?, imageUrl?, orderIndex? }|201 + Location · 403 · 409 `CATEGORY_NAME_EXISTS` · 422|
+|PUT|/categories/{id}|Cập nhật category (slug giữ nguyên)|Bearer + Admin|{ name, description?, imageUrl?, orderIndex? }|200 · 403 · 404 · 409 · 422|
+|DELETE|/categories/{id}|Xóa vật lý category|Bearer + Admin|—|204 · 403 · 404 · 409 `CATEGORY_DELETE_HAS_RECIPES`|
 
 <!-- PDF trang 63 -->
 
@@ -1430,13 +1403,16 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 
 <!-- PDF trang 64 -->
 
-## 8.4. Recipe Images (/recipes/{id}/images)
+## 8.4. Recipe Images (/recipes/{recipeId}/images)
 
-|**Method**|**Endpoint**|**Mô tả**|**Auth**|**Request**|**Response**|
-|---|---|---|---|---|---|
-|POST|/recipes/{id}/images|Upload ảnh<br>mới cho<br>recipe|Bearer<br>(Owner/Admin)|multipart/form-<br>data: file<br>(image),<br>altText?,<br>isPrimary?|201: {<br>imageId,<br>originalUrl,<br>altText,<br>isPrimary }<br>400:<br>MIME<br>invalid /<br>size ><br>5MB<br>403/404|
-|PATCH|/recipes/{id}/images/{imageId}|Cập nhật<br>metadata<br>ảnh<br>(altText,<br>isPrimary,<br>orderIndex)|Bearer<br>(Owner/Admin)|{ altText?,<br>isPrimary?,<br>orderIndex? }|200:<br>image<br>updated<br>403/404|
-|DELETE|/recipes/{id}/images/{imageId}|Xóa ảnh<br>(MinIO file<br>deleted<br>async via<br>Hangfire)|Bearer<br>(Owner/Admin)|—|204: No<br>Content<br>403/404|
+Cả bốn route yêu cầu Bearer (Author/Admin) và kiểm tra quyền sở hữu recipe.
+
+|**Method**|**Endpoint**|**Mô tả**|**Request**|**Response**|
+|---|---|---|---|---|
+|POST|/recipes/{recipeId}/images|Upload ảnh|multipart: file, altText?|201: { imageId, originalUrl, mediumUrl, thumbnailUrl, altText, isPrimary, orderIndex } · 413 · 415 · 503 · 403/404|
+|GET|/recipes/{recipeId}/images|Danh sách ảnh|—|200: mảng ảnh · 403/404|
+|PATCH|/recipes/{recipeId}/images/{imageId}|Sửa altText, đặt ảnh chính, đổi thứ tự|{ altText?, isPrimary?, orderIndex? }|200 · 422 · 403/404|
+|DELETE|/recipes/{recipeId}/images/{imageId}|Xóa ảnh (file xóa qua Hangfire)|—|204 · 403/404|
 
 ## 8.5. Recipe Steps (/recipes/{id}/steps)
 
@@ -1488,7 +1464,7 @@ Bảng dưới đây liệt kê tất cả HTTP Status Codes được sử dụn
 
 # Phụ lục B – Application Error Codes
 
-Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong trường RFC 7807 "type" để frontend có thể xử lý lỗi theo programmatic way mà không phụ thuộc vào chuỗi message (có thể thay đổi theo locale).
+Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong trường mở rộng `code` của Problem Details (RFC 9457) để frontend có thể xử lý lỗi theo programmatic way mà không phụ thuộc vào chuỗi message (có thể thay đổi theo locale).
 
 <!-- PDF trang 67 -->
 
@@ -1515,8 +1491,13 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |CATEGORY_NOT_FOUND|404|Category không tồn<br>tại.|Category|
 |CATEGORY_NAME_EXISTS|409|Tên category đã tồn<br>tại.|Category|
 |CATEGORY_DELETE_HAS_RECIPES|409|Không thể xóa<br>category đang có<br>recipes thuộc về.|Category|
-|FILE_SIZE_EXCEEDED|400|File upload vượt quá<br>giới hạn 5MB.|File|
-|FILE_MIME_INVALID|400|Loại file không được<br>phép. Chỉ chấp nhận<br>JPEG, PNG, WebP,<br>AVIF.|File|
+|FILE_SIZE_EXCEEDED|413|File upload vượt quá 5 MiB.|File|
+|FILE_TYPE_NOT_ALLOWED|415|Loại file/chữ ký không hợp lệ hoặc không khớp. Chỉ nhận JPEG, PNG, WebP.|File|
+|STORAGE_UNAVAILABLE|503|Không lưu được ảnh vào storage.|File|
+|IMAGE_NOT_FOUND|404|Không tìm thấy ảnh thuộc công thức.|Image|
+|IMAGE_ALT_TEXT_INVALID|422|Alt text quá 500 ký tự.|Image|
+|IMAGE_ORDER_INVALID|422|`orderIndex` âm.|Image|
+|IMAGE_PRIMARY_REQUIRED|422|Bỏ ảnh chính mà chưa chọn ảnh thay thế.|Image|
 |VALIDATION_ERROR|400|Một hoặc nhiều field<br>không hợp lệ. Xem<br>"errors" object.|Common|
 |RATE_LIMIT_EXCEEDED|429|Quá giới hạn request.<br>Xem Retry-After<br>header.|Common|
 

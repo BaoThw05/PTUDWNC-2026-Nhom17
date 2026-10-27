@@ -144,9 +144,14 @@
 - [x] Rate limit trả 429 kèm `Retry-After`
 - [x] Mọi lỗi auth trả Problem Details có `code`
 - [ ] Email chào mừng xuất hiện trong Mailpit
-- [ ] SRS v1.1 phần 3.1 và 8.1 khớp với OpenAPI thực tế
+- [x] SRS v1.1 phần 3.1 và 8.1 khớp với OpenAPI thực tế
 
 **Kết quả rà soát 1.23 (20/10):**
 - Đã kiểm: entity `RefreshToken` chỉ có `TokenHash`/`ReplacedByTokenHash`; mọi `Log*` của module auth chỉ ghi `UserId`/`FamilyId`; không có `.env`, khóa JWT hay Google secret trong Git (chỉ có mật khẩu mẫu `change_me_*` và tài khoản Author test trong `appsettings.Development.json`); không bật CORS (trình duyệt chỉ gọi cùng origin qua proxy); cookie phiên do Auth.js đặt HttpOnly, SameSite=Lax, Secure khi chạy HTTPS qua Tunnel. Các dòng còn lại có integration test tương ứng.
 - Đã sửa: rate limit sau chuỗi proxy Tunnel (`ForwardLimit = null`). Đề xuất cho TV3 trên nhánh `2312793/compose-auth-config` (file dùng chung): `TrustedProxyNetworks`; compose thiếu `Jwt__SigningKey` (phiên mất khi API khởi động lại), `Smtp__Host` (container gửi email tới `localhost`), `Frontend__BaseUrl` (link đặt lại mật khẩu sai địa chỉ khi demo); trang `/auth/reset-password` đặt `referrer: no-referrer` để token trên URL không lọt qua Referer.
+- 27/10: đối chiếu 8.1 với `AuthEndpoints.cs`/`AdminUsersEndpoints.cs`: 12/12 route và body request khớp. Mục "Email chào mừng trong Mailpit" cần mở Mailpit kiểm tay khi chạy compose.
 - Còn lưu ý: compose chạy API ở `Development` nên Scalar/OpenAPI mở công khai qua Tunnel trong lúc demo; Hangfire dashboard được nginx bảo vệ bằng basic auth.
+
+**Tiến độ G4 (27/10):**
+- 1.22: E2E Playwright đăng ký + đăng nhập chạy 4/4 trên Chromium (mock API, nhánh `2312793/1.22-e2e-auth` gộp với `main`). Lỗi của nhánh TV4 cần sửa khi merge: `playwright.config.ts` dùng `baseURL` cổng 3000 nhưng server chạy 3100; `package-lock.json` thiếu `@playwright/test`. CI backend trên `main` đang lỗi restore NU1902/NU1903 (`System.Security.Cryptography.Pkcs`), chờ PR #55 của TV3.
+- 1.24: đã đưa bàn giao của TV3 (PR #57) vào 3.2, FR-RCP-008, 3.5, FR-JOB-002, 5.3, 6.5, 7.5, 7.6, 8.2, 8.4, Phụ lục B; đóng CR-13, CR-14. Còn chờ phần TV2 (CR-02, 03, 10, 12, 15, 20) và TV4 (CR-16 → 19, 21), hạn T5 29/10.
