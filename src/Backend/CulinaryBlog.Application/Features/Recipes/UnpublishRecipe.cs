@@ -9,7 +9,8 @@ public sealed record UnpublishRecipeCommand(Guid Id) : IRequest;
 
 public sealed class UnpublishRecipeCommandHandler(
     IAppDbContext db,
-    IRecipeAuthorizationHandler authorizationHandler) : IRequestHandler<UnpublishRecipeCommand>
+    IRecipeAuthorizationHandler authorizationHandler,
+    ICacheInvalidator cacheInvalidator) : IRequestHandler<UnpublishRecipeCommand>
 {
     public async Task Handle(UnpublishRecipeCommand request, CancellationToken cancellationToken)
     {
@@ -38,5 +39,8 @@ public sealed class UnpublishRecipeCommandHandler(
         recipe.UpdatedAt = DateTimeOffset.UtcNow;
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // 2.20 & S-07: Invalidate cache cho recipe và danh sách công khai/danh mục
+        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}", "categories"], cancellationToken);
     }
 }
