@@ -60,12 +60,12 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ⬜ |
 | CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ⬜ |
 | CR-15 | S-13 | Ghim MediatR 12.5.0 (MIT); `ApplicationUser` nằm ở Infrastructure, Domain không dùng NuGet; có architecture test | 2.5, 6.2, NFR-MAINT-004 | TV2 | S-13 | ⬜ |
-| CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | S-07 | ⬜ |
-| CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | S-08 | ⬜ |
-| CR-18 | S-14 | Sitemap sinh bằng Next.js; Hangfire recurring job cho các việc dọn dẹp (thùng rác, refresh token hết hạn, file mồ côi) | FR-JOB-003, 3.6 | TV4, TV3 | S-14 | ⬜ |
-| CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ⬜ |
+| CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | S-07 | ✅ |
+| CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | S-08 | ✅ |
+| CR-18 | S-14 | Sitemap sinh bằng Next.js; Hangfire recurring job cho các việc dọn dẹp (thùng rác, refresh token hết hạn, file mồ côi) | FR-JOB-003, 3.6 | TV4, TV3 | S-14 | 🟡 |
+| CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ✅ |
 | CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ⬜ |
-| CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ⬜ |
+| CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ✅ |
 
 ## Diễn giải câu trả lời của giảng viên (nhóm chốt 18/09/2026)
 
@@ -386,7 +386,7 @@ Culinary Blog cung cấp 7 nhóm chức năng chính, được hiện thực hó
 |Quản lý Công thức nấu<br>ăn|FR-RCP|10|CRUD recipe, publish/archive, quản lý<br>ảnh/bước/nguyên liệu.|
 |Tìm kiếm & Phân trang|FR-SRCH|4|Full-Text Search (PostgreSQL), filter, sort,<br>offset pagination.|
 |Quản lý Tệp tin|FR-FILE|2|Upload/Delete ảnh trên MinIO S3-compatible.|
-|Background Jobs|FR-JOB|3|Email chào mừng, thumbnail generation,<br>sitemap XML (Hangfire).|
+|Background Jobs|FR-JOB|3|Email chào mừng, thumbnail generation và các tác vụ dọn dữ liệu định kỳ (Hangfire). Sitemap do Next.js sinh.|
 |Quan sát Hệ thống|FR-OBS|3|Health checks, structured logging, distributed<br>tracing.|
 
 ## 2.3. Các Lớp Người dùng và Đặc điểm
@@ -438,13 +438,11 @@ Hệ thống định nghĩa 3 loại tác nhân (Actor) với quyền hạn khá
 
 |**Trình duyệt**|**Phiên bản tối thiểu**|**Ghi chú**|
 |---|---|---|
-|Google Chrome|90+|Khuyến nghị chính – tốt nhất cho<br>Developer Tools|
-|Mozilla Firefox|88+|Hỗ trợ đầy đủ|
-|Microsoft Edge|90+ (Chromium)|Hỗ trợ đầy đủ (Chromium-based)|
-|Safari|14+ (macOS 11+)|Hỗ trợ đầy đủ; Safari 13 trở xuống<br>KHÔNG đảm bảo|
-|Mobile Chrome (Android)|90+|Responsive design, touch-friendly|
-|Mobile Safari (iOS)|iOS 14+|Hỗ trợ đầy đủ|
-|Internet Explorer|Mọi phiên bản|KHÔNG hỗ trợ (EOL)|
+|Google Chrome|111+|Desktop và Android|
+|Mozilla Firefox|128+|Desktop|
+|Microsoft Edge|111+ (Chromium)|Desktop|
+|Safari|16.4+ (macOS/iOS)|Bao gồm Mobile Safari|
+|Internet Explorer|—|Không hỗ trợ (EOL)|
 
 ## 2.5. Ràng buộc Thiết kế và Hiện thực
 
@@ -916,12 +914,12 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm chức năng**|Module Tìm kiếm và Phân trang (FR-SRCH)|
 |**Tác nhân**|Tất cả (Guest / Author / Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Hệ thống cung cấp tính năng tìm kiếm toàn văn bản (FTS) cho công<br>thức sử dụng PostgreSQL tsvector/tsquery với cấu hình tiếng Việt.<br>Trường SearchVector (computed column) được tự động cập nhật bởi<br>PostgreSQL trigger khi Title hoặc Description thay đổi. Kết quả được<br>xếp hạng bởi ts_rank(). Hỗ trợ tìm kiếm gần đúng với unaccent<br>extension (bỏ dấu tiếng Việt: "pho" tìm được "phở").|
-|**Điều kiện tiên quyết**|1. PostgreSQL extensions unaccent và pg_trgm đã được install. 2. GIN<br>index trên cột SearchVector đã được tạo. 3. Tham số q không rỗng, tối<br>thiểu 2 ký tự.|
-|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET<br>/api/v1/recipes/search?q=pho+bo&page=1&pageSize=10.<br>2. SearchRecipesQuery dispatch với SearchTerm = "pho bo", Page =<br>1, PageSize = 10.<br>3. Handler xây dựng tsquery từ search terms: "pho:* & bo:*" (prefix<br>matching).<br>4. LINQ query với EF Core: .Where(r =><br>r.SearchVector.Matches(EF.Functions.ToTsQuery("vietnamese",<br>query))).<br>5. Apply ORDER BY ts_rank(SearchVector, query) DESC để kết quả<br>liên quan nhất lên đầu.<br>6. Chỉ trả về Status == Published recipes.<br>7. Apply pagination, trả về PagedResult<RecipeSummaryDto> với field<br>relevanceScore.<br>8. Kết quả KHÔNG cache (vì query string đa dạng) hoặc cache ngắn (5<br>phút) với vary by query.|
+|**Mô tả**|Hệ thống tìm công thức đã Published bằng PostgreSQL `pg_trgm` trên trường SearchText đã chuẩn hóa qua `unaccent`; tìm được món khi truy vấn có hoặc không có dấu, không phân biệt hoa thường và chịu được sai khác dấu nhẹ. Không dùng cấu hình `tsvector` tiếng Việt.|
+|**Điều kiện tiên quyết**|1. PostgreSQL extensions `unaccent` và `pg_trgm` được cài. 2. Cột `SearchText` lưu nội dung Title/Description đã bỏ dấu, có GIN trigram index. 3. Tham số q tối thiểu 2 ký tự sau chuẩn hóa.|
+|**Luồng chính (Happy**<br>**Path)**|1. Client gửi GET `/api/v1/recipes/search?q=pho+bo&page=1&pageSize=10`. 2. SearchRecipesQuery nhận từ khóa, bộ lọc và phân trang. 3. Backend chuẩn hóa Unicode, bỏ dấu và ký tự không hỗ trợ. 4. PostgreSQL trigram similarity so khớp SearchText, ưu tiên khớp tiêu đề. 5. Chỉ lấy recipe Published, chưa xóa; áp dụng AND cho category, difficulty, maxCookTime và minServings. 6. Sắp theo độ liên quan rồi phân trang và trả PagedResult. 7. Output Cache biến thiên theo query string, TTL 1 phút.|
 |**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Query rỗng hoặc < 2 ký tự: HTTP 422.<br>A2 – Không tìm thấy kết quả: HTTP 200 với items = [] và message gợi<br>ý.<br>A3 – Ký tự đặc biệt trong query (SQL injection attempt): EF Core<br>parameterize tự động; tsquery sanitization loại bỏ ký tự nguy hiểm.|
 |**HTTP Method &**<br>**Endpoint**|GET  /api/v1/recipes/search?q={searchTerm}&page={n}&pageSize={n}|
-|**Kết quả mong đợi**|PagedResult<RecipeSummaryDto> được xếp hạng theo độ liên quan<br>(ts_rank). Hỗ trợ tìm kiếm không dấu tiếng Việt.|
+|**Kết quả mong đợi**|PagedResult<RecipeSummaryDto> được xếp hạng theo độ tương đồng trigram. Hỗ trợ tìm kiếm tiếng Việt có dấu/không dấu.|
 |**HTTP Status Code trả**<br>**về**|200 OK – Thành công (kể cả kết quả rỗng). 422 – Query không hợp lệ.|
 
 <!-- PDF trang 36 -->
@@ -933,7 +931,7 @@ Ba FR còn lại của module Search được tích hợp sẵn vào FR-RCP-001 
 |**Mã FR**|**Tên**|**Tham số Query**|**Mô tả**|
 |---|---|---|---|
 |FR-<br>SRCH-<br>002|Lọc công thức|categoryId={guid}<br>difficulty={Easy\|Medium\|Hard}<br>maxCookTime={minutes}<br>minServings={n}|Lọc kết quả theo một hoặc<br>nhiều tiêu chí. Các filter kết<br>hợp bằng AND logic.|
-|FR-<br>SRCH-<br>003|Sắp xếp kết quả|sort={field} VD: sort=createdAt<br>(ASC)     sort=-createdAt<br>(DESC)     sort=title, sort=-<br>cookTime|Tiền tố "-" = descending.<br>Mặc định: sort=-createdAt<br>(mới nhất trước).|
+|FR-<br>SRCH-<br>003|Sắp xếp kết quả|sort={field}, ví dụ `sort=title`, `sort=-createdAt`, `sort=-cookTimeMinutes`|Tiền tố "-" = descending. Mặc định: `sort=-createdAt` (mới nhất trước). Chỉ chấp nhận trường trong whitelist của API.|
 |FR-<br>SRCH-<br>004|Phân trang<br>(Offset-based)|page={n} (default: 1)<br>pageSize={n} (default: 12, max:<br>50)|Offset-based pagination<br>(SKIP/TAKE). Response<br>bao gồm totalCount,<br>totalPages, hasNextPage,<br>hasPreviousPage.|
 
 ## 3.5. Module Quản lý Tệp tin (FR-FILE)
@@ -955,25 +953,25 @@ Module xử lý các tác vụ nền không đồng bộ sử dụng Hangfire. H
 |---|---|---|---|---|---|
 |FR-<br>JOB-<br>001|Welcome<br>Email Job|Fire-and-<br>forget|Sau FR-AUTH-001 thành<br>công<br>(BackgroundJob.Enqueue)|Gửi email HTML<br>chào mừng đến<br>địa chỉ email vừa<br>đăng ký. Email<br>template bao gồm:<br>tên người dùng,<br>link kích hoạt email<br>(nếu cần), link đến<br>ứng dụng.|Tự động retry<br>3 lần với<br>exponential<br>backoff (1<br>phút, 5 phút,<br>30 phút). Sau 3<br>lần fail →<br>chuyển sang<br>Failed state,<br>log error.|
 |FR-<br>JOB-<br>002|Image Resize<br>/ Thumbnail<br>Job|Fire-and-<br>forget|Sau FR-RCP-008 upload<br>ảnh thành công|Tạo thumbnail<br>(300x300px) và<br>medium image<br>(800x600px) từ<br>ảnh gốc. Lưu cả 3<br>phiên bản lên<br>MinIO. Cập nhật<br>URLs vào<br>database.|Retry 3 lần.<br>Nếu fail: ảnh<br>gốc vẫn hiển<br>thị, chỉ thiếu<br>thumbnail.|
-|FR-<br>JOB-<br>003|Sitemap<br>Generation<br>Job|Recurring|Hàng ngày lúc 02:00 AM<br>UTC (cron: "0 2 * * *")|Tạo file<br>sitemap.xml chứa<br>URL tất cả<br>Published recipes,<br>categories và<br>pages tĩnh. Upload<br>sitemap.xml lên<br>MinIO hoặc lưu<br>vào wwwroot. Gửi<br>thông báo đến<br>Google Search<br>Console (ping).|Retry 2 lần nếu<br>fail. Log kết<br>quả (số URL<br>trong sitemap)<br>qua Serilog.|
+|FR-<br>JOB-<br>003|Sitemap<br>Generation|On request / ISR|Next.js revalidate 3600 giây|Sinh sitemap XML động từ Published recipes, category pages và trang tĩnh; xuất lastmod, changefreq, priority. Robots khai báo sitemap URL. Sitemap lấy dữ liệu qua Backend API; Hangfire không tạo sitemap và không ping Google.|Dùng public site URL từ cấu hình môi trường. Dữ liệu API được cache tối đa 1 giờ khi nguồn tạm thời lỗi.|
 
 <!-- PDF trang 38 -->
 
 ## 3.7. Module Quan sát Hệ thống (FR-OBS)
 
-Module cung cấp khả năng quan sát (Observability) toàn diện theo ba trụ cột: Logging (Serilog), Metrics (OpenTelemetry), và Distributed Tracing (OpenTelemetry). Đây là yêu cầu bắt buộc cho production deployment.
+Phạm vi NFR Base gồm structured logging với Serilog, Correlation ID và health check process/database. OpenTelemetry traces, metrics và exporters thuộc định hướng mở rộng; không bắt buộc cho bản demo.
 
 |**Mã FR**|**Tên**|**Mô tả**|**Kỹ thuật / Công cụ**|
 |---|---|---|---|
-|FR-<br>OBS-<br>001|Health Check<br>Endpoints|Hệ thống cung cấp 3 endpoint<br>health check với mục đích khác<br>nhau:<br>• GET /health – tổng hợp<br>tất cả components (database,<br>Redis, MinIO).<br>• GET<br>/health/live – Liveness probe<br>(chỉ kiểm tra process còn<br>sống).<br>• GET /health/ready –<br>Readiness probe (kiểm tra kết<br>nối database và Redis).|IHealthCheck,<br>AspNetCore.HealthChecks.NpgSql,<br>AspNetCore.HealthChecks.Redis,<br>AspNetCore.HealthChecks.Minio.<br>Liveness chỉ trả healthy. Readiness<br>fail khi DB/Redis down →<br>Kubernetes/Nginx ngừng route<br>traffic.|
-|FR-<br>OBS-<br>002|Structured<br>Logging|Mọi HTTP request được log<br>với: CorrelationId (X-<br>Correlation-ID header), HTTP<br>method/path/status, elapsed<br>time (ms), UserId (khi đã xác<br>thực). MediatR Pipeline<br>Behavior (LoggingBehavior) log<br>tất cả Commands/Queries vào.<br>Performance alert khi request ><br>500ms.|Serilog + CorrelationIdMiddleware.<br>Sinks: Console (structured JSON),<br>File (rolling daily), Seq<br>(development). Log levels: Debug<br>(development), Information<br>(production), Warning/Error (luôn<br>luôn).|
-|FR-<br>OBS-<br>003|Distributed<br>Tracing &<br>Metrics|OpenTelemetry instrumentation<br>cho: HTTP request traces<br>(ActivitySource), EF Core<br>database operation traces,<br>custom business metrics<br>(recipe created/published<br>count). Traces được export đến<br>Seq (development) hoặc<br>Jaeger/Grafana Tempo<br>(production).|OpenTelemetry .NET SDK, OTLP<br>exporter. Activity.TraceId được<br>include trong structured log (log<br>correlation với trace). Metrics:<br>request count, duration histogram,<br>error rate.|
+|FR-<br>OBS-<br>001|Health Check<br>Endpoints|`GET /health` tổng hợp trạng thái các health check đã cấu hình; `/health/live` chỉ xác nhận process đang chạy; `/health/ready` kiểm tra PostgreSQL. Redis và MinIO health probes, orchestration tự động và alerting thuộc NFR mở rộng.|ASP.NET Core Health Checks. Liveness không phụ thuộc DB/Redis; readiness trả 503 khi database không sẵn sàng.|
+|FR-<br>OBS-<br>002|Structured<br>Logging|HTTP request log có CorrelationId (`X-Correlation-ID`), method, path, status, elapsed time và UserId nếu có xác thực. Không ghi log mật khẩu, token hoặc request body nhạy cảm. LoggingBehavior ghi loại request và thời lượng; cảnh báo request vượt 500 ms.|Serilog, middleware CorrelationId và request logging; Console structured output, Seq khi được cấu hình.|
+|FR-<br>OBS-<br>003|Tracing &<br>Metrics (Mở rộng)|Có thể bổ sung HTTP/EF traces, business metrics, OTLP exporter và dashboard sau khi hoàn thành NFR Base.|Định hướng mở rộng: OpenTelemetry SDK, Jaeger hoặc Grafana Tempo. Không phải điều kiện nghiệm thu bản demo hiện tại.|
 
 <!-- PDF trang 39 -->
 
 # 4. Yêu cầu Phi Chức năng (NFR)
 
-Phần này mô tả các thuộc tính chất lượng hệ thống theo mô hình ISO/IEC 25010 (FURPS+). Mỗi yêu cầu phi chức năng được gán mã định danh, mức ưu tiên và tiêu chí đo lường định lượng cụ thể. Các NFR này ràng buộc thiết kế kiến trúc và lựa chọn công nghệ toàn bộ hệ thống.
+Phần này phân biệt NFR Base cần cho bản demo với NFR mở rộng dùng định hướng sau đồ án. Chỉ tiêu Base được đo trong môi trường demo và phải ghi cấu hình máy, dữ liệu, lệnh đo và kết quả; không suy diễn thành cam kết SLA production. OpenTelemetry, 100 VU, coverage 80%, auto-scaling, monitoring liên tục và các kiểm thử chuyên sâu được xem là mở rộng trừ khi một mục Base nêu rõ.
 
 |**Mã NFR**|**Danh mục**|**Số yêu**<br>**cầu**|**Ưu tiên**|
 |---|---|---|---|
@@ -987,13 +985,13 @@ Phần này mô tả các thuộc tính chất lượng hệ thống theo mô h�
 
 ## 4.1. Hiệu năng (NFR-PERF)
 
-Toàn bộ các chỉ số hiệu năng được đo trong môi trường production với tải thực tế. Các ngưỡng dưới đây áp dụng cho trường hợp cache warm (Redis hit rate ≥ 80%).
+Các chỉ số NFR Base được đo trên máy demo với cấu hình được ghi cùng kết quả; chúng là tiêu chí nghiệm thu dự án, không đại diện cam kết production. Mục tiêu API dùng cache warm khi endpoint có cache.
 
 |Mã NFR|Yêu cầu chi tiết|
 |---|---|
-|**NFR-PERF-001**<br>**Response Time API**|Thời gian phản hồi API:<br>• p50 ≤ 150ms — cho tất cả GET<br>endpoints với dữ liệu cache.<br>• p95 ≤ 500ms — cho tất cả API<br>endpoints (kể cả write operations).<br>• p99 ≤ 1000ms — không<br>vượt quá 1 giây trong mọi trường hợp. Đo bằng:<br>OpenTelemetry + Grafana / k6 load test.|
-|**NFR-PERF-002**<br>**Throughput**|Hệ thống xử lý đồng thời ≥ 100 concurrent users mà không<br>degradation:<br>• Trên phần cứng: 2 vCPU, 4GB RAM (single<br>instance).<br>• Horizontal scaling: thêm instance tăng tuyến tính.<br>Đo bằng: k6 smoke test → load test → stress test.|
-|**NFR-PERF-003 Cache**<br>**Effectiveness**|Redis Cache hit rate ≥ 80% trong điều kiện steady-state. Các<br>đối tượng cache:<br>• Category list: TTL = 30 phút (ít thay đổi). •<br>Recipe detail: TTL = 5 phút (cache-aside pattern).<br>• Search<br>results: TTL = 1 phút. Cache invalidation: Event-driven — xóa<br>cache khi Create/Update/Delete.|
+|**NFR-PERF-001**<br>**Response Time API**|NFR Base: GET endpoint cached p50 ≤ 150 ms; API p95 ≤ 500 ms dưới k6 50 VU trong 5 phút trên máy demo. Ghi rõ endpoint, trạng thái cache và môi trường khi đo. Không đặt p99 cứng cho mọi loại request.|
+|**NFR-PERF-002**<br>**Throughput**|NFR Base: chạy k6 50 VU trong 5 phút cho GET danh sách, chi tiết và tìm kiếm; ghi throughput, p95, lỗi và cấu hình máy. Ngưỡng 100 VU và scale tuyến tính thuộc NFR mở rộng, không phải điều kiện nghiệm thu cơ bản.|
+|**NFR-PERF-003 Cache**<br>**Effectiveness**|Base: Output Cache policy cho category list (30 phút), recipes (5 phút), search (1 phút), chỉ GET công khai; mutation invalidate tag tương ứng. Hit-rate ≥ 80% là mục tiêu đo khi có traffic ổn định, không phải điều kiện build. Request có Authorization không được cache.|
 |**NFR-PERF-004**<br>**Database Query**|Tất cả queries đến PostgreSQL:<br>• Không có N+1 query<br>problem — bắt buộc dùng .Include()/.ThenInclude() và<br>projection.<br>• Index: đảm bảo mọi WHERE/ORDER BY column<br>đều có B-tree index tương ứng.<br>• Slow query log: cảnh báo khi<br>query > 100ms (Serilog performance behavior).<br>• EXPLAIN<br>ANALYZE: phải pass review trước khi merge.|
 |**NFR-PERF-005**<br>**Frontend**<br>**Performance (Core**<br>**Web Vitals)**|Next.js frontend đạt chuẩn Google Core Web Vitals (đo bằng Lighthouse CI):<br>• LCP (Largest Contentful Paint) ≤ 2.5s.<br>• CLS (Cumulative Layout Shift) ≤ 0.1.<br>• INP (Interaction to Next<br>Paint) ≤ 200ms.<br>• First Load JS Bundle ≤ 200KB (gzipped). Kỹ<br>thuật: ISR (Incremental Static Regeneration), Image<br>Optimization (next/image), Code Splitting.|
 
@@ -1030,8 +1028,8 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 
 |Mã NFR|Yêu cầu chi tiết|
 |---|---|
-|**NFR-REL-001 Uptime**<br>**SLA**|Hệ thống có uptime ≥ 99.5% (≈ 3.65 giờ downtime/năm). •<br>Maintenance window: công bố trước 48 giờ qua banner thông<br>báo.<br>• Health check: /health/ready probe mỗi 10 giây<br>(Kubernetes readiness probe).<br>• Monitoring: Uptime Robot /<br>Better Uptime gửi alert khi down > 1 phút.|
-|**NFR-REL-002 Error**<br>**Handling & Resilience**|Hệ thống xử lý lỗi gracefully, không crash toàn bộ:<br>• Global<br>Exception Handler Middleware: bắt tất cả unhandled<br>exceptions → trả 500 Problem Details + log.<br>• Database<br>connection pool: tự reconnect, timeout 30s.<br>• Redis failover:<br>nếu Redis down → fallback database (không cache), không<br>throw exception.<br>• Hangfire retry: mỗi job tối đa 3 retry với<br>exponential backoff.<br>• Circuit Breaker: (tùy chọn nâng cao)<br>Polly cho external HTTP calls.|
+|**NFR-REL-001 Uptime**<br>**SLA**|Mục tiêu uptime tham chiếu ≥ 99,5%, tương đương tối đa khoảng 43,8 giờ downtime/năm (8760 × 0,5%). Trong phạm vi đồ án, ghi nhận khả năng khởi động và health check; monitoring liên tục và SLA production thuộc NFR mở rộng. `/health/live` kiểm tra process; `/health/ready` kiểm tra database.|
+|**NFR-REL-002 Error**<br>**Handling & Resilience**|NFR Base: unhandled exceptions trả Problem Details và được log; ứng dụng không để lộ stack trace. Nếu Redis Output Cache không cấu hình, dùng ASP.NET Core mặc định trong process. Redis failover, Hangfire retry tùy chỉnh và circuit breaker là mở rộng cần xác minh riêng.|
 |**NFR-REL-003 Data**<br>**Durability**|Dữ liệu không bị mất trong trường hợp restart hoặc crash: •<br>PostgreSQL WAL (Write-Ahead Logging): đảm bảo ACID. •<br>Backup: pg_dump tự động hàng ngày lúc 03:00 AM, lưu 30<br>ngày.<br>• MinIO: dữ liệu file trên volume persistent (không<br>ephemeral container storage).<br>• Refresh tokens: lưu DB<br>(không Redis) để survive restart.<br>• Soft delete: Recipe được<br>đánh dấu IsDeleted thay vì xóa vật lý (có thể khôi phục).|
 
 ## 4.5. Khả năng Bảo trì (NFR-MAINT)
@@ -1039,7 +1037,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |Mã NFR|Yêu cầu chi tiết|
 |---|---|
 |**NFR-MAINT-001 Code**<br>**Quality**|Toàn bộ code phải pass static analysis trước khi merge: •<br>.NET: SonarAnalyzer, StyleCop, EditorConfig (indent, naming<br>conventions).<br>• TypeScript/React: ESLint (Airbnb ruleset),<br>Prettier.<br>• Không có compiler warnings trong build CI.<br>• Code<br>review: ít nhất 1 reviewer phê duyệt Pull Request.|
-|**NFR-MAINT-002 Test**<br>**Coverage**|Độ phủ test tối thiểu:<br>• Unit tests: ≥ 80% line coverage<br>(Application layer commands, queries, validators).<br>• Integration<br>tests: tất cả API endpoints có ít nhất 1 happy path + 1 error<br>case.<br>• E2E tests: 5 critical user flows (register, login, create<br>recipe, publish, search). Tool: xUnit (backend), Jest + Testing<br>Library (frontend), Playwright (E2E).|
+|**NFR-MAINT-002 Test**<br>**Coverage**|Base: build backend/frontend và chạy các E2E đã có cho tìm kiếm, sitemap, robots trên môi trường demo. Mở rộng: coverage unit ≥ 80%, integration coverage mọi endpoint và 5 E2E flows (đăng ký, đăng nhập, tạo, publish, tìm kiếm); đo và báo cáo riêng khi triển khai. Công cụ: xUnit và Playwright.|
 |**NFR-MAINT-003**<br>**Documentation**|Tài liệu kỹ thuật bắt buộc:<br>• README.md: hướng dẫn setup<br>dev environment (Docker Compose) trong < 5 phút.<br>• API<br>documentation: tự động sinh từ XML comments +<br>Scalar/Swagger UI tại /scalar.<br>• Architecture Decision Records<br>(ADR): ghi lại mọi quyết định kiến trúc quan trọng. •<br>CHANGELOG.md: cập nhật mỗi release (theo Keep a<br>Changelog + SemVer).|
 |**NFR-MAINT-004**<br>**Clean Architecture**<br>**Compliance**|Tuân thủ nghiêm ngặt dependency rules của Clean<br>Architecture:<br>• Domain layer: KHÔNG dependency vào bất kỳ<br>layer nào khác. Không có nuget packages ngoài<br>FluentValidation.<br>• Application layer: chỉ depend vào Domain.<br>KHÔNG reference Infrastructure.<br>• Infrastructure layer: depend<br>vào Application (implements interfaces).<br>• Vi phạm: được phát<br>hiện qua ArchUnit.NET tests hoặc custom Architecture test project.<br>• CQRS: Commands thay đổi state, Queries đọc data — không trộn lẫn.|
 
@@ -1059,7 +1057,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |---|---|
 |**NFR-SEO-001**<br>**Structured Data**|Mỗi trang công thức nấu ăn phải có JSON-LD Schema.org<br>Recipe markup:<br>• @type: "Recipe"<br>• Thuộc tính: name,<br>description, image, author, datePublished, prepTime,<br>cookTime, totalTime, recipeYield, recipeIngredient[],<br>recipeInstructions[], nutrition.<br>• Validate: Google Rich Results<br>Test — phải pass 100%.<br>• Kết quả: Rich Snippets trên Google<br>Search (star rating, time, ingredients).|
 |**NFR-SEO-002 Meta**<br>**Tags & Open Graph**|Mỗi trang phải có đầy đủ:<br>• <title>: "{Recipe Name} \| Culinary<br>Blog" (≤ 60 ký tự).<br>• <meta name="description">: mô tả 150–<br>160 ký tự.<br>• Open Graph: og:title, og:description, og:image<br>(1200×630px), og:url, og:type.<br>• Twitter Card:<br>summary_large_image.<br>• Canonical URL: tránh duplicate<br>content (slug-based URL).<br>• Robots: index, follow (published) \|<br>noindex (draft/archived).|
-|**NFR-SEO-003**<br>**Sitemap & Robots**|Sitemap XML tự động:<br>• Sinh bởi FR-JOB-003 (Hangfire<br>Recurring Job, hàng ngày 02:00 AM UTC).<br>• Bao gồm: tất cả<br>Published recipes + category pages + trang tĩnh.<br>• Format:<br>sitemap.xml chuẩn, có <loc>, <lastmod>, <changefreq>,<br><priority>.<br>• Robots.txt: cho phép tất cả crawlers, khai báo<br>Sitemap URL.<br>• Ping Google Search Console sau khi update<br>sitemap.|
+|**NFR-SEO-003**<br>**Sitemap & Robots**|Next.js `app/sitemap.ts` sinh sitemap động với ISR 1 giờ từ Published recipes, category và trang tĩnh; mỗi URL có lastmod, changefreq, priority. `app/robots.ts` cho phép crawler và khai báo sitemap URL. Public site URL lấy từ cấu hình môi trường. Hangfire chỉ phụ trách tác vụ dọn dẹp; không gọi Google sitemap ping (endpoint đã ngừng hỗ trợ).|
 |**NFR-SEO-004 URL**<br>**Structure**|URL phải thân thiện SEO:<br>• Recipes: /recipes/{slug} — slug là<br>chữ thường, gạch nối, không dấu.<br>• Categories:<br>/categories/{slug}.<br>• Slug generation: tự động từ title, unique,<br>không thay đổi sau khi publish.<br>• Redirect: Nếu slug thay đổi<br>(draft) → 301 redirect từ slug cũ sang slug mới.<br>• Không dùng<br>query params cho nội dung chính (chỉ dùng cho<br>filter/sort/pagination).|
 
 <!-- PDF trang 44 -->
@@ -1117,9 +1115,9 @@ Backend cung cấp RESTful API theo chuẩn JSON. Toàn bộ endpoints được 
 |MinIO (S3-compatible)|Lưu trữ file ảnh công thức|AWS SDK for .NET (AWSSDK.S3).<br>Endpoint override cho MinIO. Presigned URL cho direct browser upload (optional).|MinIO__Endpoint, MinIO__[…]<br>MinIO__SecretKey,<br>MinIO__BucketName. Doc[…]<br>minio:9000.|
 |Hangfire|Background job processing|Nuget: Hangfire.Core, Hangfire.AspNetCore, Hangfire.PostgreSql. In-process server.<br>Dashboard: /hangfire (Admin only, policy-protected).|Dùng chung ConnectionSt[…]<br>PostgreSQL. HANGFIRE_[…]<br>hangfire.|
 |Serilog + Seq|Structured logging & log aggregation|Serilog.Sinks.Console (JSON), Serilog.Sinks.File, Serilog.Sinks.Seq.<br>HTTP ingest API.|Seq__ServerUrl = http://se[…]<br>(Docker). Production: Elas[…]<br>Monitor.|
-|OpenTelemetry|Distributed tracing & metrics|OpenTelemetry .NET SDK. OTLP exporter.<br>Tracing: HttpClient, EF Core, AspNetCore.|OTEL_EXPORTER_OTLP[…]<br>Development: Seq OTLP.<br>[…] Grafana Tempo / Jaeger.|
+|OpenTelemetry|Distributed tracing & metrics (mở rộng)|Có thể bổ sung OpenTelemetry .NET SDK và OTLP exporter sau NFR Base.|Định hướng: Jaeger hoặc Grafana Tempo.|
 |SMTP / Email|Gửi welcome email (FR-JOB-001)|MailKit (IEmailSender). Kết nối qua SMTP với TLS.|Smtp__Host, Smtp__Port,<br>Smtp__Username, Smtp__[…]<br>Development: Mailhog (Do[…]|
-|Google Search Console|Ping sitemap update|HTTP GET:<br>https://www.google.com/ping?sitemap={url}|Không cần API key. Gọi tr[…]<br>003.|
+|Google Search Console|Quản trị/kiểm tra sitemap|Đăng ký sitemap qua Search Console UI|Không gọi Google sitemap ping endpoint; sitemap được khai báo trong robots.txt.|
 
 > **Ghi chú chuyển đổi:** trong PDF gốc, bảng này bị tràn lề phải nên một phần chữ ở cuối dòng đã bị cắt mất (không thể khôi phục từ PDF). Vị trí bị cắt được đánh dấu `[…]`.
 
@@ -1135,7 +1133,7 @@ Hệ thống là web application, không giao tiếp trực tiếp với phần 
 |RAM|8 GB (chạy Docker<br>Compose đầy đủ: API + PG<br>+ Redis + MinIO + Seq)|4 GB (API + dependencies riêng lẻ)|
 |Storage|20 GB SSD (cho Docker<br>images + database data +<br>MinIO volumes)|50 GB SSD (production data<br>growth)|
 |Network|Kết nối internet (npm/nuget<br>packages, Google OAuth)|Bandwidth ≥ 1 Gbps, IP tĩnh|
-|Browser Client|Chrome 112+, Firefox<br>113+, Safari 16+, Edge<br>112+ (ES2020+)|Tương tự — không hỗ trợ IE11|
+|Browser Client|Chrome/Edge 111+, Firefox 128+, Safari 16.4+|Tương tự — không hỗ trợ Internet Explorer|
 
 <!-- PDF trang 48 -->
 <!-- PDF trang 49 -->
@@ -1149,13 +1147,13 @@ Chương này mô tả tổng quan kiến trúc phần mềm của hệ thống 
 |**Tầng**|**Technology**|**Vai trò**|**Giao tiếp với**|
 |---|---|---|---|
 |Client<br>(Browser/Mobile)|Browser<br>(Chrome/Firefox/Safari)|Người dùng tương tác<br>qua giao diện web|Next.js App|
-|Frontend|Next.js 14+ App<br>Router, TypeScript,<br>Tailwind CSS, Auth.js<br>v5, TanStack Query,<br>React Hook Form +<br>Zod|Rendering UI, route<br>management, client-side<br>state. SSR/ISR cho SEO.|Backend<br>REST API|
+|Frontend|Next.js 16 App<br>Router, TypeScript,<br>Tailwind CSS 4, Auth.js<br>v5, TanStack Query,<br>React Hook Form +<br>Zod|Rendering UI, route<br>management, client-side<br>state. SSR/ISR cho SEO.|Backend<br>REST API|
 |Nginx Reverse<br>Proxy|Nginx Alpine (Docker)|SSL termination, load<br>balancing, static file<br>caching, rate limiting<br>basic.|Frontend<br>:3000,<br>Backend API<br>:5000|
 |Backend API|ASP.NET Core .NET<br>10 Minimal API|Business logic,<br>authentication, data<br>access, background jobs.|PostgreSQL,<br>Redis, MinIO,<br>Email|
 |Cache Layer|Redis 7|Distributed cache cho<br>recipe/category/search<br>results. Rate limiting<br>counters.|Backend API|
 |Object Storage|MinIO (S3-compatible)|Lưu file ảnh: original,<br>medium (800×600),<br>thumbnail (300×300).|Backend API<br>(via<br>AWSSDK.S3)|
-|Database|PostgreSQL 16|Persistent relational data<br>storage. Full-text search<br>via tsvector.|Backend API<br>(via EF Core)|
-|Observability|Serilog + Seq,<br>OpenTelemetry +<br>Grafana/Jaeger|Logging, metrics,<br>distributed tracing.|Backend API|
+|Database|PostgreSQL 16|Persistent relational data<br>storage. Search via `unaccent`<br>and `pg_trgm`.|Backend API<br>(via EF Core)|
+|Observability|Serilog + Console,<br>Seq when configured|Structured request and<br>application logs with<br>Correlation ID.|Backend API|
 
 ## 6.2. Kiến trúc Backend – Clean Architecture
 
@@ -1180,7 +1178,7 @@ CQRS (Command Query Responsibility Segregation) tách biệt read và write mode
 |---|---|---|---|
 |1|LoggingBehavior|Log request type,<br>parameters, elapsed<br>time. Cảnh báo nếu ><br>500ms.|Tất cả Commands và<br>Queries|
 |2|ValidationBehavior|Chạy FluentValidation<br>validators đã đăng ký.<br>Throw<br>ValidationException nếu<br>có lỗi.|Tất cả Commands và<br>Queries có Validator|
-|3|CachingBehavior|Kiểm tra Redis cache<br>trước khi xử lý.<br>Implements ICacheable<br>interface trên Query.|Queries implements<br>ICacheable (GET<br>endpoints)|
+|3|ASP.NET Core Output Cache|Cache response của GET công khai theo Redis provider và policy/tag; bỏ qua request có Authorization. Không có MediatR CachingBehavior.|Public category, recipe list/detail/search endpoints có gắn policy; thời hạn theo ADR-007.|
 |4|Handler<br>(IRequestHandler)|Thực thi business logic:<br>gọi repositories, raise<br>domain events, tạo<br>response DTO.|Tất cả (bắt buộc)|
 |5|CacheInvalidationBehavior|Xóa cache liên quan sau<br>khi Command thành<br>công. Implements<br>ICacheInvalidator.|Commands thay đổi<br>data<br>(Create/Update/Delete)|
 
@@ -1440,7 +1438,7 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 |---|---|---|---|---|
 |GET|/health|Tổng hợp health<br>tất cả<br>dependencies<br>(DB, Redis,<br>MinIO)|Không|200: Healthy \| 503: Unhealthy {<br>"status":"Healthy",<br>"entries":{"database":{"status":"Healthy"},...}<br>}|
 |GET|/health/live|Liveness probe<br>— chỉ kiểm tra<br>process còn<br>sống|Không|200: Healthy (luôn luôn, trừ khi process<br>crashed)|
-|GET|/health/ready|Readiness probe<br>— kiểm tra DB<br>và Redis sẵn<br>sàng|Không|200: Healthy (DB + Redis up) 503:<br>Unhealthy (không nhận traffic)|
+|GET|/health/ready|Readiness probe — xác minh kết nối PostgreSQL|Không|200: Healthy (DB up); 503: Unhealthy|
 
 <!-- PDF trang 65 -->
 <!-- PDF trang 66 -->
