@@ -34,10 +34,13 @@ async function getPublishedRecipes(): Promise<PublishedRecipe[]> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const generatedAt = new Date();
-  const [recipes, categories] = await Promise.all([
+  const [recipeResult, categoryResult] = await Promise.allSettled([
     getPublishedRecipes(),
     getCategories({ accessToken: null, next: { revalidate } }),
   ]);
+  // Keep the sitemap buildable when the API is temporarily unavailable; ISR retries later.
+  const recipes = recipeResult.status === "fulfilled" ? recipeResult.value : [];
+  const categories = categoryResult.status === "fulfilled" ? categoryResult.value : [];
 
   const staticPages: MetadataRoute.Sitemap = [
     { url: siteUrl, lastModified: generatedAt, changeFrequency: "weekly", priority: 1 },
