@@ -64,8 +64,8 @@ export function RecipeFilters({
               <option value="createdAt">Cũ nhất</option>
               <option value="title">Tên A–Z</option>
               <option value="-title">Tên Z–A</option>
-              <option value="cookTime">Nấu nhanh trước</option>
-              <option value="-cookTime">Nấu lâu trước</option>
+              <option value="cookTimeMinutes">Nấu nhanh trước</option>
+              <option value="-cookTimeMinutes">Nấu lâu trước</option>
             </select>
           </label>
         ) : (
