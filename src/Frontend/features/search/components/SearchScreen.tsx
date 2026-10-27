@@ -63,7 +63,7 @@ export async function SearchScreen({ searchParams }: { searchParams: SearchParam
     <div className={`${styles.screen} space-y-8`}>
       <header className="border-b border-black/10 pb-6">
         <p className="text-xs font-bold uppercase text-[var(--color-tomato)]">Tìm theo tên món</p>
-        <h1 className="mt-2 font-serif text-4xl font-semibold">Tìm công thức</h1>
+        <h1 className="mt-2 font-sans text-4xl font-semibold">Tìm công thức</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">Tìm kiếm tiếng Việt có dấu hoặc không dấu.</p>
       </header>
       <RecipeSearchForm defaultValue={q} />
@@ -92,7 +92,7 @@ export async function SearchScreen({ searchParams }: { searchParams: SearchParam
               </>
             ) : (
               <section className="border-y border-black/10 py-8" aria-live="polite">
-                <h2 className="font-serif text-2xl font-semibold">Chưa tìm thấy công thức phù hợp</h2>
+                <h2 className="font-sans text-2xl font-semibold">Chưa tìm thấy công thức phù hợp</h2>
                 <p className="mt-2 text-sm text-[var(--muted)]">Thử một món quen thuộc:</p>
                 <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
                   {suggestions.map((suggestion) => (
@@ -109,7 +109,7 @@ export async function SearchScreen({ searchParams }: { searchParams: SearchParam
         </>
       ) : (
         <section className="border-y border-black/10 py-8">
-          <h2 className="font-serif text-2xl font-semibold">Bắt đầu với một món ăn</h2>
+          <h2 className="font-sans text-2xl font-semibold">Bắt đầu với một món ăn</h2>
           <p className="mt-2 text-sm text-[var(--muted)]">Nhập ít nhất 2 ký tự; có thể dùng tiếng Việt không dấu.</p>
           <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
             {suggestions.map((suggestion) => (
