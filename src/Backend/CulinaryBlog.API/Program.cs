@@ -10,6 +10,8 @@ using CulinaryBlog.API.Observability;
 using Scalar.AspNetCore;
 using Serilog;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using CulinaryBlog.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +25,8 @@ builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddApiProblemDetails();
 builder.Services.AddApiOpenApi();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
 builder.Services.AddEndpointModules();
 builder.Services.AddAuthApi(builder.Configuration);
 
@@ -70,8 +73,11 @@ else
 app.UseAuthApi();
 
 app.MapHealthChecks("/health");
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+});
 app.MapEndpointModules();
 
 app.Run();
@@ -82,5 +88,18 @@ internal sealed class ApiOutputCacheInvalidator(IOutputCacheStore outputCacheSto
     {
         foreach (var tag in tags.Distinct(StringComparer.Ordinal))
             await outputCacheStore.EvictByTagAsync(tag, cancellationToken);
+    }
+}
+
+internal sealed class DatabaseHealthCheck(AppDbContext dbContext) : Microsoft.Extensions.Diagnostics.HealthChecks.IHealthCheck
+{
+    public async Task<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult> CheckHealthAsync(
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckContext context,
+        CancellationToken cancellationToken = default)
+    {
+        var canConnect = await dbContext.Database.CanConnectAsync(cancellationToken);
+        return canConnect
+            ? Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Database is available.")
+            : Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy("Database is unavailable.");
     }
 }
