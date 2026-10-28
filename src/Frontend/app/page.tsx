@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { HomeScreen } from "@/features/search/components/HomeScreen";
 
 export const metadata: Metadata = {
