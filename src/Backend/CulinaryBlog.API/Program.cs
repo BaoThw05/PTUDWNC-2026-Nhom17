@@ -3,6 +3,7 @@ using CulinaryBlog.API.Endpoints;
 using CulinaryBlog.API.ErrorHandling;
 using CulinaryBlog.API.OpenApi;
 using CulinaryBlog.Application;
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Infrastructure;
 using Hangfire;
 using CulinaryBlog.API.Observability;
@@ -26,6 +27,12 @@ builder.Services.AddEndpointModules();
 builder.Services.AddAuthApi(builder.Configuration);
 
 var app = builder.Build();
+
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.Services.GetRequiredService<IBackgroundJobService>().AddOrUpdateRecurring<IRecipeImageOrphanCleanupJob>(
+        "recipe-image-orphan-cleanup", job => job.ExecuteAsync(), "0 3 * * *");
+}
 
 // Ghi log request ở ngoài cùng để log đúng status sau khi exception đã được đổi thành Problem Details.
 app.UseMiddleware<CorrelationIdMiddleware>();

@@ -205,6 +205,7 @@ public sealed class RecipeStepsAndIngredientsTests
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
         public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
+        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImagesIncludingDeleted => RecipeImages;
         public IQueryable<Recipe> RecipesIncludingDeleted => _recipes.AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class

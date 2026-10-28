@@ -96,6 +96,7 @@ public sealed class RecipeImageResizeJobTests
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
         public IQueryable<RecipeImage> RecipeImages => new[] { image }.AsQueryable();
+        public IQueryable<RecipeImage> RecipeImagesIncludingDeleted => RecipeImages;
         public void Add<TEntity>(TEntity entity) where TEntity : class { }
         public void Remove<TEntity>(TEntity entity) where TEntity : class { }
         public void SetOriginalVersion<TEntity>(TEntity entity, uint version) where TEntity : BaseEntity { }
@@ -120,6 +121,7 @@ public sealed class RecipeImageResizeJobTests
             Task.FromResult<Stream>(new MemoryStream(Files[key], writable: false));
         public Task DeleteAsync(string key, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<StoredFile>>([]);
         public string GetPublicUrl(string key) => $"/media/{key}";
     }
 }

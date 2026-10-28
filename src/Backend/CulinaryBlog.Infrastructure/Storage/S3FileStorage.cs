@@ -72,5 +72,31 @@ public sealed class S3FileStorage : IFileStorage
         } while (continuationToken is not null);
     }
 
+    public async Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        var files = new List<StoredFile>();
+        var normalizedPrefix = StorageKey.NormalizePrefix(prefix) + "/";
+        string? continuationToken = null;
+        do
+        {
+            var page = await _client.ListObjectsV2Async(new ListObjectsV2Request
+            {
+                BucketName = _options.BucketName,
+                Prefix = normalizedPrefix,
+                ContinuationToken = continuationToken,
+            }, cancellationToken);
+            if (page.S3Objects is not null)
+            {
+                files.AddRange(page.S3Objects.Select(item => new StoredFile(
+                    item.Key,
+                    item.LastModified is DateTime modified
+                        ? new DateTimeOffset(modified.ToUniversalTime())
+                        : DateTimeOffset.MaxValue)));
+            }
+            continuationToken = page.IsTruncated == true ? page.NextContinuationToken : null;
+        } while (continuationToken is not null);
+        return files;
+    }
+
     public string GetPublicUrl(string key) => StorageKey.PublicUrl(_publicBaseUrl, key);
 }

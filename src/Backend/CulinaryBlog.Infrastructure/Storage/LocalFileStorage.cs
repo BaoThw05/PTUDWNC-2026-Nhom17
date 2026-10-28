@@ -59,6 +59,25 @@ public sealed class LocalFileStorage : IFileStorage
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default)
+    {
+        var directory = GetPath(StorageKey.NormalizePrefix(prefix));
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!Directory.Exists(directory))
+        {
+            return Task.FromResult<IReadOnlyList<StoredFile>>([]);
+        }
+
+        IReadOnlyList<StoredFile> files = Directory.EnumerateFiles(directory, "*", SearchOption.AllDirectories)
+            .Select(path =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var key = Path.GetRelativePath(_rootPath, path).Replace(Path.DirectorySeparatorChar, '/');
+                return new StoredFile(key, new DateTimeOffset(File.GetLastWriteTimeUtc(path), TimeSpan.Zero));
+            }).ToArray();
+        return Task.FromResult(files);
+    }
+
     public string GetPublicUrl(string key) => StorageKey.PublicUrl(_publicBaseUrl, key);
 
     private string GetPath(string key)

@@ -44,6 +44,13 @@ public sealed class MinioStorageTests
         await storage.UploadAsync(new MemoryStream(bytes), original, "image/png");
         await storage.UploadAsync(new MemoryStream(bytes), thumbnail, "image/webp");
         await storage.UploadAsync(new MemoryStream(bytes), sibling, "image/png");
+        var listed = await storage.ListFilesAsync(prefix);
+        Assert.Equal(2, listed.Count);
+        Assert.All(listed, file =>
+        {
+            Assert.StartsWith(prefix + "/", file.Key);
+            Assert.True(file.LastModified <= DateTimeOffset.UtcNow);
+        });
         await using (var read = await storage.OpenReadAsync(original))
         {
             using var copy = new MemoryStream();
@@ -58,6 +65,7 @@ public sealed class MinioStorageTests
             Prefix = prefix + "/",
         });
         Assert.Empty(remaining.S3Objects ?? []);
+        Assert.Empty(await storage.ListFilesAsync(prefix));
         await using var untouched = await storage.OpenReadAsync(sibling);
         Assert.Equal(bytes.Length, untouched.Length);
     }
