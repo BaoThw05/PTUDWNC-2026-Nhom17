@@ -5,6 +5,8 @@ RUN npm ci
 COPY . .
 ARG API_INTERNAL_URL=http://api:8080
 ENV API_INTERNAL_URL=$API_INTERNAL_URL
+ARG MEDIA_INTERNAL_URL=http://minio:9000/culinary-blog
+ENV MEDIA_INTERNAL_URL=$MEDIA_INTERNAL_URL
 RUN npm run build
 
 FROM node:22-alpine AS final

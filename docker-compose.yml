@@ -77,10 +77,12 @@ services:
       dockerfile: Dockerfile
       args:
         API_INTERNAL_URL: http://api:8080
+        MEDIA_INTERNAL_URL: http://minio:9000/${MINIO_BUCKET:?copy .env.example to .env first}
     container_name: culinary_web
     restart: unless-stopped
     environment:
       API_INTERNAL_URL: http://api:8080
+      MEDIA_INTERNAL_URL: http://minio:9000/${MINIO_BUCKET:?copy .env.example to .env first}
       AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env first}
       AUTH_URL: ${AUTH_URL:?set AUTH_URL in .env first}
       AUTH_TRUST_HOST: "true"
