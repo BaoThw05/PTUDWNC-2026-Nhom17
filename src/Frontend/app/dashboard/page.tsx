@@ -1,14 +1,5 @@
-import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
-
-export const metadata: Metadata = { title: "Bảng điều khiển" };
+import { redirect } from "next/navigation";
 
 export default function DashboardPage() {
-  return (
-    <PlaceholderPage
-      title="Bảng điều khiển"
-      owner="TV2"
-      requirements="Tổng quan công thức của tác giả"
-    />
-  );
+  redirect("/dashboard/recipes");
 }

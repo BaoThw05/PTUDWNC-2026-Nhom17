@@ -63,6 +63,7 @@ Mọi lỗi trả về **Problem Details (RFC 9457)** với `Content-Type: appli
 | `RECIPE_INVALID_STATE_TRANSITION` | 422 | Chuyển đổi trạng thái công thức không hợp lệ | Recipes |
 | `STEP_NOT_FOUND` | 404 | Không tìm thấy bước thực hiện (RecipeStep) | Recipes |
 | `INGREDIENT_NOT_FOUND` | 404 | Không tìm thấy nguyên liệu (RecipeIngredient) | Recipes |
+| `RECIPE_INVALID_STEP_ORDER` | 422 | Danh sách ID các bước không hợp lệ (số lượng không khớp hoặc trùng lặp) | Recipes |
 
 ## Categories / RecipeImages / File — TV3
 
