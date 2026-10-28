@@ -123,6 +123,7 @@ public sealed class RecipeTrashTests
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
         public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImagesIncludingDeleted => RecipeImages;
         public IQueryable<Recipe> RecipesIncludingDeleted => _active.Concat(_deleted).AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class { }

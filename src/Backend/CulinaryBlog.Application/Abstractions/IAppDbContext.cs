@@ -11,6 +11,8 @@ public interface IAppDbContext
     IQueryable<RecipeIngredient> RecipeIngredients { get; }
     IQueryable<RecipeImage> RecipeImages { get; }
 
+    IQueryable<RecipeImage> RecipeImagesIncludingDeleted { get; }
+
     // Dùng cho thùng rác (S-03): bỏ qua Global Query Filter để tìm được recipe đã xóa mềm.
     IQueryable<Recipe> RecipesIncludingDeleted { get; }
 

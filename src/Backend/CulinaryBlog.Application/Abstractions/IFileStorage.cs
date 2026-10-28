@@ -11,5 +11,9 @@ public interface IFileStorage
 
     Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default);
+
     string GetPublicUrl(string key);
 }
+
+public sealed record StoredFile(string Key, DateTimeOffset LastModified);

@@ -284,6 +284,7 @@ public sealed class RecipeImageCommandTests
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
         public IQueryable<RecipeImage> RecipeImages => Images.AsQueryable();
+        public IQueryable<RecipeImage> RecipeImagesIncludingDeleted => RecipeImages;
         public void Add<TEntity>(TEntity entity) where TEntity : class
         {
             if (entity is RecipeImage image) Images.Add(image);
@@ -319,6 +320,7 @@ public sealed class RecipeImageCommandTests
             Task.FromResult<Stream>(new MemoryStream());
         public Task DeleteAsync(string key, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task DeleteByPrefixAsync(string prefix, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<StoredFile>>([]);
         public string GetPublicUrl(string key) => $"/media/{key}";
     }
 
