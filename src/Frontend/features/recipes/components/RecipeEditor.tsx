@@ -13,6 +13,7 @@ import {
 } from "../api/client";
 import type { RecipeSummary, UpdateRecipeRequest } from "../types";
 import { ApiError } from "@/lib/api/client";
+import { RecipeImageManager } from "@/features/images/components/RecipeImageManager";
 
 interface RecipeEditorProps {
   recipeId: string;
@@ -610,6 +611,14 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Quản lý Ảnh công thức (TV3 component) */}
+      <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className="mb-4 text-base font-semibold text-zinc-900 dark:text-zinc-100">
+          Hình ảnh công thức
+        </h2>
+        <RecipeImageManager recipeId={recipeId} />
       </div>
     </div>
   );
