@@ -83,22 +83,9 @@ public sealed class GetMyRecipesQueryHandler(IAppDbContext db, ICurrentUser curr
                     FiberGrams = r.Nutrition.FiberGrams,
                     SugarGrams = r.Nutrition.SugarGrams
                 },
-                Steps = r.Steps.OrderBy(s => s.StepNumber).Select(s => new RecipeStepDto
-                {
-                    Id = s.Id,
-                    StepNumber = s.StepNumber,
-                    Title = s.Title,
-                    Description = s.Description,
-                    DurationMinutes = s.DurationMinutes
-                }).ToList(),
-                Ingredients = r.Ingredients.OrderBy(i => i.OrderIndex).Select(i => new RecipeIngredientDto
-                {
-                    Id = i.Id,
-                    Name = i.Name,
-                    Quantity = i.Quantity,
-                    Unit = i.Unit,
-                    OrderIndex = i.OrderIndex
-                }).ToList()
+                // 2.24: Danh sách tóm tắt "Bài của tôi" không cần tải các collection con, tránh N+1 và Cartesian explosion
+                Steps = new List<RecipeStepDto>(),
+                Ingredients = new List<RecipeIngredientDto>()
             })
             .ToList();
 

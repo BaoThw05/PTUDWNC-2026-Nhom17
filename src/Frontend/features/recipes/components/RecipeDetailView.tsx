@@ -1,10 +1,14 @@
 import type { RecipeSummary } from "../types";
+import { RecipePublicGallery } from "./RecipePublicGallery";
 
 export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
   const totalTime = recipe.prepTimeMinutes + recipe.cookTimeMinutes;
 
   return (
     <article className="space-y-10">
+      {/* Ảnh món ăn (Gallery) */}
+      <RecipePublicGallery recipeId={recipe.id} />
+
       {/* Header Info */}
       <header className="space-y-4 border-b border-zinc-200 pb-8 dark:border-zinc-800">
         <h1 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl dark:text-zinc-100">

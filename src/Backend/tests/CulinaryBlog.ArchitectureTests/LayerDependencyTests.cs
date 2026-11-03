@@ -80,6 +80,38 @@ public sealed class LayerDependencyTests
         AssertSuccessful(result);
     }
 
+    [Fact]
+    public void Application_CommandAndQueryHandlers_AreSealed()
+    {
+        var result = Types.InAssembly(ApplicationAssembly)
+            .That()
+            .AreClasses()
+            .And()
+            .HaveNameEndingWith("Handler")
+            .Should()
+            .BeSealed()
+            .GetResult();
+
+        AssertSuccessful(result);
+    }
+
+    [Fact]
+    public void Domain_Entities_InheritFromBaseEntity()
+    {
+        var result = Types.InAssembly(DomainAssembly)
+            .That()
+            .ResideInNamespace("CulinaryBlog.Domain.Entities")
+            .And()
+            .AreClasses()
+            .And()
+            .DoNotHaveName("RecipeNutrition")
+            .Should()
+            .Inherit(typeof(BaseEntity))
+            .GetResult();
+
+        AssertSuccessful(result);
+    }
+
     private static void AssertSuccessful(TestResult result) =>
         Assert.True(
             result.IsSuccessful,
