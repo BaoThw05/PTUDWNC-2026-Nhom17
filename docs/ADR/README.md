@@ -24,8 +24,8 @@ Mỗi quyết định kiến trúc quan trọng được ghi thành một file n
 | — | S-10 · Hợp đồng API chung | TV2 | Chưa viết |
 | — | S-11 · Vòng đời công thức, publish, slug | TV2 | Chưa viết |
 | — | S-13 · Ranh giới Clean Architecture, MediatR 12.5.0 | TV2 | Chưa viết |
-| — | S-07 · Chiến lược cache | TV4 | Chưa viết |
-| — | S-08 · Tìm kiếm tiếng Việt không dấu | TV4 | Chưa viết |
-| — | S-14 · Sitemap và background job | TV4 | Chưa viết |
-| — | S-16 · NFR mức đồ án | TV4 | Chưa viết |
-| — | S-18 · Phiên bản công nghệ | TV4 | Chưa viết |
+| [ADR-007](./ADR-007.md) | S-07 · Chiến lược Output Cache + Redis và tag eviction | TV4 | Đã chốt |
+| [ADR-008](./ADR-008.md) | S-08 · Tìm kiếm tiếng Việt không dấu bằng pg_trgm | TV4 | Đã chốt |
+| [ADR-014](./ADR-014.md) | S-14 · Sitemap Next.js và maintenance jobs | TV4 | Đã chốt |
+| [ADR-016](./ADR-016.md) | S-16 · NFR Base và NFR mở rộng | TV4 | Đã chốt |
+| [ADR-018](./ADR-018.md) | S-18 · Phiên bản framework và trình duyệt hỗ trợ | TV4 | Đã chốt |
