@@ -1,12 +1,14 @@
 using CulinaryBlog.API.Auth;
 using CulinaryBlog.Application.Features.Auth.ChangePassword;
 using CulinaryBlog.Application.Features.Auth.Common;
+using CulinaryBlog.Application.Features.Auth.ForgotPassword;
 using CulinaryBlog.Application.Features.Auth.GetProfile;
 using CulinaryBlog.Application.Features.Auth.GoogleLogin;
 using CulinaryBlog.Application.Features.Auth.Login;
 using CulinaryBlog.Application.Features.Auth.Logout;
 using CulinaryBlog.Application.Features.Auth.Refresh;
 using CulinaryBlog.Application.Features.Auth.Register;
+using CulinaryBlog.Application.Features.Auth.ResetPassword;
 using CulinaryBlog.Application.Features.Auth.UpdateProfile;
 using MediatR;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -70,6 +72,16 @@ internal sealed class AuthEndpoints : IEndpointModule
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
             .ProducesProblem(StatusCodes.Status423Locked);
 
+        auth.MapPost("/forgot-password", ForgotPasswordAsync)
+            .RequireRateLimiting(AuthRateLimitPolicies.Credentials)
+            .WithSummary("Gửi email đặt lại mật khẩu (luôn trả 204)")
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        auth.MapPost("/reset-password", ResetPasswordAsync)
+            .RequireRateLimiting(AuthRateLimitPolicies.Credentials)
+            .WithSummary("Đặt lại mật khẩu bằng token trong email và thu hồi mọi phiên đăng nhập")
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
         auth.MapPatch("/me", UpdateProfileAsync)
             .RequireAuthorization()
             .WithSummary("Đổi tên hiển thị (FR-AUTH-007)")
@@ -117,6 +129,24 @@ internal sealed class AuthEndpoints : IEndpointModule
 
     private static async Task<NoContent> ChangePasswordAsync(
         ChangePasswordCommand command,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> ForgotPasswordAsync(
+        ForgotPasswordCommand command,
+        ISender sender,
+        CancellationToken cancellationToken)
+    {
+        await sender.Send(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> ResetPasswordAsync(
+        ResetPasswordCommand command,
         ISender sender,
         CancellationToken cancellationToken)
     {

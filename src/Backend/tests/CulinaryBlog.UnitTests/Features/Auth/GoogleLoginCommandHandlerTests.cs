@@ -23,6 +23,7 @@ public sealed class GoogleLoginCommandHandlerTests
         Assert.Equal("new", response.User.UserName);
         Assert.Equal(Picture, response.User.AvatarUrl);
         Assert.True(_context.Users.HasLogin(new ExternalLogin(GoogleLoginCommandHandler.ProviderName, "google-sub")));
+        Assert.Single(_context.Jobs.Enqueued);
     }
 
     [Fact]
@@ -35,6 +36,7 @@ public sealed class GoogleLoginCommandHandlerTests
 
         Assert.Equal(existing.Id, response.User.Id);
         Assert.Equal(Picture, response.User.AvatarUrl);
+        Assert.Empty(_context.Jobs.Enqueued);
     }
 
     [Fact]
@@ -61,7 +63,7 @@ public sealed class GoogleLoginCommandHandlerTests
 
     private Task<Application.Features.Auth.Common.AuthResponse> HandleAsync(GoogleIdentity identity)
     {
-        var handler = new GoogleLoginCommandHandler(new StubGoogleValidator(identity), _context.Users, _context.Sessions);
+        var handler = new GoogleLoginCommandHandler(new StubGoogleValidator(identity), _context.Users, _context.Sessions, _context.Jobs);
         return handler.Handle(new GoogleLoginCommand("id-token"), CancellationToken.None);
     }
 
