@@ -50,7 +50,8 @@ public sealed class UpdateRecipeCommandValidator : AbstractValidator<UpdateRecip
 public sealed class UpdateRecipeCommandHandler(
     IAppDbContext db,
     IRecipeAuthorizationHandler authorizationHandler,
-    ICategoryValidator categoryValidator) : IRequestHandler<UpdateRecipeCommand>
+    ICategoryValidator categoryValidator,
+    ICacheInvalidator cacheInvalidator) : IRequestHandler<UpdateRecipeCommand>
 {
     public async Task Handle(UpdateRecipeCommand request, CancellationToken cancellationToken)
     {
@@ -117,5 +118,8 @@ public sealed class UpdateRecipeCommandHandler(
         db.SetOriginalVersion(recipe, request.Version);
 
         await db.SaveChangesAsync(cancellationToken);
+
+        // 2.20 & S-07: Invalidate cache cho recipe và danh sách công khai/danh mục
+        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}", "categories"], cancellationToken);
     }
 }
