@@ -12,6 +12,7 @@ public sealed class RecipeStepsAndIngredientsTests
     private static readonly Guid StrangerId = Guid.NewGuid();
     private readonly TestCurrentUser _currentUser = new();
     private readonly RecipeAuthorizationHandler _authHandler;
+    private readonly FakeCacheInvalidator _cacheInvalidator = new();
 
     public RecipeStepsAndIngredientsTests()
     {
@@ -25,7 +26,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
         var db = new FakeAppDbContext([recipe], [step1]);
-        var handler = new AddRecipeStepCommandHandler(db, _authHandler);
+        var handler = new AddRecipeStepCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var step2Id = await handler.Handle(new AddRecipeStepCommand
         {
@@ -39,6 +40,8 @@ public sealed class RecipeStepsAndIngredientsTests
         var addedStep = db.RecipeSteps.First(s => s.Id == step2Id);
         Assert.Equal(2, addedStep.StepNumber);
         Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -47,7 +50,7 @@ public sealed class RecipeStepsAndIngredientsTests
         _currentUser.UserId = StrangerId;
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var db = new FakeAppDbContext([recipe]);
-        var handler = new AddRecipeStepCommandHandler(db, _authHandler);
+        var handler = new AddRecipeStepCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
             handler.Handle(new AddRecipeStepCommand
@@ -66,7 +69,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var step = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "Cũ" };
         var db = new FakeAppDbContext([recipe], [step]);
-        var handler = new UpdateRecipeStepCommandHandler(db, _authHandler);
+        var handler = new UpdateRecipeStepCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new UpdateRecipeStepCommand
         {
@@ -81,6 +84,8 @@ public sealed class RecipeStepsAndIngredientsTests
         Assert.Equal("Mô tả mới", step.Description);
         Assert.Equal(15, step.DurationMinutes);
         Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -95,7 +100,7 @@ public sealed class RecipeStepsAndIngredientsTests
         };
         var onlyStep = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "Duy nhất" };
         var db = new FakeAppDbContext([recipe], [onlyStep]);
-        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new DeleteRecipeStepCommand(recipe.Id, onlyStep.Id), CancellationToken.None));
@@ -112,7 +117,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
         var step3 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 3, Description = "B3" };
         var db = new FakeAppDbContext([recipe], [step1, step2, step3]);
-        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeStepCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new DeleteRecipeStepCommand(recipe.Id, step2.Id), CancellationToken.None);
 
@@ -122,6 +127,125 @@ public sealed class RecipeStepsAndIngredientsTests
         Assert.Equal(1, remaining[0].StepNumber);
         Assert.Equal(2, remaining[1].StepNumber);
         Assert.Equal(step3.Id, remaining[1].Id);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenAuthorAndValidOrder_UpdatesStepNumbersAndInvalidatesCache()
+    {
+        _currentUser.UserId = AuthorId;
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
+        var step3 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 3, Description = "B3" };
+        var db = new FakeAppDbContext([recipe], [step1, step2, step3]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        // Đổi thứ tự thành 3 -> 1 -> 2
+        await handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [step3.Id, step1.Id, step2.Id]), CancellationToken.None);
+
+        Assert.Equal(1, step3.StepNumber);
+        Assert.Equal(2, step1.StepNumber);
+        Assert.Equal(3, step2.StepNumber);
+        Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenAdmin_UpdatesStepNumbersSuccessfully()
+    {
+        _currentUser.UserId = StrangerId;
+        _currentUser.Role = "Admin";
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
+        var db = new FakeAppDbContext([recipe], [step1, step2]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        await handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [step2.Id, step1.Id]), CancellationToken.None);
+
+        Assert.Equal(1, step2.StepNumber);
+        Assert.Equal(2, step1.StepNumber);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenStranger_ThrowsForbidden()
+    {
+        _currentUser.UserId = StrangerId;
+        _currentUser.Role = null;
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var db = new FakeAppDbContext([recipe], [step1]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        var ex = await Assert.ThrowsAsync<ForbiddenException>(() =>
+            handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [step1.Id]), CancellationToken.None));
+
+        Assert.Equal(RecipeErrorCodes.RecipeForbidden, ex.Code);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenRecipeNotFound_ThrowsNotFound()
+    {
+        _currentUser.UserId = AuthorId;
+        var db = new FakeAppDbContext();
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            handler.Handle(new ReorderRecipeStepsCommand(Guid.NewGuid(), [Guid.NewGuid()]), CancellationToken.None));
+
+        Assert.Equal(RecipeErrorCodes.RecipeNotFound, ex.Code);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenStepCountMismatch_ThrowsValidationException()
+    {
+        _currentUser.UserId = AuthorId;
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
+        var db = new FakeAppDbContext([recipe], [step1, step2]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        // Gửi thiếu 1 bước (chỉ gửi 1 id trong khi có 2 bước)
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [step1.Id]), CancellationToken.None));
+
+        Assert.Equal(RecipeErrorCodes.InvalidStepOrder, ex.Code);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenStepIdNotFoundInRecipe_ThrowsNotFound()
+    {
+        _currentUser.UserId = AuthorId;
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var outsideStepId = Guid.NewGuid();
+        var db = new FakeAppDbContext([recipe], [step1]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() =>
+            handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [outsideStepId]), CancellationToken.None));
+
+        Assert.Equal(RecipeErrorCodes.StepNotFound, ex.Code);
+    }
+
+    [Fact]
+    public async Task ReorderSteps_WhenDuplicateStepIds_ThrowsValidationException()
+    {
+        _currentUser.UserId = AuthorId;
+        var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
+        var step1 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 1, Description = "B1" };
+        var step2 = new RecipeStep { Id = Guid.NewGuid(), RecipeId = recipe.Id, StepNumber = 2, Description = "B2" };
+        var db = new FakeAppDbContext([recipe], [step1, step2]);
+        var handler = new ReorderRecipeStepsCommandHandler(db, _authHandler, _cacheInvalidator);
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new ReorderRecipeStepsCommand(recipe.Id, [step1.Id, step1.Id]), CancellationToken.None));
+
+        Assert.Equal(RecipeErrorCodes.InvalidStepOrder, ex.Code);
     }
 
     [Fact]
@@ -131,7 +255,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var ing1 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Muối", OrderIndex = 0 };
         var db = new FakeAppDbContext([recipe], null, [ing1]);
-        var handler = new AddRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new AddRecipeIngredientCommandHandler(db, _authHandler, _cacheInvalidator);
 
         var ing2Id = await handler.Handle(new AddRecipeIngredientCommand
         {
@@ -145,6 +269,8 @@ public sealed class RecipeStepsAndIngredientsTests
         var added = db.RecipeIngredients.First(i => i.Id == ing2Id);
         Assert.Null(added.Quantity);
         Assert.Equal(1, added.OrderIndex);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -154,7 +280,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var recipe = new Recipe { Id = Guid.NewGuid(), AuthorId = AuthorId.ToString() };
         var ing = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Đường", Quantity = 10, Unit = "g", OrderIndex = 0 };
         var db = new FakeAppDbContext([recipe], null, [ing]);
-        var handler = new UpdateRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new UpdateRecipeIngredientCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new UpdateRecipeIngredientCommand
         {
@@ -168,6 +294,8 @@ public sealed class RecipeStepsAndIngredientsTests
         Assert.Equal("Đường phèn", ing.Name);
         Assert.Equal(20, ing.Quantity);
         Assert.NotNull(recipe.UpdatedAt);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
     }
 
     [Fact]
@@ -179,7 +307,7 @@ public sealed class RecipeStepsAndIngredientsTests
         var ing1 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Hành tím", OrderIndex = 1 };
         var ing2 = new RecipeIngredient { Id = Guid.NewGuid(), RecipeId = recipe.Id, Name = "Tỏi", OrderIndex = 2 };
         var db = new FakeAppDbContext([recipe], null, [ing0, ing1, ing2]);
-        var handler = new DeleteRecipeIngredientCommandHandler(db, _authHandler);
+        var handler = new DeleteRecipeIngredientCommandHandler(db, _authHandler, _cacheInvalidator);
 
         await handler.Handle(new DeleteRecipeIngredientCommand(recipe.Id, ing1.Id), CancellationToken.None);
 
@@ -189,6 +317,8 @@ public sealed class RecipeStepsAndIngredientsTests
         Assert.Equal(0, remaining[0].OrderIndex);
         Assert.Equal(1, remaining[1].OrderIndex);
         Assert.Equal(ing2.Id, remaining[1].Id);
+        Assert.Contains("recipes", _cacheInvalidator.InvalidatedTags);
+        Assert.Contains($"recipe:{recipe.Id}", _cacheInvalidator.InvalidatedTags);
     }
 
     private sealed class FakeAppDbContext(
@@ -200,11 +330,11 @@ public sealed class RecipeStepsAndIngredientsTests
         private readonly List<RecipeStep> _steps = [.. (steps ?? [])];
         private readonly List<RecipeIngredient> _ingredients = [.. (ingredients ?? [])];
 
-        public IQueryable<CulinaryBlog.Domain.Entities.Category> Categories => Enumerable.Empty<CulinaryBlog.Domain.Entities.Category>().AsQueryable();
+        public IQueryable<Category> Categories => Enumerable.Empty<Category>().AsQueryable();
         public IQueryable<Recipe> Recipes => _recipes.AsQueryable();
         public IQueryable<RecipeStep> RecipeSteps => _steps.AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => _ingredients.AsQueryable();
-        public IQueryable<CulinaryBlog.Domain.Entities.RecipeImage> RecipeImages => Enumerable.Empty<CulinaryBlog.Domain.Entities.RecipeImage>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
         public IQueryable<Recipe> RecipesIncludingDeleted => _recipes.AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class
@@ -232,5 +362,16 @@ public sealed class RecipeStepsAndIngredientsTests
         public string? IpAddress => "127.0.0.1";
         public string? Role { get; set; }
         public bool IsInRole(string role) => string.Equals(Role, role, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private sealed class FakeCacheInvalidator : ICacheInvalidator
+    {
+        public List<string> InvalidatedTags { get; } = [];
+
+        public Task InvalidateAsync(IEnumerable<string> tags, CancellationToken cancellationToken = default)
+        {
+            InvalidatedTags.AddRange(tags);
+            return Task.CompletedTask;
+        }
     }
 }
