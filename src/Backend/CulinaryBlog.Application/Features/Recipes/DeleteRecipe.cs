@@ -29,8 +29,8 @@ public sealed class DeleteRecipeCommandHandler(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        // S-07 & 2.15: Xóa cache tag tương ứng
-        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}"], cancellationToken);
+        // S-07 & 2.15 & 2.20: Xóa cache tag tương ứng
+        await cacheInvalidator.InvalidateAsync(["recipes", $"recipe:{recipe.Id}", "categories"], cancellationToken);
 
         logger.LogInformation("Recipe {RecipeId} moved to trash (soft-deleted)", recipe.Id);
     }
