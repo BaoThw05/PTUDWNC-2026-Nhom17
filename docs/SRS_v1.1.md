@@ -46,25 +46,25 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | Mã CR | Quyết định | Nội dung thay đổi | Mục SRS bị ảnh hưởng | Phụ trách | ADR | Trạng thái |
 |---|---|---|---|---|---|---|
 | CR-01 | S-01 | Phát hành SRS v1.1 dạng Markdown trong repo, kèm bảng Change Request và ADR | Toàn tài liệu | TV1 | — | 🔄 |
-| CR-02 | S-03 | Recipe xóa mềm vào thùng rác 30 ngày, có khôi phục; job định kỳ xóa thật và xóa ảnh; bảng con và Category xóa thật | FR-RCP-007, Chương 7 (Recipe) | TV2 | S-03 | ⬜ |
-| CR-03 | S-04 | Kiểm soát đồng thời bằng cột hệ thống `xmin` (`uint Version`); client gửi `version`, lệch → 409 | FR-RCP-004, Chương 7 | TV2 | S-04 | ⬜ |
+| CR-02 | S-03 | Recipe xóa mềm vào thùng rác 30 ngày, có khôi phục; job định kỳ xóa thật và xóa ảnh; bảng con và Category xóa thật | FR-RCP-007, Chương 7 (Recipe) | TV2 | S-03 | ✅ |
+| CR-03 | S-04 | Kiểm soát đồng thời bằng cột hệ thống `xmin` (`uint Version`); client gửi `version`, lệch → 409 | FR-RCP-004, Chương 7 | TV2 | S-04 | ✅ |
 | CR-04 | S-05 | Xác thực theo mô hình BFF với Auth.js v5; đăng ký nhận `{ fullName, email, userName, password }` (khớp `SRS_..._GiaiPhap.md` bản 19/09) và đăng nhập luôn; Google: backend chỉ nhận `{ idToken }`, tự xác minh, tự sinh `userName` | FR-AUTH-001, FR-AUTH-003, 5.2, 5.3, 6.1 | TV1 | [ADR-001](./ADR/ADR-001-kien-truc-xac-thuc.md) | ✅ |
 | CR-05 | S-06 | Refresh token 32 byte, chỉ lưu SHA-256; thêm `FamilyId`, `RevokedReason`; bỏ `IsRevoked`; xoay vòng mỗi lần refresh, dùng lại trong 30 giây vẫn đổi được, quá 30 giây thu hồi cả family | FR-AUTH-001, FR-AUTH-004, NFR-SEC-002, 7.8 | TV1 | [ADR-002](./ADR/ADR-002-refresh-token.md) | ✅ |
 | CR-06 | S-05 | Đăng xuất `AllowAnonymous`, chỉ cần `refreshToken`, luôn trả 204; có access token thì chỉ thu hồi token của chính người đó | FR-AUTH-005 | TV1 | S-05 | ✅ |
 | CR-07 | S-05 | Đăng nhập: khóa 15 phút sau 5 lần sai → 423; `IsActive = false` → 403 `AUTH_ACCOUNT_DISABLED` (chỉ báo khi mật khẩu đúng); bỏ điều kiện "LockoutEnabled = false" | FR-AUTH-002 | TV1 | S-05 | ✅ |
 | CR-08 | S-17 | Hồ sơ: `GET /auth/me` trả `{ id, email, userName, fullName, avatarUrl, roles, createdAt }`; `PATCH /auth/me` chỉ đổi `fullName` (2–100 ký tự, tự bỏ khoảng trắng đầu/cuối); `AvatarUrl` chỉ lấy từ Google; bỏ `bio`, `emailConfirmed`; bỏ xác nhận email và đổi email/username bằng OTP khỏi v1 | FR-AUTH-006, FR-AUTH-007, 8.1 | TV1 | — | ✅ |
 | CR-09 | S-15 | Rate limit theo endpoint: đăng nhập/đăng ký/Google 5 lần/phút theo IP, refresh 30 lần/phút, còn lại 100 lần/phút theo người dùng hoặc IP; 429 kèm `Retry-After`; đọc IP thật qua `X-Forwarded-For` từ proxy tin cậy | NFR-SEC-003 | TV1, TV4 | — | ✅ |
-| CR-10 | S-10 | Hợp đồng API: không vỏ bọc response; danh sách trả `PagedResult`; 422 cho validation; lỗi theo Problem Details (RFC 9457) có `code`, `traceId`; `sort=-field`; đổi tên thống nhất (người dùng dùng `fullName` như FR-AUTH, xem CR-04, CR-08) | Chương 3, Chương 8, Phụ lục A, B | TV2 | S-10 | ⬜ |
+| CR-10 | S-10 | Hợp đồng API: không vỏ bọc response; danh sách trả `PagedResult`; 422 cho validation; lỗi theo Problem Details (RFC 9457) có `code`, `traceId`; `sort=-field`; đổi tên thống nhất (người dùng dùng `fullName` như FR-AUTH, xem CR-04, CR-08) | Chương 3, Chương 8, Phụ lục A, B | TV2 | S-10 | ✅ |
 | CR-11 | S-10 | Bổ sung mã lỗi `AUTH_*` vào Phụ lục B theo `docs/api/error-codes.md` | Phụ lục B | TV1 | — | ✅ |
-| CR-12 | S-11 | Điều kiện publish chỉ cần ≥ 1 bước; nguyên liệu và ảnh bổ sung được sau khi publish | FR-RCP-005, FR-RCP-006 | TV2 | S-11 | ⬜ |
+| CR-12 | S-11 | Điều kiện publish chỉ cần ≥ 1 bước; nguyên liệu và ảnh bổ sung được sau khi publish | FR-RCP-005, FR-RCP-006 | TV2 | S-11 | ✅ |
 | CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ✅ |
 | CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ✅ |
-| CR-15 | S-13 | Ghim MediatR 12.5.0 (MIT); `ApplicationUser` nằm ở Infrastructure, Domain không dùng NuGet; có architecture test | 2.5, 6.2, NFR-MAINT-004 | TV2 | S-13 | ⬜ |
+| CR-15 | S-13 | Ghim MediatR 12.5.0 (MIT); `ApplicationUser` nằm ở Infrastructure, Domain không dùng NuGet; có architecture test | 2.5, 6.2, NFR-MAINT-004 | TV2 | S-13 | ✅ |
 | CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | S-07 | ✅ |
 | CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | S-08 | ✅ |
 | CR-18 | S-14 | Sitemap sinh bằng Next.js; Hangfire recurring job cho các việc dọn dẹp (thùng rác, refresh token hết hạn, file mồ côi) | FR-JOB-003, 3.6 | TV4, TV3 | S-14 | 🟡 |
 | CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ✅ |
-| CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ⬜ |
+| CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ✅ |
 | CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ✅ |
 | CR-22 | S-17 | Bổ sung đổi mật khẩu (FR-AUTH-008), quên/đặt lại mật khẩu qua email (FR-AUTH-009) và quản trị người dùng cho Admin (FR-AUTH-010); đổi/đặt lại mật khẩu và khóa tài khoản đều thu hồi mọi refresh token | 3.1, 8.1, Phụ lục B | TV1 | — | ✅ |
 
@@ -276,7 +276,7 @@ Các tính năng sau đây nằm ngoài phạm vi phiên bản 1.0.0:
 |SSR|Server-Side Rendering – Render HTML trên server.|
 |SSG|Static Site Generation – Tạo trang tĩnh lúc build time.|
 |MoSCoW|Must Have / Should Have / Could Have / Won't Have – Mô hình<br>phân loại ưu tiên.|
-|RFC|Request For Comments – Tài liệu tiêu chuẩn kỹ thuật (e.g., RFC<br>7807).|
+|RFC|Request For Comments – Tài liệu tiêu chuẩn kỹ thuật (e.g., RFC<br>9457).|
 |ERD|Entity Relationship Diagram – Sơ đồ quan hệ thực thể.|
 |PBKDF2|Password-Based Key Derivation Function 2 – Thuật toán hash mật<br>khẩu an toàn.|
 |CDN|Content Delivery Network – Mạng phân phối nội dung.|
@@ -292,7 +292,7 @@ Các tính năng sau đây nằm ngoài phạm vi phiên bản 1.0.0:
 |1|IEEE Std 830-<br>1998 –<br>Recommended<br>Practice for<br>Software<br>Requirements<br>Specifications|https://ieeexplore.ieee.org/document/720574|
 |2|ISO/IEC/IEEE<br>29148:2018 –<br>Requirements<br>Engineering|https://www.iso.org/standard/72089.html|
 |3|OWASP Top<br>10:2021 – Top 10<br>Web Application<br>Security Risks|https://owasp.org/www-project-top-ten/|
-|4|RFC 7807 –<br>Problem Details<br>for HTTP APIs|https://datatracker.ietf.org/doc/html/rfc7807|
+|4|RFC 9457 –<br>Problem Details<br>for HTTP APIs|https://datatracker.ietf.org/doc/html/rfc9457|
 |5|RFC 7519 –<br>JSON Web Token<br>(JWT)|https://datatracker.ietf.org/doc/html/rfc7519|
 |6|RFC 6749 – The<br>OAuth 2.0<br>Authorization<br>Framework|https://datatracker.ietf.org/doc/html/rfc6749|
 |7|.NET 10 Minimal<br>APIs – Microsoft<br>Learn|https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis|
@@ -326,7 +326,7 @@ Tài liệu SRS này được tổ chức thành 8 chương chính và 3 phụ l
 
 - **Chương 7 – Mô hình Dữ liệu:** ERD mô tả văn bản và bảng định nghĩa chi tiết từng entity/table.
 
-- **Chương 8 – Đặc tả API REST:** Quy ước, chuẩn lỗi RFC 7807, và bảng tổng hợp tất cả ~30 endpoint.
+- **Chương 8 – Đặc tả API REST:** Quy ước, chuẩn lỗi RFC 9457, và bảng tổng hợp tất cả ~30 endpoint.
 
 - **Phụ lục A-C:** HTTP Status Codes, Application Error Codes, và Từ điển thuật ngữ.
 
@@ -452,12 +452,12 @@ Các ràng buộc sau đây là bắt buộc và không thể thương lượng 
 |**Mã ràng**<br>**buộc**|**Loại**|**Mô tả ràng buộc**|
 |---|---|---|
 |CONS-001|Kiến trúc|Backend PHẢI tuân thủ Clean Architecture với 4 tầng riêng biệt:<br>Domain, Application, Infrastructure, Presentation. Tầng Domain<br>không được phụ thuộc bất kỳ thư viện ngoài nào.|
-|CONS-002|Pattern|CQRS với MediatR là pattern bắt buộc cho tầng Application. Mỗi<br>use case được hiện thực dưới dạng Command hoặc Query<br>Handler riêng biệt.|
+|CONS-002|Pattern|CQRS với MediatR 12.5.0 (giấy phép MIT, ghim phiên bản trong `Directory.Packages.props`) là pattern bắt buộc cho tầng Application. Mỗi<br>use case được hiện thực dưới dạng Command hoặc Query<br>Handler riêng biệt.|
 |CONS-003|Ngôn ngữ /<br>Framework|Backend: .NET 10 Minimal APIs (không dùng MVC Controllers).<br>Frontend: Next.js App Router (không dùng Pages Router).|
 |CONS-004|Bảo mật|Xác thực PHẢI sử dụng JWT stateless (access token 15 phút,<br>refresh token 7 ngày). Mật khẩu PHẢI được hash với PBKDF2 qua<br>ASP.NET Core Identity.|
-|CONS-005|API Design|API PHẢI tuân thủ RESTful design. Phản hồi lỗi PHẢI theo RFC<br>7807 (application/problem+json). API versioning qua URL path<br>(/api/v1/).|
+|CONS-005|API Design|API PHẢI tuân thủ RESTful design. Phản hồi lỗi PHẢI theo RFC<br>9457 (application/problem+json). API versioning qua URL path<br>(/api/v1/).|
 |CONS-006|Database|PostgreSQL là DBMS duy nhất. Migrations qua EF Core Code-<br>First. Không viết raw SQL trực tiếp (dùng LINQ hoặc Raw SQL có<br>parameterization qua EF Core).|
-|CONS-007|File Upload|Kích thước tệp tải lên tối đa 5 MB. Định dạng chỉ chấp nhận:<br>image/jpeg, image/png, image/webp, image/avif. Kiểm tra MIME<br>type (không chỉ extension).|
+|CONS-007|File Upload|Kích thước tệp tải lên tối đa 5 MB. Định dạng chỉ chấp nhận:<br>image/jpeg, image/png, image/webp (không nhận AVIF). Kiểm tra chữ ký file<br>(không chỉ extension hay MIME do client gửi).|
 |CONS-008|Validation|Input validation PHẢI qua FluentValidation kết hợp MediatR<br>Pipeline Behavior. Không validation trong Endpoint handler.|
 |CONS-009|Container|Ứng dụng PHẢI được đóng gói Docker. Dockerfile multi-stage<br>build (SDK → aspnet runtime). Docker Compose cho local<br>development.|
 |CONS-010|Logging|Structured logging với Serilog là bắt buộc. Mọi log entry PHẢI có<br>CorrelationId, RequestPath, UserId (khi đã xác thực).|
@@ -1036,7 +1036,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |---|---|
 |**NFR-USE-001**<br>**Responsive Design**|Giao diện hiển thị chính xác trên tất cả breakpoints:<br>• Mobile:<br>320px – 767px (single column, touch-friendly).<br>• Tablet: 768px<br>– 1199px (2-column grid).<br>• Desktop: ≥ 1200px (full layout).<br>Framework: Tailwind CSS utility-first. Không sử dụng CSS<br>framework override. Kiểm thử: Chrome DevTools responsive<br>mode + BrowserStack (iOS, Android).|
 |**NFR-USE-002**<br>**Accessibility (a11y)**|Tuân thủ WCAG 2.1 Level AA:<br>• Semantic HTML5: <article>,<br><nav>, <main>, <aside>.<br>• ARIA attributes: aria-label, aria-<br>expanded, role trên interactive elements.<br>• Keyboard<br>navigation: tất cả chức năng dùng được bằng bàn phím (Tab,<br>Enter, Escape).<br>• Color contrast ratio ≥ 4.5:1 (text) và ≥ 3:1 (UI<br>components).<br>• Screen reader: test với NVDA (Windows) và<br>VoiceOver (macOS/iOS).|
-|**NFR-USE-003 Error**<br>**Messages**|Thông báo lỗi phải rõ ràng và actionable:<br>• API: trả về RFC<br>7807 Problem Details (type, title, status, detail, errors{}). •<br>Frontend: hiển thị ngay bên cạnh field lỗi (React Hook Form<br>inline validation).<br>• Server errors (5xx): hiển thị thông báo thân<br>thiện, không lộ stack trace.<br>• I18n-ready: error messages sử<br>dụng error code (không hardcode tiếng Việt/Anh).|
+|**NFR-USE-003 Error**<br>**Messages**|Thông báo lỗi phải rõ ràng và actionable:<br>• API: trả về RFC<br>9457 Problem Details (type, title, status, detail, errors{}). •<br>Frontend: hiển thị ngay bên cạnh field lỗi (React Hook Form<br>inline validation).<br>• Server errors (5xx): hiển thị thông báo thân<br>thiện, không lộ stack trace.<br>• I18n-ready: error messages sử<br>dụng error code (không hardcode tiếng Việt/Anh).|
 |**NFR-USE-004**<br>**Loading States**|Mọi async operation phải có visual feedback:<br>• Loading<br>skeleton: hiển thị trong khi fetch data (không blank screen). •<br>Optimistic update: UI cập nhật ngay, rollback nếu API fail. •<br>Toast notification: xác nhận thành công/thất bại sau write<br>operation.<br>• Progress indicator: upload ảnh hiển thị progress<br>bar (%) realtime.|
 
 ## 4.4. Độ tin cậy (NFR-REL)
@@ -1056,7 +1056,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |**NFR-MAINT-001 Code**<br>**Quality**|Toàn bộ code phải pass static analysis trước khi merge: •<br>.NET: SonarAnalyzer, StyleCop, EditorConfig (indent, naming<br>conventions).<br>• TypeScript/React: ESLint (Airbnb ruleset),<br>Prettier.<br>• Không có compiler warnings trong build CI.<br>• Code<br>review: ít nhất 1 reviewer phê duyệt Pull Request.|
 |**NFR-MAINT-002 Test**<br>**Coverage**|Base: build backend/frontend và chạy các E2E đã có cho tìm kiếm, sitemap, robots trên môi trường demo. Mở rộng: coverage unit ≥ 80%, integration coverage mọi endpoint và 5 E2E flows (đăng ký, đăng nhập, tạo, publish, tìm kiếm); đo và báo cáo riêng khi triển khai. Công cụ: xUnit và Playwright.|
 |**NFR-MAINT-003**<br>**Documentation**|Tài liệu kỹ thuật bắt buộc:<br>• README.md: hướng dẫn setup<br>dev environment (Docker Compose) trong < 5 phút.<br>• API<br>documentation: tự động sinh từ XML comments +<br>Scalar/Swagger UI tại /scalar.<br>• Architecture Decision Records<br>(ADR): ghi lại mọi quyết định kiến trúc quan trọng. •<br>CHANGELOG.md: cập nhật mỗi release (theo Keep a<br>Changelog + SemVer).|
-|**NFR-MAINT-004**<br>**Clean Architecture**<br>**Compliance**|Tuân thủ nghiêm ngặt dependency rules của Clean<br>Architecture:<br>• Domain layer: KHÔNG dependency vào bất kỳ<br>layer nào khác. Không có nuget packages ngoài<br>FluentValidation.<br>• Application layer: chỉ depend vào Domain.<br>KHÔNG reference Infrastructure.<br>• Infrastructure layer: depend<br>vào Application (implements interfaces).<br>• Vi phạm: được phát<br>hiện qua ArchUnit.NET tests hoặc custom Architecture test project.<br>• CQRS: Commands thay đổi state, Queries đọc data — không trộn lẫn.|
+|**NFR-MAINT-004**<br>**Clean Architecture**<br>**Compliance**|Tuân thủ nghiêm ngặt dependency rules của Clean<br>Architecture:<br>• Domain layer: KHÔNG dependency vào bất kỳ<br>layer nào khác. Không dùng NuGet package nào (chỉ BCL); `ApplicationUser` (Identity) nằm ở Infrastructure.<br>• Application layer: chỉ depend vào Domain.<br>KHÔNG reference Infrastructure.<br>• Infrastructure layer: depend<br>vào Application (implements interfaces).<br>• Vi phạm: được phát<br>hiện qua project `CulinaryBlog.ArchitectureTests` (NetArchTest.Rules), chạy trong CI.<br>• CQRS: Commands thay đổi state, Queries đọc data — không trộn lẫn.|
 
 <!-- PDF trang 43 -->
 
@@ -1118,7 +1118,7 @@ Backend cung cấp RESTful API theo chuẩn JSON. Toàn bộ endpoints được 
 |**Base URL (prod)**|https://api.culinaryblog.com/api/v1|
 |**Content-Type**|application/json; charset=utf-8 (request và response).<br>Multipart/form-data cho file upload endpoints.|
 |**Authentication**|Bearer Token trong Authorization header: Authorization:<br>Bearer <access_token>. Refresh token: trong request body<br>(không dùng cookie để tránh CSRF).|
-|**Response Format**|Success: { "data": {...}, "meta": { "page":1, "pageSize":10,<br>"total":100 } } Error: RFC 7807 Problem Details { "type", "title",<br>"status", "detail", "errors":{} }|
+|**Response Format**|Success: trả thẳng tài nguyên, không vỏ bọc. Danh sách trả `PagedResult`: { "items":[...], "page":1, "pageSize":12,<br>"totalCount":100, "totalPages":9, "hasNextPage":true, "hasPreviousPage":false }. Error: RFC 9457 Problem Details { "type", "title",<br>"status", "detail", "code", "traceId", "errors":{} }|
 |**Versioning**|URL Path versioning: /api/v1/. Khi có breaking changes →<br>/api/v2/ (v1 được duy trì tối thiểu 6 tháng).|
 |**CORS Headers**|Access-Control-Allow-Origin: <configured-origins> Access-<br>Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE,<br>OPTIONS Access-Control-Allow-Headers: Content-Type,<br>Authorization, X-Correlation-ID|
 |**Rate Limit Headers**|X-RateLimit-Limit: 100 X-RateLimit-Remaining: 87 X-<br>RateLimit-Reset: 1700000000 (Unix timestamp) Retry-After: 30<br>(seconds, khi 429)|
@@ -1350,7 +1350,7 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 |---|---|
 |**Convention**|HTTP Method + Path (prefixed /api/v1) auth required = Bearer<br>JWT Access Token bắt buộc role = Role tối thiểu cần thiết<br>(Author ⊂ Admin)|
 |**Pagination**|Query params:<br>?page=1&pageSize=10&sortBy=createdAt&sortOrder=desc<br>Response wrapper: { "data":[], "meta":{ "page", "pageSize",<br>"total", "totalPages" } }|
-|**Error Format**|RFC 7807 Problem Details: { "type":"about:blank", "title":"...",<br>"status":400, "detail":"...", "errors":{"field":["msg"]} }|
+|**Error Format**|RFC 9457 Problem Details: { "type":"about:blank", "title":"...",<br>"status":422, "detail":"...", "code":"VALIDATION_ERROR", "traceId":"...", "errors":{"field":["msg"]} }|
 
 ## 8.1. Authentication Module (/auth)
 
@@ -1457,7 +1457,7 @@ Bảng dưới đây liệt kê tất cả HTTP Status Codes được sử dụn
 |409|Conflict|Trùng lặp unique field (email đã đăng ký, category slug đã tồn<br>tại); Xóa category đang có recipes.|
 |422|Unprocessable<br>Entity|Dữ liệu hợp lệ về cú pháp nhưng không thể xử lý về ngữ<br>nghĩa (ví dụ: RowVersion conflict — Optimistic Concurrency).|
 |429|Too Many<br>Requests|Rate limit bị vượt. Response kèm header Retry-After (giây).|
-|500|Internal Server<br>Error|Lỗi không xử lý được (unhandled exception). Trả RFC 7807,<br>log đầy đủ qua Serilog. Không lộ stack trace.|
+|500|Internal Server<br>Error|Lỗi không xử lý được (unhandled exception). Trả RFC 9457,<br>log đầy đủ qua Serilog. Không lộ stack trace.|
 |503|Service<br>Unavailable|Health check failed (DB/Redis down); hoặc server overloaded.|
 
 # Phụ lục B – Application Error Codes
@@ -1509,7 +1509,7 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |**Thuật ngữ**|**Viết**<br>**tắt**|**Định nghĩa**|
 |---|---|---|
 |Access Token|AT|JSON Web Token (JWT) dùng để xác thực API<br>request. TTL = 15 phút. Ký bằng HS256.|
-|Application Error Code|AEC|Mã lỗi tùy chỉnh dạng SCREAMING_SNAKE_CASE<br>trong trường"type" của RFC 7807 Problem Details.|
+|Application Error Code|AEC|Mã lỗi tùy chỉnh dạng SCREAMING_SNAKE_CASE<br>trong trường"type" của RFC 9457 Problem Details.|
 |Archive|—|Trạng thái Recipe khi bị ẩn khỏi public listing nhưng<br>không bị xóa. RecipeStatus.Archived.|
 |Author|—|Role người dùng mặc định sau khi đăng ký. Có thể<br>tạo/quản lý recipe của mình.|
 |Background Job|—|Tác vụ xử lý bất đồng bộ chạy ngoài HTTP request<br>cycle, quản lý bởi Hangfire.|
