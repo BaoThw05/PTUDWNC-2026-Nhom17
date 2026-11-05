@@ -1,6 +1,8 @@
+using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Application.Features.Auth.Common;
+using CulinaryBlog.Domain.Auth;
 using MediatR;
 
 namespace CulinaryBlog.Application.Features.Auth.GoogleLogin;
@@ -8,7 +10,9 @@ namespace CulinaryBlog.Application.Features.Auth.GoogleLogin;
 public sealed class GoogleLoginCommandHandler(
     IGoogleIdTokenValidator googleTokens,
     IUserAccountService users,
-    AuthSessionIssuer sessions) : IRequestHandler<GoogleLoginCommand, AuthResponse>
+    AuthSessionIssuer sessions,
+    IBackgroundJobService jobs,
+    LoginAudit audit) : IRequestHandler<GoogleLoginCommand, AuthResponse>
 {
     public const string ProviderName = "Google";
 
@@ -30,10 +34,13 @@ public sealed class GoogleLoginCommandHandler(
 
         if (!user.IsActive)
         {
+            await audit.RecordAsync(user.Id, LoginMethod.Google, LoginResult.Disabled, cancellationToken);
             throw new ForbiddenException("The account is disabled.", AuthErrorCodes.AccountDisabled);
         }
 
-        return await sessions.StartAsync(user, cancellationToken);
+        var response = await sessions.StartAsync(user, cancellationToken);
+        await audit.RecordAsync(user.Id, LoginMethod.Google, LoginResult.Succeeded, cancellationToken);
+        return response;
     }
 
     private async Task<UserAccount> LinkOrCreateAsync(
@@ -51,8 +58,9 @@ public sealed class GoogleLoginCommandHandler(
             new NewUserAccount(identity.Email, FullNameOf(identity), GenerateUserNameFrom(identity.Email), Password: null, identity.PictureUrl),
             cancellationToken);
 
-        // TODO(TV1): IWelcomeEmailJob đã sẵn sàng; chỉ còn thiếu IBackgroundJobService (TV3, 3.07) để enqueue thay vì gọi trực tiếp (việc 1.15).
-        return await users.LinkExternalLoginAsync(created.Id, login, avatarUrl: null, cancellationToken);
+        var linked = await users.LinkExternalLoginAsync(created.Id, login, avatarUrl: null, cancellationToken);
+        jobs.Enqueue<IWelcomeEmailJob>(job => job.ExecuteAsync(created.Id, CancellationToken.None));
+        return linked;
     }
 
     private static string FullNameOf(GoogleIdentity identity)

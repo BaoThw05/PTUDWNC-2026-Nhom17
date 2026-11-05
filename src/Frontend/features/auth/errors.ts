@@ -7,6 +7,11 @@ const MESSAGES: Record<string, string> = {
   AUTH_EMAIL_EXISTS: "Email này đã được đăng ký.",
   AUTH_GOOGLE_UNAVAILABLE: "Đăng nhập bằng Google đang tạm thời không dùng được.",
   AUTH_GOOGLE_EMAIL_UNVERIFIED: "Email của tài khoản Google chưa được xác minh.",
+  AUTH_ADMIN_SELF_LOCKOUT: "Bạn không thể tự khóa hoặc tự gỡ quyền Admin của chính mình.",
+  AUTH_RESET_TOKEN_INVALID: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu liên kết mới.",
+  AUTH_EMAIL_TOKEN_INVALID: "Liên kết xác nhận email không hợp lệ hoặc đã hết hạn. Vui lòng gửi lại email xác nhận.",
+  AUTH_EMAIL_CODE_INVALID: "Mã xác minh không đúng hoặc đã hết hạn.",
+  FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
   TOO_MANY_REQUESTS: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.",
   VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ.",
   SERVICE_UNAVAILABLE: "Không kết nối được máy chủ. Vui lòng thử lại sau.",
@@ -20,5 +25,10 @@ export function authErrorMessage(code: string | null | undefined): string {
 
 /** Mã lỗi Auth.js đặt trên URL khi đăng nhập Google thất bại. */
 export const PASSWORD_CHANGED_MESSAGE = "Đã đổi mật khẩu. Vui lòng đăng nhập lại bằng mật khẩu mới.";
+
+export const PASSWORD_RESET_MESSAGE = "Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.";
+
+export const FORGOT_PASSWORD_SENT_MESSAGE =
+  "Nếu email này đã đăng ký, chúng tôi vừa gửi liên kết đặt lại mật khẩu. Liên kết có hiệu lực trong 1 ngày.";
 
 export const GOOGLE_SIGN_IN_FAILED_MESSAGE = "Đăng nhập bằng Google thất bại. Vui lòng thử lại.";

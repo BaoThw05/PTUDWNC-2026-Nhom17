@@ -5,7 +5,12 @@ import { auth, googleEnabled } from "@/features/auth/auth";
 import { AuthCard } from "@/features/auth/components/AuthCard";
 import { LoginForm } from "@/features/auth/components/LoginForm";
 import { REGISTER_PATH } from "@/features/auth/constants";
-import { authErrorMessage, GOOGLE_SIGN_IN_FAILED_MESSAGE, PASSWORD_CHANGED_MESSAGE } from "@/features/auth/errors";
+import {
+  authErrorMessage,
+  GOOGLE_SIGN_IN_FAILED_MESSAGE,
+  PASSWORD_CHANGED_MESSAGE,
+  PASSWORD_RESET_MESSAGE,
+} from "@/features/auth/errors";
 import { safeCallbackUrl } from "@/features/auth/redirect";
 
 export const metadata: Metadata = { title: "Đăng nhập" };
@@ -24,6 +29,9 @@ function initialMessageFor(params: SearchParams): string | null {
   }
   if (params.reason === "password-changed") {
     return PASSWORD_CHANGED_MESSAGE;
+  }
+  if (params.reason === "password-reset") {
+    return PASSWORD_RESET_MESSAGE;
   }
   return params.reason === "expired" ? EXPIRED_MESSAGE : null;
 }
@@ -57,7 +65,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/auth/login
         callbackUrl={callbackUrl}
         googleEnabled={googleEnabled}
         initialMessage={initialMessageFor(params)}
-        initialTone={params.reason === "password-changed" ? "info" : "error"}
+        initialTone={params.reason === "password-changed" || params.reason === "password-reset" ? "info" : "error"}
       />
     </AuthCard>
   );
