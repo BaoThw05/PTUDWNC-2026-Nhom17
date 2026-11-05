@@ -66,6 +66,7 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ✅ |
 | CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ✅ |
 | CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ✅ |
+| CR-23 | S-05, S-17 | Mở rộng sau 25/10: nhật ký đăng nhập (FR-AUTH-011), xác nhận email và đổi email bằng mã OTP (FR-AUTH-012, thay phần "bỏ khỏi v1" của CR-08), xoay khóa ký JWT có `kid` (FR-AUTH-013); trình duyệt gọi API qua Route Handler `/api/v1/*` của Next.js nên access token không xuống trình duyệt | 3.1, 8.1, Phụ lục B | TV1 | ADR-001 | ✅ |
 | CR-22 | S-17 | Bổ sung đổi mật khẩu (FR-AUTH-008), quên/đặt lại mật khẩu qua email (FR-AUTH-009) và quản trị người dùng cho Admin (FR-AUTH-010); đổi/đặt lại mật khẩu và khóa tài khoản đều thu hồi mọi refresh token | 3.1, 8.1, Phụ lục B | TV1 | — | ✅ |
 
 ## Diễn giải câu trả lời của giảng viên (nhóm chốt 18/09/2026)
@@ -115,6 +116,7 @@ Giảng viên đã trả lời 8 câu hỏi ở mục 5.6 của `SRS_Culinary_Bl
     - FR-AUTH-005: Đăng xuất (Logout / Token Revocation) — tr. 21
     - FR-AUTH-006: Xem Hồ sơ Cá nhân (View Profile) — tr. 22
     - FR-AUTH-007: Cập nhật Hồ sơ Cá nhân (Update Profile) — tr. 23
+    - FR-AUTH-008 → FR-AUTH-013: bổ sung ở SRS v1.1 (CR-22, CR-23)
   - 3.2. Module Quản lý Danh mục (FR-CAT) — tr. 23
     - FR-CAT-001: Xem Danh sách Danh mục — tr. 23
     - FR-CAT-002: Xem Chi tiết Danh mục và Công thức — tr. 24
@@ -501,7 +503,7 @@ Chương này đặc tả chi tiết 27 Functional Requirements (FR) được nh
 
 ## 3.1. Module Xác thực và Quản lý Người dùng (FR-AUTH)
 
-Module quản lý vòng đời tài khoản: đăng ký, đăng nhập (mật khẩu, Google), duy trì phiên bằng refresh token xoay vòng, hồ sơ cá nhân, đổi/đặt lại mật khẩu và quản trị người dùng. Backend dùng ASP.NET Core Identity + JWT HS256; frontend dùng Auth.js v5 theo mô hình BFF (phiên nằm trong cookie HttpOnly của Next.js, xem CR-04, ADR-001). Mọi lỗi trả Problem Details (RFC 9457) có trường `code` theo Phụ lục B. Các endpoint đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu giới hạn 5 lần/phút/IP; refresh 30 lần/phút; còn lại 100 lần/phút (CR-09).
+Module quản lý vòng đời tài khoản: đăng ký, đăng nhập (mật khẩu, Google), duy trì phiên bằng refresh token xoay vòng, hồ sơ cá nhân, đổi/đặt lại mật khẩu và quản trị người dùng. Backend dùng ASP.NET Core Identity + JWT HS256; frontend dùng Auth.js v5 theo mô hình BFF (phiên nằm trong cookie HttpOnly của Next.js, xem CR-04, ADR-001). Trình duyệt không giữ access token: `/api/auth/session` trả phiên đã bỏ `accessToken`, còn mọi request `/api/v1/*` đi qua Route Handler của Next.js, nơi server lấy token từ cookie phiên (tự làm mới khi sắp hết hạn) rồi gắn header `Authorization` (CR-23). Mọi lỗi trả Problem Details (RFC 9457) có trường `code` theo Phụ lục B. Các endpoint đăng ký, đăng nhập, Google, quên/đặt lại mật khẩu giới hạn 5 lần/phút/IP; refresh 30 lần/phút; còn lại 100 lần/phút (CR-09).
 
 ### FR-AUTH-001: Đăng ký Tài khoản (User Registration)
 
@@ -642,6 +644,43 @@ Module quản lý vòng đời tài khoản: đăng ký, đăng nhập (mật kh
 |**Ngoại lệ**|Không phải Admin → 403; admin tự khóa hoặc tự bỏ quyền Admin của mình → 403 `AUTH_ADMIN_SELF_LOCKOUT`; không tìm thấy user → 404 `AUTH_USER_NOT_FOUND`; dữ liệu sai → 422.|
 |**HTTP Method & Endpoint**|GET /api/v1/admin/users · PATCH /api/v1/admin/users/{id}|
 |**HTTP Status Code trả về**|200 (`PagedResult<AdminUser>` / `AdminUser`), 401, 403, 404, 422|
+
+### FR-AUTH-011: Nhật ký Đăng nhập (Login History)
+
+|**Mã yêu cầu**|FR-AUTH-011|
+|---|---|
+|**Tên yêu cầu**|Nhật ký Đăng nhập|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Người dùng đang đăng nhập|
+|**Mức ưu tiên**<br>**(MoSCoW)**|C – Could Have|
+|**Mô tả**|Mỗi lần đăng nhập bằng mật khẩu hoặc Google của một tài khoản có thật được ghi vào bảng `LoginAttempts`: thời gian, phương thức (`Password`/`Google`), kết quả (`Succeeded`, `InvalidPassword`, `LockedOut`, `Disabled`), IP (sau proxy tin cậy) và User-Agent do Next.js chuyển tiếp. Email không tồn tại thì không ghi. Trang `/profile` hiện 20 lần gần nhất để người dùng tự phát hiện truy cập lạ. Recurring job `auth-login-attempt-cleanup` xóa bản ghi quá 90 ngày (CR-23).|
+|**Ngoại lệ**|Chưa đăng nhập → 401.|
+|**HTTP Method & Endpoint**|GET /api/v1/auth/me/logins|
+|**HTTP Status Code trả về**|200 (`LoginAttempt[]`, mới nhất trước), 401|
+
+### FR-AUTH-012: Xác nhận Email và Đổi Email bằng OTP
+
+|**Mã yêu cầu**|FR-AUTH-012|
+|---|---|
+|**Tên yêu cầu**|Xác nhận Email, Đổi Email bằng Mã OTP|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Khách (mở link xác nhận), người dùng đang đăng nhập|
+|**Mức ưu tiên**<br>**(MoSCoW)**|C – Could Have|
+|**Mô tả**|Đăng ký bằng mật khẩu xong, hệ thống gửi email chứa link `{Frontend:BaseUrl}/auth/confirm-email?userId=...&token=...` (token Identity, hiệu lực 1 ngày); người dùng bấm nút trên trang để xác nhận (không tự xác nhận khi mở link, tránh trình quét link). Tài khoản tạo từ Google coi như đã xác nhận. Chưa xác nhận vẫn đăng nhập bình thường; `/profile` hiện trạng thái và nút gửi lại. Đổi email: nhập email mới + mật khẩu hiện tại → mã 6 chữ số (TOTP của Identity, hiệu lực vài phút) gửi tới email mới → nhập mã thì email đổi và được coi là đã xác nhận. Tài khoản Google chưa có mật khẩu dùng FR-AUTH-009 để đặt mật khẩu trước (CR-23).|
+|**Ngoại lệ**|`confirm-email`: token sai/hết hạn → 422 `AUTH_EMAIL_TOKEN_INVALID`; userId không tồn tại → 404. `email-change`: sai mật khẩu → 422 (lỗi gắn trường `currentPassword`, tính vào lockout); bị khóa → 423; email mới trùng email hiện tại → 422; email đã thuộc tài khoản khác → 409 `AUTH_EMAIL_EXISTS`. `email-change/confirm`: mã sai/hết hạn → 422 `AUTH_EMAIL_CODE_INVALID`; email bị người khác dùng trong lúc chờ → 409. Gửi lại, yêu cầu đổi và nhập mã giới hạn 5 lần/phút/IP.|
+|**HTTP Method & Endpoint**|POST /api/v1/auth/confirm-email · POST /api/v1/auth/me/email-confirmation · POST /api/v1/auth/me/email-change · POST /api/v1/auth/me/email-change/confirm|
+|**HTTP Status Code trả về**|204, 200 (`UserProfile` sau khi đổi email), 401, 404, 409, 422, 423, 429|
+
+### FR-AUTH-013: Xoay Khóa Ký JWT
+
+|**Mã yêu cầu**|FR-AUTH-013|
+|---|---|
+|**Tên yêu cầu**|Xoay Khóa Ký Access Token|
+|**Nhóm chức năng**|Module Xác thực và Quản lý Người dùng (FR-AUTH)|
+|**Tác nhân**|Người vận hành|
+|**Mức ưu tiên**<br>**(MoSCoW)**|C – Could Have|
+|**Mô tả**|Access token mang header `kid` (8 byte đầu SHA-256 của khóa, mã base64url, không lộ khóa). Backend ký bằng `Jwt:SigningKey` và chấp nhận thêm các khóa trong `Jwt:PreviousSigningKeys`. Quy trình xoay: chép khóa đang dùng vào `Jwt__PreviousSigningKeys__0`, đặt khóa mới cho `Jwt__SigningKey`, khởi động lại API; sau ít nhất 15 phút (thời hạn access token) thì gỡ khóa cũ. Người dùng không bị đăng xuất vì refresh token không phụ thuộc khóa ký (CR-23).|
+|**Ngoại lệ**|Khóa nào ngắn hơn 32 byte → API không khởi động. Token ký bằng khóa đã gỡ → 401.|
 
 ## 3.2. Module Quản lý Danh mục (FR-CAT)
 
@@ -1354,7 +1393,7 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 
 ## 8.1. Authentication Module (/auth)
 
-Đường dẫn tính từ `/api/v1`. `AuthResponse = { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`; `UserProfile = { id, email, userName, fullName, avatarUrl, roles, createdAt }`; `AdminUser = UserProfile + isActive`. Mã lỗi xem Phụ lục B.
+Đường dẫn tính từ `/api/v1`. `AuthResponse = { accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user: UserProfile }`; `UserProfile = { id, email, userName, fullName, avatarUrl, roles, createdAt, emailConfirmed }`; `AdminUser = UserProfile + isActive`; `LoginAttempt = { occurredAt, method, result, ipAddress, userAgent }`. Mã lỗi xem Phụ lục B.
 
 |**Method**|**Endpoint**|**Mô tả**|**Auth**|**Request Body / Params**|**Response**|
 |---|---|---|---|---|---|
@@ -1365,6 +1404,11 @@ Chương này liệt kê tất cả API endpoints của hệ thống Culinary Bl
 |POST|/auth/logout|Thu hồi refresh token|Không|{ refreshToken }|204 · 422|
 |GET|/auth/me|Hồ sơ người dùng hiện tại|Bearer|—|200: UserProfile · 401 · 404|
 |PATCH|/auth/me|Đổi họ tên|Bearer|{ fullName }|200: UserProfile · 401 · 422|
+|GET|/auth/me/logins|20 lần đăng nhập gần nhất|Bearer|—|200: LoginAttempt[] · 401|
+|POST|/auth/confirm-email|Xác nhận email bằng token trong link|Không|{ userId, token }|204 · 404 · 422|
+|POST|/auth/me/email-confirmation|Gửi lại email xác nhận|Bearer|—|204 · 401 · 429|
+|POST|/auth/me/email-change|Gửi mã OTP tới email mới|Bearer|{ newEmail, currentPassword }|204 · 401 · 409 · 422 · 423 · 429|
+|POST|/auth/me/email-change/confirm|Đổi email bằng mã OTP|Bearer|{ newEmail, code }|200: UserProfile · 401 · 409 · 422 · 429|
 |POST|/auth/change-password|Đổi mật khẩu, thu hồi mọi phiên|Bearer|{ currentPassword, newPassword }|204 · 401 · 422 · 423|
 |POST|/auth/forgot-password|Gửi email đặt lại mật khẩu|Không|{ email }|204 (luôn) · 422 · 429|
 |POST|/auth/reset-password|Đặt lại mật khẩu bằng token|Không|{ userId, token, newPassword }|204 · 422 · 429|
@@ -1481,6 +1525,8 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |AUTH_GOOGLE_EMAIL_UNVERIFIED|401|Email tài khoản<br>Google chưa được<br>Google xác minh.|Auth|
 |AUTH_GOOGLE_UNAVAILABLE|502|Không xác minh được<br>với Google, hoặc<br>backend chưa cấu<br>hình Google Client<br>ID.|Auth|
 |AUTH_RESET_TOKEN_INVALID|422|Link đặt lại mật khẩu<br>sai, đã hết hạn<br>(1 ngày) hoặc đã<br>được dùng.|Auth|
+|AUTH_EMAIL_TOKEN_INVALID|422|Link xác nhận email<br>sai hoặc đã hết hạn<br>(1 ngày).|Auth|
+|AUTH_EMAIL_CODE_INVALID|422|Mã OTP đổi email sai<br>hoặc đã hết hạn.|Auth|
 |RECIPE_NOT_FOUND|404|Recipe với id/slug<br>không tồn tại hoặc đã<br>bị chuyển vào thùng rác.|Recipe|
 |RECIPE_SLUG_EXISTS|409|Slug đã tồn tại — tự<br>động thêm suffix<br>(slug-2, slug-3...).|Recipe|
 |RECIPE_PUBLISH_INCOMPLETE|422|Recipe thiếu điều kiện<br>publish: phải có ít nhất<br>1 bước thực hiện (steps).|Recipe|
