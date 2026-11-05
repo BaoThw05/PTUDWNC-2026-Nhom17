@@ -62,7 +62,7 @@ internal static class AuthApiRegistration
         {
             ValidIssuer = jwt.Issuer,
             ValidAudience = jwt.Audience,
-            IssuerSigningKey = jwt.CreateSigningKey(),
+            IssuerSigningKeys = jwt.CreateValidationKeys(),
             ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
             NameClaimType = JwtOptions.NameClaimType,
             RoleClaimType = JwtOptions.RoleClaimType,
