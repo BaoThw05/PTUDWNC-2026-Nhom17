@@ -2,8 +2,10 @@ import NextAuth, { CredentialsSignin, type NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import { headers } from "next/headers";
 import { ApiError } from "@/lib/api/client";
 import {
+  clientHeaders,
   loginWithGoogle,
   loginWithPassword,
   refreshSession,
@@ -84,7 +86,7 @@ const config: NextAuthConfig = {
         }
 
         try {
-          const auth = await loginWithPassword(parsed.data, request.headers.get("x-forwarded-for"));
+          const auth = await loginWithPassword(parsed.data, clientHeaders(request.headers));
           return {
             id: auth.user.id,
             email: auth.user.email,
@@ -106,15 +108,18 @@ const config: NextAuthConfig = {
         if (!account.id_token) {
           throw new Error("Google did not return an id_token.");
         }
-        return toToken(await loginWithGoogle(account.id_token));
+        // Chạy trong route callback của Google nên đọc được header của trình duyệt.
+        return toToken(await loginWithGoogle(account.id_token, clientHeaders(await headers())));
       }
 
       if (user?.backendAuth) {
         return toToken(user.backendAuth);
       }
 
-      if (trigger === "update" && token.user && typeof session?.fullName === "string") {
-        return { ...token, user: { ...token.user, fullName: session.fullName } };
+      if (trigger === "update" && token.user) {
+        const fullName = typeof session?.fullName === "string" ? session.fullName : token.user.fullName;
+        const email = typeof session?.email === "string" ? session.email : token.user.email;
+        return { ...token, user: { ...token.user, fullName, email } };
       }
 
       return refreshIfNeeded(token);

@@ -7,6 +7,16 @@ export type UserProfile = {
   avatarUrl: string | null;
   roles: string[];
   createdAt: string;
+  emailConfirmed: boolean;
+};
+
+/** Khớp LoginAttemptResponse của backend (nhật ký đăng nhập). */
+export type LoginAttempt = {
+  occurredAt: string;
+  method: "Password" | "Google";
+  result: "Succeeded" | "InvalidPassword" | "LockedOut" | "Disabled";
+  ipAddress: string | null;
+  userAgent: string | null;
 };
 
 /** Khớp AdminUserResponse của backend (trang quản trị người dùng). */
@@ -22,6 +32,6 @@ export type AuthResponse = {
 };
 
 /** Thông tin người dùng giữ trong phiên Auth.js. */
-export type SessionUser = Omit<UserProfile, "createdAt">;
+export type SessionUser = Omit<UserProfile, "createdAt" | "emailConfirmed">;
 
 export type SessionError = "RefreshTokenError";

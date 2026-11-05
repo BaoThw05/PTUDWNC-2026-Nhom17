@@ -90,8 +90,8 @@ internal sealed class AuthEndpoints : IEndpointModule
             .WithSummary("Đặt lại mật khẩu bằng token trong email và thu hồi mọi phiên đăng nhập")
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        // Token dài và khó đoán nên chỉ chịu hạn mức chung, không chung hạn mức chặt với đăng nhập.
         auth.MapPost("/confirm-email", ConfirmEmailAsync)
-            .RequireRateLimiting(AuthRateLimitPolicies.Credentials)
             .WithSummary("Xác nhận email bằng token trong link đã gửi")
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
