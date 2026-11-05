@@ -27,6 +27,9 @@ internal static class AuthInfrastructureRegistration
             .Validate(
                 jwt => System.Text.Encoding.UTF8.GetByteCount(jwt.SigningKey) >= JwtOptions.MinSigningKeyBytes,
                 $"Jwt:SigningKey must be at least {JwtOptions.MinSigningKeyBytes} bytes.")
+            .Validate(
+                jwt => jwt.PreviousSigningKeys.All(key => System.Text.Encoding.UTF8.GetByteCount(key) >= JwtOptions.MinSigningKeyBytes),
+                $"Every Jwt:PreviousSigningKeys entry must be at least {JwtOptions.MinSigningKeyBytes} bytes.")
             .ValidateOnStart();
         services.AddSingleton<IPostConfigureOptions<JwtOptions>, JwtDevelopmentKeySetup>();
 
