@@ -63,7 +63,7 @@ public sealed class GoogleLoginCommandHandlerTests
 
     private Task<Application.Features.Auth.Common.AuthResponse> HandleAsync(GoogleIdentity identity)
     {
-        var handler = new GoogleLoginCommandHandler(new StubGoogleValidator(identity), _context.Users, _context.Sessions, _context.Jobs);
+        var handler = new GoogleLoginCommandHandler(new StubGoogleValidator(identity), _context.Users, _context.Sessions, _context.Jobs, _context.Audit);
         return handler.Handle(new GoogleLoginCommand("id-token"), CancellationToken.None);
     }
 

@@ -28,6 +28,18 @@ public interface IUserAccountService
     /// <summary>Đặt mật khẩu mới bằng token; token sai/hết hạn hoặc mật khẩu không đạt → <c>ValidationException</c>.</summary>
     Task ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken);
 
+    /// <summary>Sinh token xác nhận email của Identity (hết hạn sau 1 ngày).</summary>
+    Task<string> CreateEmailConfirmationTokenAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Đánh dấu email đã xác nhận; token sai/hết hạn → <c>ValidationException</c> mã <c>AUTH_EMAIL_TOKEN_INVALID</c>.</summary>
+    Task<UserAccount> ConfirmEmailAsync(Guid userId, string token, CancellationToken cancellationToken);
+
+    /// <summary>Sinh mã OTP 6 chữ số để đổi sang <paramref name="newEmail"/> (TOTP của Identity, hiệu lực vài phút).</summary>
+    Task<string> CreateChangeEmailCodeAsync(Guid userId, string newEmail, CancellationToken cancellationToken);
+
+    /// <summary>Đổi email bằng mã OTP; email mới tự được coi là đã xác nhận. Mã sai → <c>AUTH_EMAIL_CODE_INVALID</c>; email đã có người dùng → <c>ConflictException</c>.</summary>
+    Task<UserAccount> ChangeEmailAsync(Guid userId, string newEmail, string code, CancellationToken cancellationToken);
+
     Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken);
 
     /// <summary>Liên kết đăng nhập ngoài; ảnh đại diện chỉ được gán khi tài khoản chưa có (S-17).</summary>

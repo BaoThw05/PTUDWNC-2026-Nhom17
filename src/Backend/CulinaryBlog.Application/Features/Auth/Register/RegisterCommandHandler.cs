@@ -29,6 +29,7 @@ public sealed class RegisterCommandHandler(
 
         // FR-JOB-001: enqueue sau khi user và refresh token đã lưu; lỗi gửi mail thì Hangfire tự retry.
         jobs.Enqueue<IWelcomeEmailJob>(job => job.ExecuteAsync(user.Id, CancellationToken.None));
+        jobs.Enqueue<IAccountEmailJob>(job => job.SendConfirmationAsync(user.Id, CancellationToken.None));
         return response;
     }
 }

@@ -8,6 +8,7 @@ internal sealed class AuthTestContext
     public AuthTestContext()
     {
         Sessions = new AuthSessionIssuer(new FakeAccessTokenIssuer(Time), RefreshTokens, CurrentUser, Time);
+        Audit = new LoginAudit(LoginAttempts, CurrentUser, Time);
     }
 
     public ManualTimeProvider Time { get; } = new(new DateTimeOffset(2026, 9, 20, 8, 0, 0, TimeSpan.Zero));
@@ -19,6 +20,10 @@ internal sealed class AuthTestContext
     public FakeCurrentUser CurrentUser { get; } = new();
 
     public AuthSessionIssuer Sessions { get; }
+
+    public InMemoryLoginAttemptRepository LoginAttempts { get; } = new();
+
+    public LoginAudit Audit { get; }
 
     public FakeBackgroundJobService Jobs { get; } = new();
 }
