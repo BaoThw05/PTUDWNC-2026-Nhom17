@@ -9,6 +9,8 @@ const MESSAGES: Record<string, string> = {
   AUTH_GOOGLE_EMAIL_UNVERIFIED: "Email của tài khoản Google chưa được xác minh.",
   AUTH_ADMIN_SELF_LOCKOUT: "Bạn không thể tự khóa hoặc tự gỡ quyền Admin của chính mình.",
   AUTH_RESET_TOKEN_INVALID: "Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu liên kết mới.",
+  AUTH_EMAIL_TOKEN_INVALID: "Liên kết xác nhận email không hợp lệ hoặc đã hết hạn. Vui lòng gửi lại email xác nhận.",
+  AUTH_EMAIL_CODE_INVALID: "Mã xác minh không đúng hoặc đã hết hạn.",
   FORBIDDEN: "Bạn không có quyền thực hiện thao tác này.",
   TOO_MANY_REQUESTS: "Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.",
   VALIDATION_ERROR: "Thông tin nhập chưa hợp lệ.",

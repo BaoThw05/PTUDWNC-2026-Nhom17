@@ -3,6 +3,7 @@ import type { AuthResponse, SessionError, SessionUser } from "./types";
 
 declare module "next-auth" {
   interface Session {
+    /** Chỉ có phía server (auth()); /api/auth/session trả cho trình duyệt đã bỏ trường này. */
     accessToken?: string;
     error?: SessionError;
     user: SessionUser & DefaultSession["user"];
@@ -16,6 +17,7 @@ declare module "next-auth" {
 
 declare module "@auth/core/jwt" {
   interface JWT {
+    /** Chỉ có phía server (auth()); /api/auth/session trả cho trình duyệt đã bỏ trường này. */
     accessToken?: string;
     accessTokenExpiresAt?: number;
     refreshToken?: string;

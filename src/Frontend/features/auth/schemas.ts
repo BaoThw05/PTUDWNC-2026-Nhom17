@@ -72,9 +72,20 @@ export const resetPasswordSchema = z
 
 export const profileSchema = z.object({ fullName });
 
+export const emailChangeSchema = z.object({
+  newEmail: email,
+  currentPassword: z.string().min(1, "Vui lòng nhập mật khẩu hiện tại.").max(128),
+});
+
+export const emailCodeSchema = z.object({
+  code: z.string().trim().regex(/^[0-9]{6}$/, "Mã gồm 6 chữ số."),
+});
+
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type ProfileValues = z.infer<typeof profileSchema>;
+export type EmailChangeValues = z.infer<typeof emailChangeSchema>;
+export type EmailCodeValues = z.infer<typeof emailCodeSchema>;
