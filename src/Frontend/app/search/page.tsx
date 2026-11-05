@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { PlaceholderPage } from "@/components/PlaceholderPage";
+import { SearchScreen } from "@/features/search/components/SearchScreen";
 
 export const metadata: Metadata = { title: "Tìm kiếm" };
 
-export default function SearchPage() {
-  return (
-    <PlaceholderPage
-      title="Tìm kiếm"
-      owner="TV4"
-      requirements="FR-SRCH-001"
-    />
-  );
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export const dynamic = "force-dynamic";
+
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  return <SearchScreen searchParams={await searchParams} />;
 }
