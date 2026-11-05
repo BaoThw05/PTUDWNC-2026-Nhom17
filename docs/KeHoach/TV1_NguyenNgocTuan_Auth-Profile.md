@@ -117,11 +117,13 @@
 |---|---|---|
 | 1 | Đăng nhập Google (nếu 1.21 bị trễ) | Đã có thiết kế ở S-05 |
 | 2 | Quên / đặt lại mật khẩu | Dùng token đặt lại mật khẩu của Identity + email qua Hangfire (tái sử dụng 1.15) |
-| 3 | Gọi API qua Route Handler proxy của Next.js | Access token không còn xuống trình duyệt |
-| 4 | Quản trị người dùng cho Admin | Danh sách, khóa/mở `IsActive`, gán role |
-| 5 | Xác nhận email, đổi email bằng OTP | Đã ghi "ngoài phạm vi v1" trong SRS v1.1 |
-| 6 | Xoay khóa ký JWT có `kid` | Hai khóa chạy song song trong thời gian chuyển |
-| 7 | Nhật ký đăng nhập (thời gian, IP, thiết bị) | Hỗ trợ phát hiện bất thường |
+| 3 | Gọi API qua Route Handler proxy của Next.js | ✅ 05/11: `app/api/v1/[...path]/route.ts`; `/api/auth/session` bỏ `accessToken` |
+| 4 | Quản trị người dùng cho Admin | ✅ (FR-AUTH-010) |
+| 5 | Xác nhận email, đổi email bằng OTP | ✅ 05/11: FR-AUTH-012, trang `/auth/confirm-email`, mục "Đổi email" ở `/profile` |
+| 6 | Xoay khóa ký JWT có `kid` | ✅ 05/11: FR-AUTH-013, `Jwt:PreviousSigningKeys` |
+| 7 | Nhật ký đăng nhập (thời gian, IP, thiết bị) | ✅ 05/11: FR-AUTH-011, bảng `LoginAttempts` (migration `Auth_LoginHistory`), mục "Nhật ký đăng nhập" ở `/profile` |
+
+Ghi chú 05/11 (nhánh `2312793/tv1-mo-rong`, CR-23): không sửa file dùng chung — `LoginAttempt` dùng `dbContext.Set<>()` thay vì thêm `DbSet` vào `AppDbContext`, `ICurrentUser.UserAgent` có cài đặt mặc định nên fake của TV2/TV3 không phải sửa, `lib/api/client.ts` (TV4) giữ nguyên. Cần báo nhóm: khi xoay khóa trên máy demo thêm biến `Jwt__PreviousSigningKeys__0` vào service `api` trong `docker-compose.yml` (TV3).
 
 ## 7. Rủi ro, dự phòng và checklist
 
