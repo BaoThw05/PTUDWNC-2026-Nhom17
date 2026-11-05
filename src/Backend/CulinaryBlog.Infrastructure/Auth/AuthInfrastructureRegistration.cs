@@ -38,6 +38,7 @@ internal static class AuthInfrastructureRegistration
 
         services.AddScoped<IUserAccountService, IdentityUserAccountService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         services.AddSingleton<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
         services.AddScoped<IDataSeeder, AuthDataSeeder>();
@@ -58,6 +59,9 @@ internal static class AuthInfrastructureRegistration
         options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = MaxFailedAccessAttempts;
         options.Lockout.DefaultLockoutTimeSpan = LockoutDuration;
+
+        // Đổi email bằng mã 6 chữ số (TOTP của EmailTokenProvider) thay vì token dài trong link.
+        options.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
 
         options.User.RequireUniqueEmail = true;
         // UserName = email; email đã được validator kiểm tra nên không giới hạn ký tự.

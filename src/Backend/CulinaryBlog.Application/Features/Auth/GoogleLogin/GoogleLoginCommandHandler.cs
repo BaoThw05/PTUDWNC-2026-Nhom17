@@ -2,6 +2,7 @@ using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Common.Exceptions;
 using CulinaryBlog.Application.Features.Auth.Abstractions;
 using CulinaryBlog.Application.Features.Auth.Common;
+using CulinaryBlog.Domain.Auth;
 using MediatR;
 
 namespace CulinaryBlog.Application.Features.Auth.GoogleLogin;
@@ -10,7 +11,8 @@ public sealed class GoogleLoginCommandHandler(
     IGoogleIdTokenValidator googleTokens,
     IUserAccountService users,
     AuthSessionIssuer sessions,
-    IBackgroundJobService jobs) : IRequestHandler<GoogleLoginCommand, AuthResponse>
+    IBackgroundJobService jobs,
+    LoginAudit audit) : IRequestHandler<GoogleLoginCommand, AuthResponse>
 {
     public const string ProviderName = "Google";
 
@@ -32,10 +34,13 @@ public sealed class GoogleLoginCommandHandler(
 
         if (!user.IsActive)
         {
+            await audit.RecordAsync(user.Id, LoginMethod.Google, LoginResult.Disabled, cancellationToken);
             throw new ForbiddenException("The account is disabled.", AuthErrorCodes.AccountDisabled);
         }
 
-        return await sessions.StartAsync(user, cancellationToken);
+        var response = await sessions.StartAsync(user, cancellationToken);
+        await audit.RecordAsync(user.Id, LoginMethod.Google, LoginResult.Succeeded, cancellationToken);
+        return response;
     }
 
     private async Task<UserAccount> LinkOrCreateAsync(

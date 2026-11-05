@@ -12,6 +12,8 @@ internal sealed class FakeUserAccountService : IUserAccountService
     private readonly Dictionary<Guid, string?> _passwords = [];
     private readonly Dictionary<ExternalLogin, Guid> _logins = [];
 
+    public const string ChangeEmailCode = "123456";
+
     public HashSet<Guid> LockedOut { get; } = [];
 
     public UserAccount Add(string email, string password, bool isActive = true, string userName = "testuser")
@@ -98,6 +100,42 @@ internal sealed class FakeUserAccountService : IUserAccountService
 
         _passwords[userId] = newPassword;
         return Task.CompletedTask;
+    }
+
+    public Task<string> CreateEmailConfirmationTokenAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        GetRequired(userId);
+        return Task.FromResult($"confirm-{userId}");
+    }
+
+    public Task<UserAccount> ConfirmEmailAsync(Guid userId, string token, CancellationToken cancellationToken)
+    {
+        var user = GetRequired(userId);
+        if (token != $"confirm-{userId}")
+        {
+            throw new ValidationException(AuthErrorCodes.EmailTokenInvalid, "Invalid token.");
+        }
+
+        _users[userId] = user = user with { EmailConfirmed = true };
+        return Task.FromResult(user);
+    }
+
+    public Task<string> CreateChangeEmailCodeAsync(Guid userId, string newEmail, CancellationToken cancellationToken)
+    {
+        GetRequired(userId);
+        return Task.FromResult(ChangeEmailCode);
+    }
+
+    public Task<UserAccount> ChangeEmailAsync(Guid userId, string newEmail, string code, CancellationToken cancellationToken)
+    {
+        var user = GetRequired(userId);
+        if (code != ChangeEmailCode)
+        {
+            throw new ValidationException(AuthErrorCodes.EmailCodeInvalid, "Invalid code.");
+        }
+
+        _users[userId] = user = user with { Email = newEmail, EmailConfirmed = true };
+        return Task.FromResult(user);
     }
 
     public Task<UserAccount> UpdateFullNameAsync(Guid userId, string fullName, CancellationToken cancellationToken)

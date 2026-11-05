@@ -98,13 +98,38 @@ internal sealed class IdentityUserAccountService(
     public async Task ResetPasswordAsync(Guid userId, string token, string newPassword, CancellationToken cancellationToken)
     {
         var result = await userManager.ResetPasswordAsync(await GetRequiredAsync(userId), token, newPassword);
-
-        if (result.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.InvalidToken)))
-        {
-            throw new ValidationException(AuthErrorCodes.ResetTokenInvalid, "The password reset link is invalid or has expired.");
-        }
-
+        ThrowIfInvalidToken(result, AuthErrorCodes.ResetTokenInvalid, "The password reset link is invalid or has expired.");
         EnsureSucceeded(result);
+    }
+
+    public async Task<string> CreateEmailConfirmationTokenAsync(Guid userId, CancellationToken cancellationToken) =>
+        await userManager.GenerateEmailConfirmationTokenAsync(await GetRequiredAsync(userId));
+
+    public async Task<UserAccount> ConfirmEmailAsync(Guid userId, string token, CancellationToken cancellationToken)
+    {
+        var user = await GetRequiredAsync(userId);
+        var result = await userManager.ConfirmEmailAsync(user, token);
+        ThrowIfInvalidToken(result, AuthErrorCodes.EmailTokenInvalid, "The email confirmation link is invalid or has expired.");
+        EnsureSucceeded(result);
+
+        return await ToAccountAsync(user);
+    }
+
+    public async Task<string> CreateChangeEmailCodeAsync(Guid userId, string newEmail, CancellationToken cancellationToken) =>
+        await userManager.GenerateChangeEmailTokenAsync(await GetRequiredAsync(userId), newEmail);
+
+    public async Task<UserAccount> ChangeEmailAsync(
+        Guid userId,
+        string newEmail,
+        string code,
+        CancellationToken cancellationToken)
+    {
+        var user = await GetRequiredAsync(userId);
+        var result = await userManager.ChangeEmailAsync(user, newEmail, code);
+        ThrowIfInvalidToken(result, AuthErrorCodes.EmailCodeInvalid, "The verification code is invalid or has expired.");
+        EnsureSucceeded(result);
+
+        return await ToAccountAsync(user);
     }
 
     public async Task<UserAccount> UpdateFullNameAsync(
@@ -235,7 +260,16 @@ internal sealed class IdentityUserAccountService(
             user.AvatarUrl,
             user.IsActive,
             user.CreatedAt,
-            roles);
+            roles,
+            user.EmailConfirmed);
+
+    private static void ThrowIfInvalidToken(IdentityResult result, string code, string message)
+    {
+        if (result.Errors.Any(error => error.Code == nameof(IdentityErrorDescriber.InvalidToken)))
+        {
+            throw new ValidationException(code, message);
+        }
+    }
 
     private static void EnsureSucceeded(IdentityResult result)
     {

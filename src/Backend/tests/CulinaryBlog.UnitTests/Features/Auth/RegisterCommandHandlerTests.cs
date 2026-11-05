@@ -28,7 +28,7 @@ public sealed class RegisterCommandHandlerTests
         Assert.Equal("Tuấn", response.User.FullName);
         Assert.Contains(Roles.Author, response.User.Roles);
         Assert.Single(_context.RefreshTokens.Tokens);
-        Assert.Single(_context.Jobs.Enqueued);
+        Assert.Equal(2, _context.Jobs.Enqueued.Count);
     }
 
     [Fact]
