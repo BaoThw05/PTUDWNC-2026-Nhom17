@@ -253,8 +253,11 @@ public sealed class RecipeImageCommandTests
         {
             var image = new RecipeImage
             {
-                Id = Guid.NewGuid(), RecipeId = Recipe.Id, IsPrimary = isPrimary,
-                OrderIndex = order, OriginalKey = $"recipes/{Recipe.Id}/{Guid.NewGuid()}/original.jpg"
+                Id = Guid.NewGuid(),
+                RecipeId = Recipe.Id,
+                IsPrimary = isPrimary,
+                OrderIndex = order,
+                OriginalKey = $"recipes/{Recipe.Id}/{Guid.NewGuid()}/original.jpg"
             };
             Db.Images.Add(image);
             return image;

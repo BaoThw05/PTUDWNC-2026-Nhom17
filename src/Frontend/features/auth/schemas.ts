@@ -58,9 +58,23 @@ export const changePasswordSchema = z
     message: "Mật khẩu mới phải khác mật khẩu hiện tại.",
   });
 
+export const forgotPasswordSchema = z.object({ email });
+
+export const resetPasswordSchema = z
+  .object({
+    newPassword: strongPassword,
+    confirmPassword: z.string(),
+  })
+  .refine((values) => values.newPassword === values.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Mật khẩu nhập lại không khớp.",
+  });
+
 export const profileSchema = z.object({ fullName });
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;
+export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 export type ProfileValues = z.infer<typeof profileSchema>;

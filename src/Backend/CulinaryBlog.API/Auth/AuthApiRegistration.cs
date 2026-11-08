@@ -34,6 +34,8 @@ internal static class AuthApiRegistration
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            // Qua Tunnel request đi cloudflared → nginx → Next.js → API: bỏ giới hạn 1 hop để lần ngược tới IP client thật.
+            options.ForwardLimit = null;
             foreach (var network in trustedNetworks)
             {
                 options.KnownIPNetworks.Add(IPNetwork.Parse(network));
