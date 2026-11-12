@@ -790,13 +790,13 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm chức năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tác giả sở hữu (Author – Owner) / Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Cập nhật thông tin của một công thức. Resource-Based Authorization<br>được áp dụng: chỉ Author sở hữu recipe (AuthorId == currentUserId)<br>hoặc Admin được phép. Concurrency control qua RowVersion (ETag<br>pattern): client phải gửi RowVersion hiện tại trong If-Match header; nếu<br>mismatch → conflict.|
-|**Điều kiện tiên quyết**|1. Author/Admin đang đăng nhập. 2. Recipe với ID tương ứng tồn tại.<br>3. Client cung cấp RowVersion hợp lệ trong If-Match header (hoặc<br>trong request body).|
-|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PUT /api/v1/recipes/{id} với body: { title, description,<br>categoryId, prepTime, cookTime, servings, difficulty, instructions,<br>nutrition? }.<br>2. Kiểm tra xác thực.<br>3. UpdateRecipeCommand dispatch.<br>4. Lấy recipe từ database theo ID.<br>5. IAuthorizationService.AuthorizeAsync(user, recipe,<br>Operations.Update) – kiểm tra resource-based auth.<br>6. Kiểm tra RowVersion: DbContext sẽ ném<br>DbUpdateConcurrencyException nếu RowVersion mismatch.<br>7. Update các field của recipe entity qua domain method<br>recipe.Update(...).<br>8. Cập nhật Nutrition nếu có.<br>9. SaveChangesAsync() – nếu RowVersion mismatch tại đây → ném<br>ConcurrencyException → HTTP 409.<br>10. Invalidate cache: EvictByTagAsync("recipes"),<br>EvictByTagAsync($"recipe:{slug}").<br>11. Trả về HTTP 200 OK với RecipeDto đã cập nhật.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Không phải owner (Author khác): HTTP 403 Forbidden.<br>A2 – Concurrency conflict (RowVersion mismatch): HTTP 409 Conflict<br>– "Dữ liệu đã bị thay đổi bởi người dùng khác."<br>A3 – ID không tồn tại: HTTP 404.|
+|**Mô tả**|Cập nhật thông tin của một công thức. Resource-Based Authorization<br>được áp dụng: chỉ Author sở hữu recipe (AuthorId == currentUserId)<br>hoặc Admin được phép. Kiểm soát đồng thời lạc quan (Optimistic Concurrency)<br>sử dụng cột hệ thống `xmin` (`uint Version`): Client bắt buộc gửi kèm trường<br>`version` trong request body. Nếu `version` gửi lên khác với giá trị hiện tại trong database<br>→ trả về HTTP 409 Conflict (`RECIPE_CONCURRENCY_CONFLICT`). Khi cập nhật tiêu đề,<br>hệ thống chỉ tự động sinh lại Slug nếu bài viết chưa từng được Publish (`PublishedAt == null`).|
+|**Điều kiện tiên quyết**|1. Author/Admin đang đăng nhập. 2. Recipe với ID tương ứng tồn tại.<br>3. Client cung cấp `version` (uint) hiện tại trong request body.|
+|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PUT /api/v1/recipes/{id} với body: { title, description,<br>categoryId, prepTimeMinutes, cookTimeMinutes, servings, difficulty,<br>nutrition?: { calories, protein, carbs, fat }, version }.<br>2. Kiểm tra xác thực (RequireAuthorization).<br>3. UpdateRecipeCommand dispatch qua MediatR.<br>4. Lấy recipe từ database theo ID.<br>5. RecipeAuthorizationHandler kiểm tra: currentUserId == recipe.AuthorId hoặc role Admin.<br>6. EF Core gán OriginalValue của `Version` từ request body; SaveChangesAsync()<br>sẽ ném DbUpdateConcurrencyException nếu `xmin` mismatch.<br>7. Nếu đổi Title và PublishedAt == null: tự động sinh lại Slug với SlugHelper tiếng Việt.<br>8. Cập nhật các trường thông tin cơ bản và Nutrition.<br>9. Lưu thay đổi và kích hoạt ICacheInvalidator: xóa cache tag "recipes" và $"recipe:{id}".<br>10. Trả về HTTP 200 OK với RecipeDetailDto mới nhất.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Chưa đăng nhập: HTTP 401 Unauthorized.<br>A2 – Không phải chủ bài/Admin: HTTP 403 Forbidden (`RECIPE_FORBIDDEN`).<br>A3 – Concurrency conflict (`version` mismatch): HTTP 409 Conflict (`RECIPE_CONCURRENCY_CONFLICT`).<br>A4 – ID không tồn tại: HTTP 404 Not Found (`RECIPE_NOT_FOUND`).<br>A5 – Dữ liệu không hợp lệ hoặc CategoryId không tồn tại: HTTP 422 Unprocessable Entity.|
 |**HTTP Method &**<br>**Endpoint**|PUT  /api/v1/recipes/{id:guid}|
-|**Kết quả mong đợi**|Recipe được cập nhật, cache bị invalidate, trả về RecipeDto mới nhất.|
-|**HTTP Status Code trả**<br>**về**|200 OK. 403 Forbidden – Không phải owner. 404 Not Found. 409<br>Conflict – Concurrency hoặc slug trùng. 422 Unprocessable Entity.|
+|**Kết quả mong đợi**|Recipe được cập nhật, version tự tăng, cache bị xóa, trả về RecipeDetailDto mới nhất.|
+|**HTTP Status Code trả**<br>**về**|200 OK – Cập nhật thành công. 401 Unauthorized. 403 Forbidden. 404 Not Found. 409 Conflict. 422 Unprocessable Entity.|
 
 <!-- PDF trang 30 -->
 
@@ -808,47 +808,47 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm chức năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tác giả sở hữu (Author – Owner) / Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Thay đổi trạng thái công thức: Draft → Published (xuất bản) hoặc<br>Published → Draft (hủy xuất bản). Business rule: KHÔNG thể publish<br>nếu recipe không có ít nhất 1 bước thực hiện (Steps.Count > 0). Khi<br>publish, Recipe trở nên công khai và được đưa vào index tìm kiếm.|
+|**Mô tả**|Thay đổi trạng thái công thức: Draft → Published (xuất bản) hoặc<br>Published → Draft (hủy xuất bản). Quy tắc nghiệp vụ (S-11): Điều kiện publish<br>chỉ yêu cầu công thức có **ít nhất 1 bước thực hiện** (Steps.Count >= 1). Nguyên liệu<br>và ảnh **không bắt buộc** để publish, cho phép bổ sung sau. Lần đầu publish thành công,<br>hệ thống gán `PublishedAt = UtcNow` và giữ nguyên mốc này vĩnh viễn. Thao tác có tính chất<br>idempotent: gọi publish khi đã Published trả về 200 OK.|
 |**Điều kiện tiên quyết**|1. Recipe tồn tại, người dùng là owner hoặc Admin. 2. Để publish:<br>recipe phải có ít nhất 1 RecipeStep.|
-|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PATCH /api/v1/recipes/{id}/publish (để xuất bản) hoặc<br>PATCH /api/v1/recipes/{id}/unpublish.<br>2. PublishRecipeCommand dispatch với isPublish = true/false.<br>3. Kiểm tra resource-based authorization.<br>4. Gọi domain method: recipe.Publish() hoặc recipe.Unpublish().<br>5. recipe.Publish() kiểm tra: Steps.Count == 0 → Throw<br>DomainException("Recipe phải có ít nhất 1 bước thực hiện.").<br>6. Set Status = Published/Draft, UpdatedAt = DateTime.UtcNow.<br>7. SaveChangesAsync(), invalidate cache.<br>8. Trả về HTTP 200 OK với RecipeDto.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Recipe không có bước thực hiện: HTTP 422 với<br>DomainException message.<br>A2 – Recipe đã ở trạng thái mong muốn: Idempotent, trả về HTTP 200<br>OK.|
+|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PATCH /api/v1/recipes/{id}/publish (hoặc PATCH /api/v1/recipes/{id}/unpublish).<br>2. PublishRecipeCommand / UnpublishRecipeCommand dispatch qua MediatR.<br>3. Kiểm tra resource-based authorization (chủ sở hữu hoặc Admin).<br>4. Lấy recipe kèm Steps.<br>5. Đối với Publish: kiểm tra Steps.Count == 0 → ném BusinessRuleException (HTTP 422).<br>6. Gọi domain method: `recipe.Publish()` hoặc `recipe.Unpublish()`.<br>7. Gán `PublishedAt` ở lần đầu publish; cập nhật `UpdatedAt` để thay đổi version concurrency.<br>8. SaveChangesAsync(), kích hoạt ICacheInvalidator xóa tag "recipes", $"recipe:{id}".<br>9. Trả về HTTP 200 OK.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – Recipe không có bước thực hiện nào: HTTP 422 Unprocessable Entity (`RECIPE_PUBLISH_INCOMPLETE`).<br>A2 – Trạng thái chuyển đổi không hợp lệ: HTTP 422 (`RECIPE_INVALID_STATE_TRANSITION`).<br>A3 – Recipe đã ở trạng thái đích: Idempotent, trả về HTTP 200 OK.<br>A4 – Không có quyền: HTTP 403 Forbidden. Recipe không tồn tại: HTTP 404 Not Found.|
 |**HTTP Method &**<br>**Endpoint**|PATCH  /api/v1/recipes/{id:guid}/publish  \|  PATCH  /api/v1/recipes/{id:guid}/unpublish|
-|**Kết quả mong đợi**|Status recipe được thay đổi thành Published hoặc Draft. Cache bị<br>invalidate.|
-|**HTTP Status Code trả**<br>**về**|200 OK – Thành công. 403 Forbidden. 404 Not Found. 422<br>Unprocessable Entity – Thiếu steps.|
+|**Kết quả mong đợi**|Trạng thái recipe được chuyển sang Published hoặc Draft. Cache bị xóa. Người dùng công khai thấy được bài khi Published.|
+|**HTTP Status Code trả**<br>**về**|200 OK – Thành công. 401 Unauthorized. 403 Forbidden. 404 Not Found. 422 Unprocessable Entity.|
 
 <!-- PDF trang 31 -->
 
-### FR-RCP-006: Lưu trữ Công thức (Archive)
+### FR-RCP-006: Lưu trữ Công thức (Archive / Unarchive)
 
 |**Mã yêu cầu**|FR-RCP-006|
 |---|---|
 |**Tên yêu cầu**|Lưu trữ Công thức (Archive / Unarchive)|
 |**Nhóm chức năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
-|**Tác nhân**|Tác giả sở hữu / Quản trị viên (Admin)|
+|**Tác nhân**|Tác giả sở hữu (Author – Owner) / Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|S – Should Have|
-|**Mô tả**|Chuyển Recipe sang trạng thái Archived. Recipe Archived không hiển<br>thị trong danh sách công khai nhưng không bị xóa khỏi database (soft<br>hide). Hữu ích để ẩn recipe cũ không còn phù hợp mà không mất dữ<br>liệu.|
-|**Điều kiện tiên quyết**|1. Recipe tồn tại, người dùng có quyền.|
-|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PATCH /api/v1/recipes/{id}/archive.<br>2. Kiểm tra authorization.<br>3. recipe.Archive() → Status = Archived.<br>4. SaveChangesAsync(), invalidate cache.<br>5. HTTP 200 OK.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – ID không tồn tại: HTTP 404. A2 – Không có quyền: HTTP 403.|
-|**HTTP Method &**<br>**Endpoint**|PATCH  /api/v1/recipes/{id:guid}/archive|
-|**Kết quả mong đợi**|Status = Archived. Recipe không còn xuất hiện trong public listing.|
-|**HTTP Status Code trả**<br>**về**|200 OK. 403 Forbidden. 404 Not Found.|
+|**Mô tả**|Quản lý trạng thái lưu trữ: Chuyển Recipe sang trạng thái `Archived` (ẩn khỏi danh sách<br>công khai và tìm kiếm nhưng vẫn xem được trong dashboard) hoặc `Unarchive` (chuyển về `Draft`).<br>Cho phép tác giả tạm đóng các bài viết cũ mà không làm mất dữ liệu.|
+|**Điều kiện tiên quyết**|1. Recipe tồn tại, người dùng là chủ sở hữu hoặc Admin.|
+|**Luồng chính (Happy**<br>**Path)**|1. Author gửi PATCH /api/v1/recipes/{id}/archive hoặc PATCH /api/v1/recipes/{id}/unarchive.<br>2. Kiểm tra authorization.<br>3. Gọi domain method `recipe.Archive()` hoặc `recipe.Unarchive()`.<br>4. SaveChangesAsync(), xóa cache qua ICacheInvalidator.<br>5. Trả về HTTP 200 OK.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – ID không tồn tại: HTTP 404 Not Found.<br>A2 – Không có quyền: HTTP 403 Forbidden.<br>A3 – Chuyển đổi trạng thái sai quy tắc: HTTP 422 Unprocessable Entity.|
+|**HTTP Method &**<br>**Endpoint**|PATCH  /api/v1/recipes/{id:guid}/archive  \|  PATCH  /api/v1/recipes/{id:guid}/unarchive|
+|**Kết quả mong đợi**|Trạng thái recipe chuyển thành Archived hoặc Draft. Danh sách công khai lập tức ẩn bài viết.|
+|**HTTP Status Code trả**<br>**về**|200 OK. 401 Unauthorized. 403 Forbidden. 404 Not Found. 422 Unprocessable Entity.|
 
-### FR-RCP-007: Xóa Công thức [Author-Owner/Admin]
+### FR-RCP-007: Xóa mềm và Khôi phục Công thức [Author-Owner/Admin]
 
 |**Mã yêu cầu**|FR-RCP-007|
 |---|---|
-|**Tên yêu cầu**|Xóa Vĩnh viễn Công thức Nấu ăn|
+|**Tên yêu cầu**|Xóa mềm vào Thùng rác và Khôi phục Công thức (Soft Delete & Restore)|
 |**Nhóm chức năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tác giả sở hữu (Author – Owner) / Quản trị viên (Admin)|
 |**Mức ưu tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Xóa vĩnh viễn một công thức và tất cả dữ liệu liên quan (cascade<br>delete: Steps, Ingredients, Images). Các file ảnh trên MinIO được xóa<br>bất đồng bộ qua Hangfire fire-and-forget job để tránh blocking HTTP<br>response. Đây là hard delete (không dùng soft delete pattern cho<br>recipe).|
+|**Mô tả**|Áp dụng mô hình Xóa lai (Phương án C - Quyết định S-03):<br>1. **Xóa mềm (Thùng rác):** Khi gọi xóa, Recipe được đánh dấu `IsDeleted = true`, `DeletedAt = UtcNow`.<br>Bài viết lập tức biến mất khỏi tất cả endpoint công khai và tìm kiếm thông qua Global Query Filter.<br>Tác giả vẫn xem được các bài đã xóa trong mục "Thùng rác" qua `GET /me/recipes?deleted=true`.<br>2. **Khôi phục (Restore):** Cho phép khôi phục bài từ thùng rác về lại trạng thái trước khi xóa qua endpoint `POST /recipes/{id}/restore`. Nếu slug ban đầu bị trùng với bài khác thì tự động thêm hậu tố.<br>3. **Dọn dẹp tự động (Hard Delete sau 30 ngày):** Hangfire recurring job chạy định kỳ hằng đêm quét các Recipe nằm trong thùng rác quá 30 ngày để xóa vĩnh viễn khỏi database (cascade delete steps, ingredients) và gọi `IFileStorageService.DeleteByPrefixAsync($"recipes/{id}/")` xóa toàn bộ ảnh liên quan.|
 |**Điều kiện tiên quyết**|1. Recipe tồn tại. 2. Người dùng là owner hoặc Admin.|
-|**Luồng chính (Happy**<br>**Path)**|1. Author/Admin gửi DELETE /api/v1/recipes/{id}.<br>2. Kiểm tra xác thực và resource-based authorization.<br>3. Lấy danh sách URL ảnh từ recipe.Images.<br>4. _unitOfWork.Recipes.Remove(recipe), SaveChangesAsync() –<br>cascade delete Steps, Ingredients, Images trong database.<br>5. Với mỗi imageUrl:<br>BackgroundJob.Enqueue<IFileStorageService>(svc =><br>svc.DeleteAsync(url)) – xóa ảnh trên MinIO bất đồng bộ.<br>6. EvictByTagAsync("recipes"),<br>EvictByTagAsync($"recipe:{recipe.Slug}") – invalidate cache.<br>7. Trả về HTTP 204 No Content.|
-|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – ID không tồn tại: HTTP 404.<br>A2 – Không phải owner: HTTP 403.<br>A3 – Xóa MinIO file thất bại (job retry): Hangfire tự động retry 3 lần.<br>Nếu vẫn fail, log error nhưng không ảnh hưởng response đã trả về.|
-|**HTTP Method &**<br>**Endpoint**|DELETE  /api/v1/recipes/{id:guid}|
-|**Kết quả mong đợi**|Recipe và tất cả child entities bị xóa khỏi database. Ảnh trên MinIO<br>được lên lịch xóa qua Hangfire.|
-|**HTTP Status Code trả**<br>**về**|204 No Content – Xóa thành công. 403 Forbidden. 404 Not Found.|
+|**Luồng chính (Happy**<br>**Path)**|--- XÓA VÀO THÙNG RÁC ---<br>1. Author/Admin gửi DELETE /api/v1/recipes/{id}.<br>2. Kiểm tra xác thực và resource-based authorization.<br>3. Gọi domain method: `recipe.SoftDelete()`. Gán `IsDeleted = true`, `DeletedAt = DateTime.UtcNow`.<br>4. SaveChangesAsync(). Kích hoạt ICacheInvalidator xóa tag "recipes" và $"recipe:{id}".<br>5. Trả về HTTP 204 No Content.<br>--- KHÔI PHỤC TỪ THÙNG RÁC ---<br>6. Author/Admin gửi POST /api/v1/recipes/{id}/restore.<br>7. Kiểm tra quyền, truy vấn bằng `.IgnoreQueryFilters()`.<br>8. Gọi `recipe.Restore()`. Kiểm tra partial unique index của Slug; nếu trùng slug với bài hiện có thì tạo slug mới có hậu tố `-2`, `-3`.<br>9. SaveChangesAsync(). Trả về HTTP 200 OK.<br>--- DỌN DẸP HANGFIRE (ĐỊNH KỲ) ---<br>10. Hangfire Job `CleanTrashRecipesJob` quét các recipe có `IsDeleted == true` và `DeletedAt < UtcNow - 30 days`.<br>11. Xóa vĩnh viễn entity và gọi xóa folder ảnh trên storage.|
+|**Luồng thay thế /**<br>**Ngoại lệ**|A1 – ID không tồn tại: HTTP 404 Not Found (`RECIPE_NOT_FOUND`).<br>A2 – Không phải chủ bài/Admin: HTTP 403 Forbidden (`RECIPE_FORBIDDEN`).<br>A3 – Khôi phục recipe chưa bị xóa: HTTP 422 Unprocessable Entity.|
+|**HTTP Method &**<br>**Endpoint**|DELETE  /api/v1/recipes/{id:guid}  \|  POST  /api/v1/recipes/{id:guid}/restore|
+|**Kết quả mong đợi**|Recipe được chuyển vào Thùng rác hoặc khôi phục thành công. Cache liên quan được giải phóng.|
+|**HTTP Status Code trả**<br>**về**|DELETE: 204 No Content. RESTORE: 200 OK. 401 Unauthorized. 403 Forbidden. 404 Not Found. 422 Unprocessable Entity.|
 
 <!-- PDF trang 32 -->
 
@@ -1484,11 +1484,14 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |AUTH_GOOGLE_TOKEN_INVALID|401|idToken Google sai<br>chữ ký, sai audience<br>hoặc hết hạn.|Auth|
 |AUTH_GOOGLE_EMAIL_UNVERIFIED|401|Email tài khoản<br>Google chưa được<br>Google xác minh.|Auth|
 |AUTH_GOOGLE_UNAVAILABLE|502|Không xác minh được<br>với Google, hoặc<br>backend chưa cấu<br>hình Google Client<br>ID.|Auth|
-|RECIPE_NOT_FOUND|404|Recipe với id/slug<br>không tồn tại hoặc đã<br>bị xóa.|Recipe|
-|RECIPE_SLUG_EXISTS|409|Slug đã tồn tại — tự<br>động thêm suffix<br>(slug-1, slug-2...).|Recipe|
-|RECIPE_PUBLISH_INCOMPLETE|400|Recipe thiếu điều kiện<br>publish: phải có ít nhất<br>1 ingredient và 1 step.|Recipe|
+|RECIPE_NOT_FOUND|404|Recipe với id/slug<br>không tồn tại hoặc đã<br>bị chuyển vào thùng rác.|Recipe|
+|RECIPE_SLUG_EXISTS|409|Slug đã tồn tại — tự<br>động thêm suffix<br>(slug-2, slug-3...).|Recipe|
+|RECIPE_PUBLISH_INCOMPLETE|422|Recipe thiếu điều kiện<br>publish: phải có ít nhất<br>1 bước thực hiện (steps).|Recipe|
 |RECIPE_FORBIDDEN|403|User không phải<br>owner và không phải<br>Admin.|Recipe|
-|RECIPE_CONCURRENCY_CONFLICT|422|RowVersion không<br>khớp — resource đã<br>được cập nhật bởi<br>request khác. Client<br>cần reload.|Recipe|
+|RECIPE_CONCURRENCY_CONFLICT|409|Version không khớp —<br>dữ liệu đã bị thay đổi<br>bởi người dùng khác.<br>Client cần tải lại.|Recipe|
+|RECIPE_INVALID_STATE_TRANSITION|422|Chuyển trạng thái<br>vòng đời không hợp lệ.|Recipe|
+|STEP_NOT_FOUND|404|Bước nấu ăn không tồn<br>tại hoặc không thuộc về<br>recipe.|Recipe|
+|INGREDIENT_NOT_FOUND|404|Nguyên liệu không tồn<br>tại hoặc không thuộc về<br>recipe.|Recipe|
 |CATEGORY_NOT_FOUND|404|Category không tồn<br>tại.|Category|
 |CATEGORY_NAME_EXISTS|409|Tên category đã tồn<br>tại.|Category|
 |CATEGORY_DELETE_HAS_RECIPES|409|Không thể xóa<br>category đang có<br>recipes thuộc về.|Category|

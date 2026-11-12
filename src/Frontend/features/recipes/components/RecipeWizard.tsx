@@ -10,10 +10,12 @@ import type {
   RecipeNutrition,
 } from "../types";
 import { ApiError } from "@/lib/api/client";
+import { RecipeImageManager } from "@/features/images/components/RecipeImageManager";
 
 export function RecipeWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [createdRecipeId, setCreatedRecipeId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -144,22 +146,25 @@ export function RecipeWizard() {
     setDragOverStepIdx(null);
   };
 
-  // Submit tạo bài (Lưu nháp hoặc Xuất bản)
-  const handleSubmit = async (shouldPublish: boolean) => {
+  // Chuyển sang Bước 4 (tự động tạo bản nháp trước để có recipeId cho upload ảnh)
+  const handleProceedToStep4 = async () => {
+    setErrorMessage(null);
+    setFieldErrors({});
+
+    const filteredSteps = steps.filter((s) => s.description.trim().length > 0);
+    if (filteredSteps.length === 0) {
+      setErrorMessage("Vui lòng thêm ít nhất 1 bước thực hiện trước khi sang bước tiếp theo.");
+      return;
+    }
+
+    if (createdRecipeId) {
+      setCurrentStep(4);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      setErrorMessage(null);
-      setFieldErrors({});
-
       const filteredIngredients = ingredients.filter((i) => i.name.trim().length > 0);
-      const filteredSteps = steps.filter((s) => s.description.trim().length > 0);
-
-      if (shouldPublish && filteredSteps.length === 0) {
-        setErrorMessage("Để xuất bản bài viết, bắt buộc phải có ít nhất 1 bước thực hiện.");
-        setIsSubmitting(false);
-        return;
-      }
-
       const payload: CreateRecipeRequest = {
         title: title.trim(),
         description: description.trim(),
@@ -173,9 +178,58 @@ export function RecipeWizard() {
       };
 
       const result = await createRecipe(payload);
+      setCreatedRecipeId(result.id);
+      setCurrentStep(4);
+    } catch (err: unknown) {
+      if (err instanceof ApiError && err.problem) {
+        setErrorMessage(err.problem.detail || err.problem.title || "Lỗi tạo bài viết (422).");
+      } else {
+        setErrorMessage((err as Error).message || "Không thể khởi tạo bài viết.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  const handleSubmit = async (shouldPublish: boolean) => {
+    try {
+      setIsSubmitting(true);
+      setErrorMessage(null);
+      setFieldErrors({});
 
-      if (shouldPublish) {
-        await publishRecipe(result.id);
+      const targetId = createdRecipeId;
+
+      if (!targetId) {
+        // Nếu chưa có ID thì tạo bài mới
+        const filteredIngredients = ingredients.filter((i) => i.name.trim().length > 0);
+        const filteredSteps = steps.filter((s) => s.description.trim().length > 0);
+
+        if (shouldPublish && filteredSteps.length === 0) {
+          setErrorMessage("Để xuất bản bài viết, bắt buộc phải có ít nhất 1 bước thực hiện.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const payload: CreateRecipeRequest = {
+          title: title.trim(),
+          description: description.trim(),
+          prepTimeMinutes: Number(prepTimeMinutes),
+          cookTimeMinutes: Number(cookTimeMinutes),
+          servings: Number(servings),
+          difficulty: Number(difficulty),
+          nutrition: nutrition.calories ? nutrition : null,
+          ingredients: filteredIngredients,
+          steps: filteredSteps,
+        };
+
+        const result = await createRecipe(payload);
+        if (shouldPublish) {
+          await publishRecipe(result.id);
+        }
+      } else {
+        // Đã có bài được tạo ở Bước 4, chỉ cần Publish nếu người dùng yêu cầu
+        if (shouldPublish) {
+          await publishRecipe(targetId);
+        }
       }
 
       router.push("/dashboard/recipes");
@@ -216,7 +270,7 @@ export function RecipeWizard() {
             { step: 1, label: "1. Thông tin" },
             { step: 2, label: "2. Nguyên liệu" },
             { step: 3, label: "3. Các bước" },
-            { step: 4, label: "4. Hoàn tất" },
+            { step: 4, label: "4. Ảnh & Lưu" },
           ].map((item) => (
             <div
               key={item.step}
@@ -621,34 +675,49 @@ export function RecipeWizard() {
         </div>
       )}
 
-      {/* BƯỚC 4: XÁC NHẬN & LƯU BÀI */}
+      {/* BƯỚC 4: ẢNH MINH HỌA & HOÀN TẤT */}
       {currentStep === 4 && (
-        <div className="space-y-6 rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Xem lại và Lưu công thức
-          </h2>
+        <div className="space-y-6">
+          {/* Component Quản lý Ảnh của TV3 */}
+          {createdRecipeId && (
+            <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
+              <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                Thêm hình ảnh cho món ăn (Tùy chọn)
+              </h2>
+              <p className="mb-4 text-xs text-zinc-500">
+                Tải lên ảnh minh họa cho công thức của bạn (hỗ trợ JPEG, PNG, WebP tối đa 5MB).
+              </p>
+              <RecipeImageManager recipeId={createdRecipeId} />
+            </div>
+          )}
 
-          <div className="rounded-lg bg-zinc-50 p-4 space-y-3 dark:bg-zinc-800/50 text-sm">
-            <div>
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300">Tên món: </span>
-              <span className="text-zinc-900 dark:text-zinc-100 font-bold">{title}</span>
-            </div>
-            <div>
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300">Thời gian: </span>
-              <span>Chuẩn bị {prepTimeMinutes} phút, nấu {cookTimeMinutes} phút ({servings} người)</span>
-            </div>
-            <div>
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300">Nguyên liệu: </span>
-              <span>{ingredients.filter((i) => i.name.trim()).length} mục</span>
-            </div>
-            <div>
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300">Các bước làm: </span>
-              <span>{steps.filter((s) => s.description.trim()).length} bước</span>
-            </div>
-          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-6 shadow-xs dark:border-zinc-800 dark:bg-zinc-900 space-y-4">
+            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Xem lại tóm tắt công thức
+            </h2>
 
-          <div className="rounded-lg border border-emerald-500/30 bg-emerald-50/50 p-4 text-xs text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
-            💡 Lưu ý: Bạn có thể chọn <strong>Lưu nháp</strong> để chỉnh sửa thêm sau này, hoặc <strong>Xuất bản ngay</strong> để hiển thị công khai tới độc giả.
+            <div className="rounded-lg bg-zinc-50 p-4 space-y-2 dark:bg-zinc-800/50 text-sm">
+              <div>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Tên món: </span>
+                <span className="text-zinc-900 dark:text-zinc-100 font-bold">{title}</span>
+              </div>
+              <div>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Thời gian: </span>
+                <span>Chuẩn bị {prepTimeMinutes} phút, nấu {cookTimeMinutes} phút ({servings} người)</span>
+              </div>
+              <div>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Nguyên liệu: </span>
+                <span>{ingredients.filter((i) => i.name.trim()).length} mục</span>
+              </div>
+              <div>
+                <span className="font-semibold text-zinc-700 dark:text-zinc-300">Các bước làm: </span>
+                <span>{steps.filter((s) => s.description.trim()).length} bước</span>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-50/50 p-3 text-xs text-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-300">
+              💡 Bạn có thể chọn <strong>Hoàn tất lưu nháp</strong> hoặc <strong>Xuất bản ngay</strong> để đưa công thức lên blog.
+            </div>
           </div>
         </div>
       )}
@@ -667,13 +736,22 @@ export function RecipeWizard() {
         ) : <div />}
 
         <div className="flex gap-3">
-          {currentStep < 4 ? (
+          {currentStep < 3 ? (
             <button
               type="button"
               onClick={nextStep}
               className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-emerald-500"
             >
               Tiếp tục →
+            </button>
+          ) : currentStep === 3 ? (
+            <button
+              type="button"
+              disabled={isSubmitting}
+              onClick={handleProceedToStep4}
+              className="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-xs hover:bg-emerald-500 disabled:opacity-50"
+            >
+              {isSubmitting ? "Đang xử lý..." : "Tiếp tục sang bước ảnh →"}
             </button>
           ) : (
             <>
