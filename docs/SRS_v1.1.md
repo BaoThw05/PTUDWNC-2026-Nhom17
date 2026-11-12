@@ -60,14 +60,14 @@ Mỗi dòng là một thay đổi so với SRS v1.0.0, lấy từ các quyết �
 | CR-13 | S-12 | Ảnh chỉ nhận JPEG, PNG, WebP (không AVIF); kiểm tra chữ ký file | FR-RCP-008, FR-FILE | TV3 | S-12 | ✅ |
 | CR-14 | S-09 | Lưu trữ theo chuẩn S3 trung lập (dev chạy trong Docker); bản demo đưa ra Internet bằng Cloudflare Tunnel | 2.4, FR-FILE, 5.3 | TV3 | S-09 | ✅ |
 | CR-15 | S-13 | Ghim MediatR 12.5.0 (MIT); `ApplicationUser` nằm ở Infrastructure, Domain không dùng NuGet; có architecture test | 2.5, 6.2, NFR-MAINT-004 | TV2 | S-13 | ✅ |
-| CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | S-07 | ✅ |
-| CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | S-08 | ✅ |
-| CR-18 | S-14 | Sitemap sinh bằng Next.js; Hangfire recurring job cho các việc dọn dẹp (thùng rác, refresh token hết hạn, file mồ côi) | FR-JOB-003, 3.6 | TV4, TV3 | S-14 | 🟡 |
-| CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | S-16 | ✅ |
+| CR-16 | S-07 | Chiến lược cache: Output Cache + Redis, xóa theo tag | FR-CAT, NFR-PERF | TV4 | [ADR-007](./ADR/ADR-007.md) | ✅ |
+| CR-17 | S-08 | Tìm kiếm tiếng Việt không dấu bằng `pg_trgm` trên cột đã bỏ dấu | FR-SRCH-001 | TV4 | [ADR-008](./ADR/ADR-008.md) | ✅ |
+| CR-18 | S-14 | Sitemap sinh bằng Next.js; Hangfire recurring job cho các việc dọn dẹp (thùng rác, refresh token hết hạn, file mồ côi) | FR-JOB-003, 3.6 | TV4, TV3 | [ADR-014](./ADR/ADR-014.md) | 🟡 |
+| CR-19 | S-16 | Viết lại NFR ở mức đo được trên máy demo; phần mở rộng chuyển sang "Định hướng" | Chương 4 | TV4 | [ADR-016](./ADR/ADR-016.md) | ✅ |
 | CR-20 | S-17 | Bổ sung unarchive, `GET /recipes/{id}`, `GET /me/recipes`; bỏ ảnh cho từng bước | FR-RCP, Chương 8 | TV2 | S-17 | ✅ |
-| CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | S-18 | ✅ |
-| CR-23 | S-05, S-17 | Mở rộng sau 25/10: nhật ký đăng nhập (FR-AUTH-011), xác nhận email và đổi email bằng mã OTP (FR-AUTH-012, thay phần "bỏ khỏi v1" của CR-08), xoay khóa ký JWT có `kid` (FR-AUTH-013); trình duyệt gọi API qua Route Handler `/api/v1/*` của Next.js nên access token không xuống trình duyệt | 3.1, 8.1, Phụ lục B | TV1 | ADR-001 | ✅ |
+| CR-21 | S-18 | Chốt phiên bản: .NET 10, Next.js 16, PostgreSQL 16, Redis 7 | 1.2, 2.4 | TV4 | [ADR-018](./ADR/ADR-018.md) | ✅ |
 | CR-22 | S-17 | Bổ sung đổi mật khẩu (FR-AUTH-008), quên/đặt lại mật khẩu qua email (FR-AUTH-009) và quản trị người dùng cho Admin (FR-AUTH-010); đổi/đặt lại mật khẩu và khóa tài khoản đều thu hồi mọi refresh token | 3.1, 8.1, Phụ lục B | TV1 | — | ✅ |
+| CR-23 | S-05, S-17 | Mở rộng sau 25/10: nhật ký đăng nhập (FR-AUTH-011), xác nhận email và đổi email bằng mã OTP (FR-AUTH-012, thay phần "bỏ khỏi v1" của CR-08), xoay khóa ký JWT có `kid` (FR-AUTH-013); trình duyệt gọi API qua Route Handler `/api/v1/*` của Next.js nên access token không xuống trình duyệt | 3.1, 8.1, Phụ lục B | TV1 | ADR-001 | ✅ |
 
 ## Diễn giải câu trả lời của giảng viên (nhóm chốt 18/09/2026)
 

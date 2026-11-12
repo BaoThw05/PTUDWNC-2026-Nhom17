@@ -114,6 +114,9 @@ public sealed class RecipeTrashCleanupJobTests
             return Task.CompletedTask;
         }
 
+        public Task<IReadOnlyList<StoredFile>> ListFilesAsync(string prefix, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<StoredFile>>([]);
+
         public string GetPublicUrl(string key) => $"http://localhost:5000/{key}";
     }
 
@@ -131,6 +134,7 @@ public sealed class RecipeTrashCleanupJobTests
         public IQueryable<RecipeStep> RecipeSteps => Enumerable.Empty<RecipeStep>().AsQueryable();
         public IQueryable<RecipeIngredient> RecipeIngredients => Enumerable.Empty<RecipeIngredient>().AsQueryable();
         public IQueryable<RecipeImage> RecipeImages => Enumerable.Empty<RecipeImage>().AsQueryable();
+        public IQueryable<RecipeImage> RecipeImagesIncludingDeleted => RecipeImages;
         public IQueryable<Recipe> RecipesIncludingDeleted => _active.Concat(_deleted).AsQueryable();
 
         public void Add<TEntity>(TEntity entity) where TEntity : class { }

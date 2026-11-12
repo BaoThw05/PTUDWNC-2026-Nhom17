@@ -46,7 +46,7 @@ export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
           {recipe.description}
         </p>
       </Link>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/15 pt-3 text-xs text-[var(--muted)]">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-black/10 pt-3 text-xs text-[var(--muted)]">
         <span>{difficultyLabel(recipe.difficulty)}</span>
         <span>{recipe.servings} khẩu phần</span>
       </div>

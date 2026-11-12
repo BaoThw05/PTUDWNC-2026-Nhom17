@@ -14,7 +14,7 @@ type RecipeFiltersProps = {
 };
 
 const fieldClassName =
-  "mt-1 h-11 w-full border border-white/20 bg-zinc-900 px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--color-leaf)] focus:ring-2 focus:ring-[var(--color-leaf)]/20";
+  "mt-1 h-11 w-full border border-black/15 bg-white px-3 text-sm text-[var(--foreground)] outline-none focus:border-[var(--color-leaf)] focus:ring-2 focus:ring-[var(--color-leaf)]/20";
 
 export function RecipeFilters({
   action,
@@ -27,7 +27,7 @@ export function RecipeFilters({
   const searchParams = useSearchParams();
 
   return (
-    <form key={searchParams.toString()} action={action} method="get" className="border-y border-white/15 py-4">
+    <form key={searchParams.toString()} action={action} method="get" className="border-y border-black/10 py-4">
       {searchTerm !== undefined && <input type="hidden" name="q" value={searchTerm} />}
       <div className={styles.filterGrid}>
         <label className="text-xs font-semibold text-[var(--muted)]">
@@ -64,8 +64,8 @@ export function RecipeFilters({
               <option value="createdAt">Cũ nhất</option>
               <option value="title">Tên A–Z</option>
               <option value="-title">Tên Z–A</option>
-              <option value="cookTime">Nấu nhanh trước</option>
-              <option value="-cookTime">Nấu lâu trước</option>
+              <option value="cookTimeMinutes">Nấu nhanh trước</option>
+              <option value="-cookTimeMinutes">Nấu lâu trước</option>
             </select>
           </label>
         ) : (
@@ -84,7 +84,7 @@ export function RecipeFilters({
         {showSort && (
           <label className="text-xs font-semibold text-[var(--muted)]">
             Số kết quả
-            <select className="ml-2 h-10 border border-white/20 bg-zinc-900 px-3 text-sm font-normal text-[var(--foreground)]" name="pageSize" defaultValue={values.pageSize ?? "12"}>
+            <select className="ml-2 h-10 border border-black/15 bg-white px-3 text-sm font-normal text-[var(--foreground)]" name="pageSize" defaultValue={values.pageSize ?? "12"}>
               <option value="12">12</option>
               <option value="24">24</option>
               <option value="50">50</option>
