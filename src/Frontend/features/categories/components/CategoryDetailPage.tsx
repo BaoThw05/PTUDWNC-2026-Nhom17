@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCategoryBySlug } from "../api/public-client";
@@ -43,13 +44,20 @@ export async function CategoryDetailPage({ slug, page }: { slug: string; page: n
           {page > 1 ? "Trang này không có công thức." : "Danh mục này chưa có công thức được xuất bản."}
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {recipes.items.map((recipe) => (
             <Link
               key={recipe.id}
               href={`/recipes/${encodeURIComponent(recipe.slug)}`}
               className="group rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-orange-400 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:border-zinc-800 dark:bg-zinc-900"
             >
+              <div className="relative -mx-6 -mt-6 mb-5 aspect-[4/3] overflow-hidden rounded-t-2xl bg-zinc-100 dark:bg-zinc-900">
+                {recipe.thumbnailUrl ? (
+                  <Image src={recipe.thumbnailUrl} alt={`Ảnh món ${recipe.title}`} fill sizes="(max-width: 639px) 100vw, (max-width: 1279px) 50vw, 25vw" unoptimized className="object-cover transition duration-300 group-hover:scale-105" />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400">Chưa có ảnh</div>
+                )}
+              </div>
               <h2 className="text-lg font-semibold group-hover:text-orange-700 dark:group-hover:text-orange-300">
                 {recipe.title}
               </h2>

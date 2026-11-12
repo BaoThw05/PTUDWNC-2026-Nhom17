@@ -21,7 +21,7 @@ public sealed class GetCategoryBySlugQueryValidator : AbstractValidator<GetCateg
     }
 }
 
-public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser currentUser)
+public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser currentUser, IFileStorage? fileStorage = null)
     : IRequestHandler<GetCategoryBySlugQuery, CategoryDetailDto>
 {
     public Task<CategoryDetailDto> Handle(GetCategoryBySlugQuery request, CancellationToken cancellationToken)
@@ -61,7 +61,8 @@ public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser
             : recipes
                 .Skip((int)offset)
                 .Take(request.PageSize)
-                .Select(recipe => new CategoryRecipeSummaryDto(
+                .Select(recipe => new
+                {
                     recipe.Id,
                     recipe.Title,
                     recipe.Slug,
@@ -70,7 +71,24 @@ public sealed class GetCategoryBySlugQueryHandler(IAppDbContext db, ICurrentUser
                     recipe.CookTimeMinutes,
                     recipe.Servings,
                     recipe.Difficulty,
-                    recipe.PublishedAt))
+                    recipe.PublishedAt,
+                    ThumbnailKey = recipe.Images
+                        .Where(image => image.IsPrimary)
+                        .Select(image => image.ThumbnailKey ?? image.MediumKey ?? image.OriginalKey)
+                        .FirstOrDefault()
+                })
+                .ToList()
+                .Select(row => new CategoryRecipeSummaryDto(
+                    row.Id,
+                    row.Title,
+                    row.Slug,
+                    row.Description,
+                    row.PrepTimeMinutes,
+                    row.CookTimeMinutes,
+                    row.Servings,
+                    row.Difficulty,
+                    row.PublishedAt,
+                    row.ThumbnailKey is null || fileStorage is null ? null : fileStorage.GetPublicUrl(row.ThumbnailKey)))
                 .ToList();
 
         return Task.FromResult(new CategoryDetailDto(
@@ -92,7 +110,8 @@ public sealed record CategoryRecipeSummaryDto(
     int CookTimeMinutes,
     int Servings,
     Difficulty Difficulty,
-    DateTimeOffset? PublishedAt);
+    DateTimeOffset? PublishedAt,
+    string? ThumbnailUrl = null);
 
 public static class CategoryErrorCodes
 {
