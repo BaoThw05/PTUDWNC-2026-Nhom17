@@ -10,5 +10,8 @@ public interface ICurrentUser
 
     string? IpAddress { get; }
 
+    /// <summary>Thiết bị/trình duyệt gửi request; mặc định null để các fake trong test không phải cài đặt.</summary>
+    string? UserAgent => null;
+
     bool IsInRole(string role);
 }

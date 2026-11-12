@@ -27,6 +27,9 @@ internal static class AuthInfrastructureRegistration
             .Validate(
                 jwt => System.Text.Encoding.UTF8.GetByteCount(jwt.SigningKey) >= JwtOptions.MinSigningKeyBytes,
                 $"Jwt:SigningKey must be at least {JwtOptions.MinSigningKeyBytes} bytes.")
+            .Validate(
+                jwt => jwt.PreviousSigningKeys.All(key => System.Text.Encoding.UTF8.GetByteCount(key) >= JwtOptions.MinSigningKeyBytes),
+                $"Every Jwt:PreviousSigningKeys entry must be at least {JwtOptions.MinSigningKeyBytes} bytes.")
             .ValidateOnStart();
         services.AddSingleton<IPostConfigureOptions<JwtOptions>, JwtDevelopmentKeySetup>();
 
@@ -35,9 +38,11 @@ internal static class AuthInfrastructureRegistration
 
         services.AddScoped<IUserAccountService, IdentityUserAccountService>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ILoginAttemptRepository, LoginAttemptRepository>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
         services.AddSingleton<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
         services.AddScoped<IDataSeeder, AuthDataSeeder>();
+        services.AddHostedService<AuthRecurringJobsRegistration>();
 
         return services;
     }
@@ -54,6 +59,9 @@ internal static class AuthInfrastructureRegistration
         options.Lockout.AllowedForNewUsers = true;
         options.Lockout.MaxFailedAccessAttempts = MaxFailedAccessAttempts;
         options.Lockout.DefaultLockoutTimeSpan = LockoutDuration;
+
+        // Đổi email bằng mã 6 chữ số (TOTP của EmailTokenProvider) thay vì token dài trong link.
+        options.Tokens.ChangeEmailTokenProvider = TokenOptions.DefaultEmailProvider;
 
         options.User.RequireUniqueEmail = true;
         // UserName = email; email đã được validator kiểm tra nên không giới hạn ký tự.

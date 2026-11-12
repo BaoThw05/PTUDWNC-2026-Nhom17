@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
+/*
+ * Theme: hiện chỉ dùng THEME TỐI cho toàn site (html có data-theme="dark" trong layout.tsx).
+ * Theme sáng sẽ làm sau: đổi data-theme thành "light" là các lớp `dark:` tự tắt,
+ * các biến --auth-* (features/auth/auth-theme.css) và biến bên dưới trả về bảng màu sáng.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+}
+
+:root[data-theme="dark"] {
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -10,13 +23,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-lora), "Times New Roman", serif;
 }
 
 body {

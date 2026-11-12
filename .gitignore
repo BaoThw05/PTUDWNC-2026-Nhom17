@@ -489,3 +489,18 @@ out/
 next-env.d.ts
 .vercel
 .env*.local
+
+# Local helper scripts, bundles and tool output (not part of the project)
+docker-compose.override.yml
+mo-web.bat
+chay-web.bat
+gan-anh-mon-an.ps1
+seed-photos/
+*.bundle
+graphify-out/
+.claude/
+
+# Frontend build/test artifacts
+*.tsbuildinfo
+playwright-report/
+blob-report/

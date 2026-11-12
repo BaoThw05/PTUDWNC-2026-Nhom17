@@ -12,5 +12,7 @@ internal sealed class HttpCurrentUser(IHttpContextAccessor httpContextAccessor) 
 
     public string? IpAddress => Context?.Connection.RemoteIpAddress?.ToString();
 
+    public string? UserAgent => Context?.Request.Headers.UserAgent.ToString() is { Length: > 0 } userAgent ? userAgent : null;
+
     public bool IsInRole(string role) => Context?.User.IsInRole(role) ?? false;
 }

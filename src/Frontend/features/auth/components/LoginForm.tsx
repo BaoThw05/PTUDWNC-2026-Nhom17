@@ -2,9 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { FORGOT_PASSWORD_PATH } from "../constants";
 import { authErrorMessage } from "../errors";
 import { loginSchema, type LoginValues } from "../schemas";
 import { FormAlert } from "./FormAlert";
@@ -59,6 +61,9 @@ export function LoginForm({ callbackUrl, googleEnabled, initialMessage, initialT
           error={errors.password?.message}
           {...register("password")}
         />
+        <Link href={FORGOT_PASSWORD_PATH} className="self-end text-sm text-(color:--auth-muted) underline">
+          Quên mật khẩu?
+        </Link>
         <SubmitButton pending={isSubmitting} pendingLabel="Đang đăng nhập…">
           Đăng nhập
         </SubmitButton>
@@ -66,10 +71,10 @@ export function LoginForm({ callbackUrl, googleEnabled, initialMessage, initialT
 
       {googleEnabled && (
         <>
-          <div className="flex items-center gap-3 text-xs text-zinc-500">
-            <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
+          <div className="flex items-center gap-3 text-xs text-(color:--auth-subtle)">
+            <span className="h-px flex-1 bg-(color:--auth-border)" />
             hoặc
-            <span className="h-px flex-1 bg-black/10 dark:bg-white/15" />
+            <span className="h-px flex-1 bg-(color:--auth-border)" />
           </div>
           <GoogleSignInButton callbackUrl={callbackUrl} />
         </>

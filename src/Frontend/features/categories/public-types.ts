@@ -18,6 +18,7 @@ export type CategoryRecipe = {
   servings: number;
   difficulty: number | string;
   publishedAt: string | null;
+  thumbnailUrl?: string | null;
 };
 
 export type CategoryDetail = {

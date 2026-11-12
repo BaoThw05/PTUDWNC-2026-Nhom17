@@ -28,7 +28,7 @@ export async function HomeScreen() {
   return (
     <div className={`${styles.screen} space-y-14`}>
       <section aria-labelledby="home-title" className="grid gap-8 border-b border-white/15 pb-10 md:grid-cols-[1fr_1.05fr] md:items-center">
-        <div>
+        <div className={styles.reveal}>
           <p className="mb-3 text-xs font-bold uppercase text-[var(--color-tomato)]">Công thức nấu ăn</p>
           <h1 id="home-title" className="max-w-xl font-serif text-4xl font-semibold leading-tight sm:text-5xl">
             Món ngon bắt đầu từ căn bếp của bạn.
@@ -45,7 +45,7 @@ export async function HomeScreen() {
             Không thể tải công thức lúc này.
           </p>
         ) : featured ? (
-          <article>
+          <article className={`${styles.reveal} ${styles.revealDelay1}`}>
             <Link href={`/recipes/${encodeURIComponent(featured.slug)}`} className="group block">
               <div className={styles.featureMedia}>
                 {featured.thumbnailUrl ? (
@@ -73,7 +73,7 @@ export async function HomeScreen() {
         )}
       </section>
 
-      <section aria-labelledby="recent-title">
+      <section aria-labelledby="recent-title" className={`${styles.reveal} ${styles.revealDelay2}`}>
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase text-[var(--color-leaf)]">Từ cộng đồng</p>
@@ -88,7 +88,7 @@ export async function HomeScreen() {
         )}
       </section>
 
-      <section aria-labelledby="categories-title" className="border-t border-white/15 pt-8">
+      <section aria-labelledby="categories-title" className={`${styles.reveal} ${styles.revealDelay3} border-t border-white/15 pt-8`}>
         <div className="mb-5">
           <p className="text-xs font-bold uppercase text-[var(--color-tomato)]">Chọn theo khẩu vị</p>
           <h2 id="categories-title" className="mt-1 font-serif text-3xl font-semibold">Danh mục</h2>

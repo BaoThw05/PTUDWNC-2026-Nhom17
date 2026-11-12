@@ -19,7 +19,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
         {/* Quick Stats Grid */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 pt-4">
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <span className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Chuẩn bị
             </span>
             <span className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -28,7 +28,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
           </div>
 
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <span className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Nấu nướng
             </span>
             <span className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -37,7 +37,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
           </div>
 
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <span className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Tổng thời gian
             </span>
             <span className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -46,7 +46,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
           </div>
 
           <div className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
-            <span className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">
+            <span className="block text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Khẩu phần
             </span>
             <span className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -64,7 +64,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
             Nguyên liệu cần chuẩn bị
           </h2>
           {recipe.ingredients.length === 0 ? (
-            <p className="text-sm text-zinc-500 italic">Không có danh sách nguyên liệu cụ thể.</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">Không có danh sách nguyên liệu cụ thể.</p>
           ) : (
             <ul className="divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white p-4 shadow-2xs dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
               {recipe.ingredients.map((ing) => (
@@ -140,7 +140,7 @@ export function RecipeDetailView({ recipe }: { recipe: RecipeSummary }) {
               )}
             </div>
           ) : (
-            <p className="text-sm text-zinc-500 italic">Chưa có thông tin dinh dưỡng.</p>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 italic">Chưa có thông tin dinh dưỡng.</p>
           )}
         </div>
       </div>
