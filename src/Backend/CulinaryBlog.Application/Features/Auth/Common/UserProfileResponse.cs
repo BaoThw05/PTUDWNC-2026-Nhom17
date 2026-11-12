@@ -9,8 +9,9 @@ public sealed record UserProfileResponse(
     string FullName,
     string? AvatarUrl,
     IReadOnlyList<string> Roles,
-    DateTimeOffset CreatedAt)
+    DateTimeOffset CreatedAt,
+    bool EmailConfirmed)
 {
     public static UserProfileResponse From(UserAccount user) =>
-        new(user.Id, user.Email, user.UserName, user.FullName, user.AvatarUrl, user.Roles, user.CreatedAt);
+        new(user.Id, user.Email, user.UserName, user.FullName, user.AvatarUrl, user.Roles, user.CreatedAt, user.EmailConfirmed);
 }

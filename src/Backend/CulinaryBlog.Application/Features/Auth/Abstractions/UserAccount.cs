@@ -8,4 +8,5 @@ public sealed record UserAccount(
     string? AvatarUrl,
     bool IsActive,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<string> Roles);
+    IReadOnlyList<string> Roles,
+    bool EmailConfirmed = false);
