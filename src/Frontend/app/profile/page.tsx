@@ -49,61 +49,61 @@ export default async function ProfilePage() {
             className="size-16 rounded-full object-cover"
           />
         ) : (
-          <span className="flex size-16 items-center justify-center rounded-full bg-foreground text-2xl font-semibold text-background">
+          <span className="flex size-16 items-center justify-center rounded-full bg-(color:--auth-fg) text-2xl font-semibold text-(color:--auth-bg)">
             {profile.fullName.charAt(0).toUpperCase()}
           </span>
         )}
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold tracking-tight">{profile.fullName}</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-(color:--auth-muted)">
             @{profile.userName} · {profile.roles.map((role) => ROLE_LABELS[role] ?? role).join(" · ")} · tham gia{" "}
             {joinedDate.format(new Date(profile.createdAt))}
           </p>
         </div>
       </header>
 
-      <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
+      <div className="rounded-2xl border border-(color:--auth-border) bg-(color:--auth-surface) p-6">
         <h2 className="mb-4 text-lg font-semibold">Thông tin tài khoản</h2>
         <ProfileForm profile={profile} />
         <div className="mt-4 flex flex-col gap-2 text-sm">
           <p>
             Email {profile.email}:{" "}
             {profile.emailConfirmed ? (
-              <span className="font-medium text-emerald-700 dark:text-emerald-400">đã xác nhận</span>
+              <span className="font-medium text-(color:--auth-success)">đã xác nhận</span>
             ) : (
-              <span className="font-medium text-amber-700 dark:text-amber-400">chưa xác nhận</span>
+              <span className="font-medium text-(color:--auth-warning)">chưa xác nhận</span>
             )}
           </p>
           {!profile.emailConfirmed && <ResendConfirmationButton />}
         </div>
       </div>
 
-      <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
+      <div className="rounded-2xl border border-(color:--auth-border) bg-(color:--auth-surface) p-6">
         <h2 className="mb-1 text-lg font-semibold">Đổi email</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-4 text-sm text-(color:--auth-muted)">
           Chúng tôi gửi mã 6 chữ số tới email mới. Tài khoản đăng nhập bằng Google chưa có mật khẩu: dùng &quot;Quên mật
           khẩu&quot; để đặt mật khẩu trước.
         </p>
         <ChangeEmailForm />
       </div>
 
-      <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
+      <div className="rounded-2xl border border-(color:--auth-border) bg-(color:--auth-surface) p-6">
         <h2 className="mb-1 text-lg font-semibold">Đổi mật khẩu</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-4 text-sm text-(color:--auth-muted)">
           Sau khi đổi, bạn sẽ được đăng xuất khỏi mọi thiết bị và cần đăng nhập lại.
         </p>
         <ChangePasswordForm />
       </div>
 
-      <div className="rounded-2xl border border-black/10 p-6 dark:border-white/15">
+      <div className="rounded-2xl border border-(color:--auth-border) bg-(color:--auth-surface) p-6">
         <h2 className="mb-1 text-lg font-semibold">Nhật ký đăng nhập</h2>
-        <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="mb-4 text-sm text-(color:--auth-muted)">
           20 lần đăng nhập gần nhất. Thấy thiết bị lạ? Hãy đổi mật khẩu ngay.
         </p>
         <LoginHistoryTable attempts={loginHistory} />
       </div>
 
-      <SignOutButton className="self-start text-sm text-red-600 hover:underline dark:text-red-400" />
+      <SignOutButton className="self-start text-sm text-(color:--auth-danger) hover:underline" />
     </section>
   );
 }

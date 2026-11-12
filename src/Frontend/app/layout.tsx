@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -8,6 +8,11 @@ import { AuthSessionProvider } from "@/features/auth/components/AuthSessionProvi
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin", "vietnamese"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
   subsets: ["latin", "vietnamese"],
 });
 
@@ -28,13 +33,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="vi"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme="dark"
+      className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <AuthSessionProvider>
           <QueryProvider>
             <SiteHeader />
-            <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+            <main className="mx-auto w-full max-w-[1920px] flex-1 px-[clamp(1rem,4vw,6rem)] py-10">
               {children}
             </main>
             <SiteFooter />

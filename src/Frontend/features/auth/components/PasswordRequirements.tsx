@@ -14,7 +14,7 @@ export function PasswordRequirements({ value }: { value: string }) {
         return (
           <li
             key={label}
-            className={met ? "text-emerald-700 dark:text-emerald-400" : "text-zinc-500"}
+            className={met ? "text-(color:--auth-success)" : "text-(color:--auth-subtle)"}
           >
             <span aria-hidden>{met ? "✓" : "○"}</span> {label}
             <span className="sr-only">{met ? " — đã đạt" : " — chưa đạt"}</span>

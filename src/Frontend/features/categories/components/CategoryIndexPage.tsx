@@ -18,7 +18,7 @@ export async function CategoryIndexPage() {
           Chưa có danh mục nào. Hãy quay lại sau nhé.
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {categories.map((category) => (
             <Link
               key={category.id}

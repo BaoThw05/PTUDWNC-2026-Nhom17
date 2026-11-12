@@ -12,7 +12,7 @@ export default function ForgotPasswordPage() {
       title="Quên mật khẩu"
       description="Nhập email đã đăng ký, chúng tôi sẽ gửi liên kết để đặt lại mật khẩu."
       footer={
-        <Link href={LOGIN_PATH} className="font-medium text-foreground underline">
+        <Link href={LOGIN_PATH} className="font-medium text-(color:--auth-fg) underline">
           Quay lại đăng nhập
         </Link>
       }

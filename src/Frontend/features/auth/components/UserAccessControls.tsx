@@ -8,7 +8,7 @@ import { authErrorMessage } from "../errors";
 import type { AdminUser } from "../types";
 
 const BUTTON_CLASS =
-  "whitespace-nowrap rounded-full border border-black/15 px-3 py-1 text-xs font-medium transition hover:bg-black/[.04] disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/20 dark:hover:bg-white/[.06]";
+  "whitespace-nowrap rounded-full border border-(color:--auth-input-border) px-3 py-1 text-xs font-medium transition hover:bg-(color:--auth-hover) disabled:cursor-not-allowed disabled:opacity-40";
 
 /** Nút khóa/mở và cấp/gỡ Admin cho một dòng; Admin không tự khóa hay tự gỡ quyền của mình (backend cũng chặn). */
 export function UserAccessControls({ user, isSelf }: { user: AdminUser; isSelf: boolean }) {
@@ -42,13 +42,13 @@ export function UserAccessControls({ user, isSelf }: { user: AdminUser; isSelf: 
           type="button"
           onClick={toggleActive}
           disabled={disabled}
-          className={`${BUTTON_CLASS} ${user.isActive ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"}`}
+          className={`${BUTTON_CLASS} ${user.isActive ? "text-(color:--auth-danger)" : "text-(color:--auth-success)"}`}
         >
           {user.isActive ? "Khóa" : "Mở khóa"}
         </button>
       </div>
       {mutation.error && (
-        <p role="alert" className="text-xs text-red-600 dark:text-red-400">
+        <p role="alert" className="text-xs text-(color:--auth-danger)">
           {authErrorMessage(mutation.error instanceof ApiError ? mutation.error.code : "SERVICE_UNAVAILABLE")}
         </p>
       )}

@@ -1,0 +1,60 @@
+/*
+ * Token màu cho các trang của TV1 (auth, profile, admin/users).
+ * Mọi màu trong features/auth và app/{auth,profile,admin} đi qua biến --auth-*,
+ * nên sau này chỉ cần bật `data-theme="dark"` trên <html> (nút chuyển theme) là đổi cả cụm trang.
+ * Hiện mặc định luôn là sáng; chưa theo prefers-color-scheme.
+ */
+:root {
+  --auth-bg: #ffffff;
+  --auth-surface: #ffffff;
+  --auth-fg: #171717;
+  --auth-muted: #52525b;
+  --auth-subtle: #71717a;
+  --auth-border: rgb(0 0 0 / 12%);
+  --auth-input-bg: #ffffff;
+  --auth-input-border: #8e8e98;
+  --auth-focus: rgb(23 23 23 / 22%);
+  --auth-hover: rgb(0 0 0 / 5%);
+  --auth-row-tint: rgb(0 0 0 / 3%);
+  --auth-chip: rgb(0 0 0 / 6%);
+  --auth-danger: #dc2626;
+  --auth-danger-bg: #fef2f2;
+  --auth-danger-border: rgb(239 68 68 / 40%);
+  --auth-danger-strong: #991b1b;
+  --auth-danger-tint: rgb(254 226 226 / 60%);
+  --auth-success: #047857;
+  --auth-success-bg: #ecfdf5;
+  --auth-success-border: rgb(16 185 129 / 40%);
+  --auth-success-strong: #065f46;
+  --auth-warning: #b45309;
+  --auth-warning-bg: #fef3c7;
+  --auth-warning-strong: #78350f;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --auth-bg: #0a0a0a;
+  --auth-surface: #141414;
+  --auth-fg: #ededed;
+  --auth-muted: #a1a1aa;
+  --auth-subtle: #8b8b94;
+  --auth-border: rgb(255 255 255 / 15%);
+  --auth-input-bg: #0a0a0a;
+  --auth-input-border: #6b6b75;
+  --auth-focus: rgb(237 237 237 / 25%);
+  --auth-hover: rgb(255 255 255 / 7%);
+  --auth-row-tint: rgb(255 255 255 / 4%);
+  --auth-chip: rgb(255 255 255 / 10%);
+  --auth-danger: #f87171;
+  --auth-danger-bg: rgb(69 10 10 / 40%);
+  --auth-danger-border: rgb(239 68 68 / 40%);
+  --auth-danger-strong: #fecaca;
+  --auth-danger-tint: rgb(69 10 10 / 20%);
+  --auth-success: #34d399;
+  --auth-success-bg: rgb(2 44 34 / 40%);
+  --auth-success-border: rgb(16 185 129 / 40%);
+  --auth-success-strong: #a7f3d0;
+  --auth-warning: #fbbf24;
+  --auth-warning-bg: rgb(120 53 15 / 40%);
+  --auth-warning-strong: #fde68a;
+}

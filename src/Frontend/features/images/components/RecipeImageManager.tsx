@@ -239,7 +239,7 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
     <section aria-label="Ảnh công thức" className="space-y-5">
       <div>
         <h2 className="text-xl font-semibold">Ảnh công thức</h2>
-        <p className="mt-1 text-sm text-gray-500">Tải nhiều ảnh JPEG, PNG hoặc WebP; mỗi ảnh tối đa 5 MB.</p>
+        <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">Tải nhiều ảnh JPEG, PNG hoặc WebP; mỗi ảnh tối đa 5 MB.</p>
       </div>
 
       <div
@@ -253,7 +253,7 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
           setDragging(false);
           addFiles(event.dataTransfer.files);
         }}
-        className={`rounded-xl border-2 border-dashed p-6 text-center ${dragging ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+        className={`rounded-xl border-2 border-dashed p-6 text-center ${dragging ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40" : "border-gray-300 dark:border-white/25"}`}
       >
         <p className="mb-3 text-sm">Kéo thả ảnh vào đây hoặc chọn từ máy</p>
         <button type="button" onClick={() => inputRef.current?.click()}
@@ -268,9 +268,9 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
           }} />
       </div>
 
-      {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-400">{error}</p>}
       {message && <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-700">{message}</p>}
-      {loadError && <p role="alert" className="text-sm text-red-700">{imageErrorMessage(loadError)}</p>}
+      {loadError && <p role="alert" className="text-sm text-red-700 dark:text-red-400">{imageErrorMessage(loadError)}</p>}
 
       {uploads.length > 0 && (
         <ul className="space-y-3" aria-label="Tiến trình tải ảnh">
@@ -280,18 +280,18 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{item.file.name}</p>
                 {item.status === "failed" ? (
-                  <p role="alert" className="text-sm text-red-700">{item.error}</p>
+                  <p role="alert" className="text-sm text-red-700 dark:text-red-400">{item.error}</p>
                 ) : (
                   <>
                     <progress value={item.progress} max={100} className="mt-2 h-2 w-full" />
-                    <p className="text-xs text-gray-500">{item.status === "queued" ? "Đang chờ" : `Đang tải ${item.progress}%`}</p>
+                    <p className="text-xs text-gray-500 dark:text-zinc-400">{item.status === "queued" ? "Đang chờ" : `Đang tải ${item.progress}%`}</p>
                   </>
                 )}
               </div>
               {item.status === "failed" && (
                 <div className="flex gap-2 text-sm">
                   <button type="button" onClick={() => retryUpload(item)} className="text-blue-700">Thử lại</button>
-                  <button type="button" onClick={() => removeFailedUpload(item)} className="text-red-700">Bỏ</button>
+                  <button type="button" onClick={() => removeFailedUpload(item)} className="text-red-700 dark:text-red-400">Bỏ</button>
                 </div>
               )}
             </li>
@@ -300,9 +300,9 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
       )}
 
       {isPending ? (
-        <div className="animate-pulse rounded-lg border p-6 text-sm text-gray-500">Đang tải danh sách ảnh…</div>
+        <div className="animate-pulse rounded-lg border p-6 text-sm text-gray-500 dark:text-zinc-400">Đang tải danh sách ảnh…</div>
       ) : orderedImages.length === 0 ? (
-        <p className="rounded-lg border p-6 text-sm text-gray-500">Công thức chưa có ảnh.</p>
+        <p className="rounded-lg border p-6 text-sm text-gray-500 dark:text-zinc-400">Công thức chưa có ảnh.</p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Danh sách ảnh công thức">
           {orderedImages.map((image, index) => (
@@ -340,7 +340,7 @@ export function RecipeImageManager({ recipeId, initialImages, onChange, onPendin
                   </div>
                   <button type="button" disabled={busy}
                     onClick={() => void removeImage(image)}
-                    className="text-red-700 disabled:opacity-50">Xóa ảnh</button>
+                    className="text-red-700 dark:text-red-400 disabled:opacity-50">Xóa ảnh</button>
                 </div>
               </div>
             </li>

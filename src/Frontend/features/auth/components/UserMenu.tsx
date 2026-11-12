@@ -10,7 +10,7 @@ export function UserMenu() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <span className="h-8 w-24 animate-pulse rounded-full bg-black/10 dark:bg-white/10" aria-hidden />;
+    return <span className="h-8 w-24 animate-pulse rounded-full bg-(color:--auth-border)" aria-hidden />;
   }
 
   if (!session || session.error) {
@@ -19,7 +19,7 @@ export function UserMenu() {
         <Link href={REGISTER_PATH} className="hover:underline">
           Đăng ký
         </Link>
-        <Link href={LOGIN_PATH} className="rounded-full bg-foreground px-4 py-1.5 text-background">
+        <Link href={LOGIN_PATH} className="rounded-full bg-(color:--auth-fg) px-4 py-1.5 text-(color:--auth-bg)">
           Đăng nhập
         </Link>
       </div>
@@ -41,7 +41,7 @@ export function UserMenu() {
       <Link href={PROFILE_PATH} className="font-medium hover:underline">
         {session.user.fullName}
       </Link>
-      <SignOutButton className="rounded-full border border-black/15 px-4 py-1.5 hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]" />
+      <SignOutButton className="rounded-full border border-(color:--auth-input-border) px-4 py-1.5 hover:bg-(color:--auth-hover)" />
     </div>
   );
 }

@@ -173,7 +173,7 @@ export function RecipeWizard() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       {/* Step Indicator Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
@@ -312,7 +312,7 @@ export function RecipeWizard() {
 
             {/* Dinh dưỡng tùy chọn */}
             <div className="pt-4 border-t border-zinc-200 dark:border-zinc-800">
-              <span className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
+              <span className="block text-xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-3">
                 Giá trị dinh dưỡng (Tùy chọn)
               </span>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

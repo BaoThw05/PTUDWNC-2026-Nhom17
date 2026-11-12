@@ -18,7 +18,7 @@ export default async function ResetPasswordPage({ searchParams }: PageProps<"/au
       title="Đặt lại mật khẩu"
       description="Nhập mật khẩu mới cho tài khoản của bạn."
       footer={
-        <Link href={FORGOT_PASSWORD_PATH} className="font-medium text-foreground underline">
+        <Link href={FORGOT_PASSWORD_PATH} className="font-medium text-(color:--auth-fg) underline">
           Yêu cầu liên kết mới
         </Link>
       }

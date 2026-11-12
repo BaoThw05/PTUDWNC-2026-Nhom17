@@ -24,7 +24,7 @@ export function TextField({ label, error, id, type, ...inputProps }: TextFieldPr
           type={isPassword && revealed ? "text" : type}
           aria-invalid={Boolean(error)}
           aria-describedby={errorId}
-          className={`w-full rounded-lg border border-black/15 bg-transparent px-3 py-2 outline-none transition focus:border-foreground focus:ring-2 focus:ring-foreground/15 aria-invalid:border-red-500 dark:border-white/20 ${isPassword ? "pr-16" : ""}`}
+          className={`w-full rounded-lg border border-(color:--auth-input-border) bg-(color:--auth-input-bg) px-3 py-2 text-(color:--auth-fg) placeholder:text-(color:--auth-subtle) shadow-sm outline-none transition focus:border-(color:--auth-fg) focus:ring-2 focus:ring-(color:--auth-focus) aria-invalid:border-(color:--auth-danger) ${isPassword ? "pr-16" : ""}`}
           {...inputProps}
         />
         {isPassword && (
@@ -32,14 +32,14 @@ export function TextField({ label, error, id, type, ...inputProps }: TextFieldPr
             type="button"
             onClick={() => setRevealed((value) => !value)}
             aria-pressed={revealed}
-            className="absolute inset-y-0 right-0 px-3 text-xs font-medium text-zinc-600 hover:text-foreground dark:text-zinc-400"
+            className="absolute inset-y-0 right-0 px-3 text-xs font-medium text-(color:--auth-muted) hover:text-(color:--auth-fg)"
           >
             {revealed ? "Ẩn" : "Hiện"}
           </button>
         )}
       </div>
       {error && (
-        <p id={errorId} className="text-sm text-red-600 dark:text-red-400">
+        <p id={errorId} className="text-sm text-(color:--auth-danger)">
           {error}
         </p>
       )}

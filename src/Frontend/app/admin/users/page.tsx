@@ -36,7 +36,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Quản lý người dùng</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-sm text-(color:--auth-muted)">
             {result.totalCount} tài khoản · khóa tài khoản sẽ đăng xuất người đó khỏi mọi thiết bị
           </p>
         </div>
@@ -47,17 +47,17 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
             defaultValue={search}
             placeholder="Email, tên đăng nhập, họ tên…"
             aria-label="Tìm người dùng"
-            className="w-64 rounded-full border border-black/15 bg-transparent px-4 py-2 text-sm outline-none focus:border-foreground dark:border-white/20"
+            className="w-64 rounded-full border border-(color:--auth-input-border) bg-(color:--auth-input-bg) text-(color:--auth-fg) px-4 py-2 text-sm outline-none focus:border-(color:--auth-fg)"
           />
-          <button type="submit" className="rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background">
+          <button type="submit" className="rounded-full bg-(color:--auth-fg) px-4 py-2 text-sm font-medium text-(color:--auth-bg)">
             Tìm
           </button>
         </form>
       </header>
 
-      <div className="overflow-x-auto rounded-2xl border border-black/10 dark:border-white/15">
+      <div className="overflow-x-auto rounded-2xl border border-(color:--auth-border)">
         <table className="w-full text-left text-sm">
-          <thead className="bg-black/[.03] text-xs whitespace-nowrap uppercase tracking-wide text-zinc-500 dark:bg-white/[.04]">
+          <thead className="bg-(color:--auth-row-tint) text-xs whitespace-nowrap uppercase tracking-wide text-(color:--auth-subtle)">
             <tr>
               <th className="px-4 py-3 font-medium">Người dùng</th>
               <th className="px-4 py-3 font-medium">Vai trò</th>
@@ -66,20 +66,20 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
               <th className="px-4 py-3 font-medium sr-only">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-black/5 dark:divide-white/10">
+          <tbody className="divide-y divide-(color:--auth-border)">
             {result.items.map((user) => (
-              <tr key={user.id} className={user.isActive ? undefined : "bg-red-50/60 dark:bg-red-950/20"}>
+              <tr key={user.id} className={user.isActive ? undefined : "bg-(color:--auth-danger-tint)"}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-(color:--auth-fg) text-sm font-semibold text-(color:--auth-bg)">
                       {user.fullName.charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
                       <p className="truncate font-medium">
                         {user.fullName}
-                        {user.id === session.user.id && <span className="ml-1 text-xs text-zinc-500">(bạn)</span>}
+                        {user.id === session.user.id && <span className="ml-1 text-xs text-(color:--auth-subtle)">(bạn)</span>}
                       </p>
-                      <p className="truncate text-xs text-zinc-500">
+                      <p className="truncate text-xs text-(color:--auth-subtle)">
                         @{user.userName} · {user.email}
                       </p>
                     </div>
@@ -92,8 +92,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                         key={role}
                         className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                           role === "Admin"
-                            ? "bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200"
-                            : "bg-black/[.05] dark:bg-white/10"
+                            ? "bg-(color:--auth-warning-bg) text-(color:--auth-warning-strong)"
+                            : "bg-(color:--auth-chip)"
                         }`}
                       >
                         {ROLE_LABELS[role] ?? role}
@@ -103,12 +103,12 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {user.isActive ? (
-                    <span className="text-emerald-700 dark:text-emerald-400">● Hoạt động</span>
+                    <span className="text-(color:--auth-success)">● Hoạt động</span>
                   ) : (
-                    <span className="text-red-600 dark:text-red-400">● Đã khóa</span>
+                    <span className="text-(color:--auth-danger)">● Đã khóa</span>
                   )}
                 </td>
-                <td className="px-4 py-3 whitespace-nowrap text-zinc-600 dark:text-zinc-400">
+                <td className="px-4 py-3 whitespace-nowrap text-(color:--auth-muted)">
                   {joinedDate.format(new Date(user.createdAt))}
                 </td>
                 <td className="px-4 py-3">
@@ -118,7 +118,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
             ))}
             {result.items.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-10 text-center text-zinc-500">
+                <td colSpan={5} className="px-4 py-10 text-center text-(color:--auth-subtle)">
                   Không tìm thấy người dùng nào.
                 </td>
               </tr>
@@ -136,7 +136,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps<"/admin
           ) : (
             <span />
           )}
-          <span className="text-zinc-500">
+          <span className="text-(color:--auth-subtle)">
             Trang {result.page}/{result.totalPages}
           </span>
           {result.hasNextPage ? (

@@ -27,7 +27,7 @@ export default async function RegisterPage({ searchParams }: PageProps<"/auth/re
           Đã có tài khoản?{" "}
           <Link
             href={`${LOGIN_PATH}?callbackUrl=${encodeURIComponent(callbackUrl)}`}
-            className="font-medium text-foreground underline"
+            className="font-medium text-(color:--auth-fg) underline"
           >
             Đăng nhập
           </Link>

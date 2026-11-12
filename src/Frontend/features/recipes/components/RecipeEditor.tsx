@@ -200,7 +200,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
   if (isLoading) {
     return (
-      <div className="py-20 text-center text-sm text-zinc-500">
+      <div className="py-20 text-center text-sm text-zinc-500 dark:text-zinc-400">
         Đang tải dữ liệu công thức...
       </div>
     );
@@ -215,7 +215,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -229,7 +229,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
             Chỉnh sửa công thức
           </h1>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
             Phiên bản (Version): {version} | Slug: /{recipe.slug}
           </p>
         </div>
@@ -443,7 +443,7 @@ export function RecipeEditor({ recipeId }: RecipeEditorProps) {
 
         {/* Thêm bước mới */}
         <div className="rounded-lg border border-dashed border-zinc-300 p-3 space-y-2 dark:border-zinc-700">
-          <span className="text-xs font-semibold text-zinc-500">Thêm bước mới</span>
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">Thêm bước mới</span>
           <div className="flex gap-2">
             <input
               type="text"

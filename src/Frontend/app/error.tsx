@@ -15,7 +15,7 @@ export default function Error({
 
   return (
     <section className="flex flex-col items-start gap-4">
-      <p className="text-sm font-medium text-zinc-500">500</p>
+      <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">500</p>
       <h1 className="text-2xl font-semibold">Đã có lỗi xảy ra</h1>
       <p className="text-zinc-600 dark:text-zinc-400">
         Vui lòng thử lại sau ít phút.

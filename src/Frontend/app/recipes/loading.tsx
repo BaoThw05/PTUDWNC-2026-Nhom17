@@ -3,8 +3,8 @@ import { RecipeGridLoading } from "@/features/search/components/RecipeGridLoadin
 export default function RecipesLoading() {
   return (
     <div aria-busy="true" className="space-y-7">
-      <div className="h-10 w-56 animate-pulse bg-black/5" />
-      <div className="h-24 animate-pulse border-y border-black/10 bg-black/[0.02]" />
+      <div className="h-10 w-56 animate-pulse bg-black/5 dark:bg-white/10" />
+      <div className="h-24 animate-pulse border-y border-black/10 dark:border-white/15 bg-black/[0.02] dark:bg-white/5" />
       <RecipeGridLoading />
     </div>
   );

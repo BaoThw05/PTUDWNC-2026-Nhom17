@@ -41,13 +41,13 @@ function describeDevice(userAgent: string | null): string {
 
 export function LoginHistoryTable({ attempts }: { attempts: LoginAttempt[] }) {
   if (attempts.length === 0) {
-    return <p className="text-sm text-zinc-600 dark:text-zinc-400">Chưa có lần đăng nhập nào được ghi lại.</p>;
+    return <p className="text-sm text-(color:--auth-muted)">Chưa có lần đăng nhập nào được ghi lại.</p>;
   }
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="text-zinc-600 dark:text-zinc-400">
+        <thead className="text-(color:--auth-muted)">
           <tr>
             <th scope="col" className="py-2 pr-4 font-medium">Thời gian</th>
             <th scope="col" className="py-2 pr-4 font-medium">Thiết bị</th>
@@ -57,13 +57,13 @@ export function LoginHistoryTable({ attempts }: { attempts: LoginAttempt[] }) {
         </thead>
         <tbody>
           {attempts.map((attempt) => (
-            <tr key={`${attempt.occurredAt}-${attempt.result}`} className="border-t border-black/10 dark:border-white/15">
+            <tr key={`${attempt.occurredAt}-${attempt.result}`} className="border-t border-(color:--auth-border)">
               <td className="py-2 pr-4 whitespace-nowrap">{timeFormat.format(new Date(attempt.occurredAt))}</td>
               <td className="py-2 pr-4" title={attempt.userAgent ?? undefined}>
                 {describeDevice(attempt.userAgent)} · {METHOD_LABELS[attempt.method]}
               </td>
               <td className="py-2 pr-4 whitespace-nowrap">{attempt.ipAddress ?? "—"}</td>
-              <td className={`py-2 ${attempt.result === "Succeeded" ? "" : "text-red-600 dark:text-red-400"}`}>
+              <td className={`py-2 ${attempt.result === "Succeeded" ? "" : "text-(color:--auth-danger)"}`}>
                 {RESULT_LABELS[attempt.result]}
               </td>
             </tr>
