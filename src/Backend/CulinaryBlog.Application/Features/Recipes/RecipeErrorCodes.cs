@@ -10,4 +10,5 @@ public static class RecipeErrorCodes
     public const string InvalidStateTransition = "RECIPE_INVALID_STATE_TRANSITION";
     public const string StepNotFound = "STEP_NOT_FOUND";
     public const string IngredientNotFound = "INGREDIENT_NOT_FOUND";
+    public const string InvalidStepOrder = "RECIPE_INVALID_STEP_ORDER";
 }

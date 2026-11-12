@@ -173,4 +173,52 @@ public class RecipeValidationTests
 
         Assert.True(result.IsValid);
     }
+
+    [Fact]
+    public void ReorderRecipeSteps_WithValidCommand_ShouldPassValidation()
+    {
+        var validator = new ReorderRecipeStepsCommandValidator();
+        var command = new ReorderRecipeStepsCommand(Guid.NewGuid(), [Guid.NewGuid(), Guid.NewGuid()]);
+
+        var result = validator.Validate(command);
+
+        Assert.True(result.IsValid);
+    }
+
+    [Fact]
+    public void ReorderRecipeSteps_WithEmptyRecipeId_ShouldFailValidation()
+    {
+        var validator = new ReorderRecipeStepsCommandValidator();
+        var command = new ReorderRecipeStepsCommand(Guid.Empty, [Guid.NewGuid()]);
+
+        var result = validator.Validate(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(ReorderRecipeStepsCommand.RecipeId));
+    }
+
+    [Fact]
+    public void ReorderRecipeSteps_WithNullStepIds_ShouldFailValidation()
+    {
+        var validator = new ReorderRecipeStepsCommandValidator();
+        var command = new ReorderRecipeStepsCommand(Guid.NewGuid(), null!);
+
+        var result = validator.Validate(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(ReorderRecipeStepsCommand.StepIds));
+    }
+
+    [Fact]
+    public void ReorderRecipeSteps_WithDuplicateStepIds_ShouldFailValidation()
+    {
+        var validator = new ReorderRecipeStepsCommandValidator();
+        var duplicateId = Guid.NewGuid();
+        var command = new ReorderRecipeStepsCommand(Guid.NewGuid(), [duplicateId, duplicateId]);
+
+        var result = validator.Validate(command);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(ReorderRecipeStepsCommand.StepIds));
+    }
 }
