@@ -4,7 +4,8 @@ import type { PagedResult } from "@/lib/api/types";
 import { getCategories } from "@/features/categories/api/public-client";
 import { siteUrl } from "@/features/search/seo/metadata";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
+const revalidate = 3600;
 
 type PublishedRecipe = {
   slug: string;

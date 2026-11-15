@@ -40,26 +40,6 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
   if (recipe.status !== "Published" && (recipe.status as unknown as number) !== 1) notFound();
 
-  let recipe;
-  try {
-    recipe = await getRecipeBySlug(slug);
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) {
-      notFound();
-    }
-    // Lỗi khác hoặc mạng không kết nối
-    throw error;
-  }
-
-  const isPublished =
-    recipe &&
-    (recipe.status === "Published" ||
-      (recipe.status as unknown as number) === 1);
-
-  if (!isPublished) {
-    notFound();
-  }
-
   return (
     <>
       <RecipeJsonLd recipe={{
