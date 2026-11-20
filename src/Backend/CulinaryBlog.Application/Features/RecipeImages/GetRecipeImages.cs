@@ -17,7 +17,7 @@ public sealed class GetRecipeImagesQueryHandler(
     {
         var recipe = db.Recipes.FirstOrDefault(item => item.Id == request.RecipeId)
             ?? throw new NotFoundException($"Không tìm thấy công thức có id '{request.RecipeId}'.", "RECIPE_NOT_FOUND");
-        authorization.EnsureCanModify(recipe);
+        authorization.EnsureCanView(recipe);
 
         IReadOnlyList<RecipeImageDto> images = db.RecipeImages
             .Where(item => item.RecipeId == request.RecipeId)

@@ -1014,12 +1014,12 @@ Module xử lý các tác vụ nền không đồng bộ sử dụng Hangfire. H
 
 ## 3.7. Module Quan sát Hệ thống (FR-OBS)
 
-Phạm vi NFR Base gồm structured logging với Serilog, Correlation ID và health check process/database. OpenTelemetry traces, metrics và exporters thuộc định hướng mở rộng; không bắt buộc cho bản demo.
+Phạm vi NFR Base gồm structured request/application logging với Serilog, Correlation ID, thời gian xử lý và health check process/database/Redis/object storage. Readiness chỉ phụ thuộc PostgreSQL; lỗi Redis hoặc object storage được báo Degraded trong health tổng hợp và không làm liveness thất bại. OpenTelemetry traces, metrics và exporters thuộc định hướng mở rộng; không bắt buộc cho bản demo.
 
 |**Mã FR**|**Tên**|**Mô tả**|**Kỹ thuật / Công cụ**|
 |---|---|---|---|
-|FR-<br>OBS-<br>001|Health Check<br>Endpoints|`GET /health` tổng hợp trạng thái các health check đã cấu hình; `/health/live` chỉ xác nhận process đang chạy; `/health/ready` kiểm tra PostgreSQL. Redis và MinIO health probes, orchestration tự động và alerting thuộc NFR mở rộng.|ASP.NET Core Health Checks. Liveness không phụ thuộc DB/Redis; readiness trả 503 khi database không sẵn sàng.|
-|FR-<br>OBS-<br>002|Structured<br>Logging|HTTP request log có CorrelationId (`X-Correlation-ID`), method, path, status, elapsed time và UserId nếu có xác thực. Không ghi log mật khẩu, token hoặc request body nhạy cảm. LoggingBehavior ghi loại request và thời lượng; cảnh báo request vượt 500 ms.|Serilog, middleware CorrelationId và request logging; Console structured output, Seq khi được cấu hình.|
+|FR-<br>OBS-<br>001|Health Check<br>Endpoints|`GET /health` tổng hợp database, Redis và object storage; `/health/live` chỉ xác nhận process đang chạy; `/health/ready` kiểm tra PostgreSQL. Redis/object storage lỗi được báo Degraded trong health tổng hợp, không làm readiness phụ thuộc các dịch vụ này.|ASP.NET Core Health Checks. Liveness không phụ thuộc dịch vụ ngoài; readiness trả 503 khi database không sẵn sàng.|
+|FR-<br>OBS-<br>002|Structured<br>Logging|HTTP request log có CorrelationId (`X-Correlation-ID`), method, path, status, elapsed time và UserId nếu có xác thực. Không ghi mật khẩu, token hoặc request body nhạy cảm. LoggingBehavior ghi loại request và thời lượng; cảnh báo request vượt 500 ms.|Serilog, middleware CorrelationId và request logging; structured JSON trên Console và Seq theo cấu hình.|
 |FR-<br>OBS-<br>003|Tracing &<br>Metrics (Mở rộng)|Có thể bổ sung HTTP/EF traces, business metrics, OTLP exporter và dashboard sau khi hoàn thành NFR Base.|Định hướng mở rộng: OpenTelemetry SDK, Jaeger hoặc Grafana Tempo. Không phải điều kiện nghiệm thu bản demo hiện tại.|
 
 <!-- PDF trang 39 -->
@@ -1203,25 +1203,25 @@ Chương này mô tả tổng quan kiến trúc phần mềm của hệ thống 
 |---|---|---|---|
 |Client<br>(Browser/Mobile)|Browser<br>(Chrome/Firefox/Safari)|Người dùng tương tác<br>qua giao diện web|Next.js App|
 |Frontend|Next.js 16 App<br>Router, TypeScript,<br>Tailwind CSS 4, Auth.js<br>v5, TanStack Query,<br>React Hook Form +<br>Zod|Rendering UI, route<br>management, client-side<br>state. SSR/ISR cho SEO.|Backend<br>REST API|
-|Nginx Reverse<br>Proxy|Nginx Alpine (Docker)|SSL termination, load<br>balancing, static file<br>caching, rate limiting<br>basic.|Frontend<br>:3000,<br>Backend API<br>:5000|
-|Backend API|ASP.NET Core .NET<br>10 Minimal API|Business logic,<br>authentication, data<br>access, background jobs.|PostgreSQL,<br>Redis, MinIO,<br>Email|
+|Nginx Reverse<br>Proxy|Nginx Alpine (Docker)|Reverse proxy, static/media routing, rate limiting cơ bản.|Frontend<br>:3000,<br>Backend API<br>:8080|
+|Backend API|ASP.NET Core .NET<br>10 Minimal API|Business logic,<br>authentication, data<br>access, background jobs.|PostgreSQL,<br>Redis, S3-compatible storage,<br>Email|
 |Cache Layer|Redis 7|Distributed cache cho<br>recipe/category/search<br>results. Rate limiting<br>counters.|Backend API|
 |Object Storage|MinIO (S3-compatible)|Lưu file ảnh: original,<br>medium (800×600),<br>thumbnail (300×300).|Backend API<br>(via<br>AWSSDK.S3)|
 |Database|PostgreSQL 16|Persistent relational data<br>storage. Search via `unaccent`<br>and `pg_trgm`.|Backend API<br>(via EF Core)|
-|Observability|Serilog + Console,<br>Seq when configured|Structured request and<br>application logs with<br>Correlation ID.|Backend API|
+|Observability|Serilog JSON Console + Seq|Structured request/application logs, Correlation ID, elapsed time and health checks.|Backend API|
 
 ## 6.2. Kiến trúc Backend – Clean Architecture
 
-Backend tuân thủ Clean Architecture (Robert C. Martin) với nguyên tắc Dependency Rule: dependency chỉ đi vào trong (hướng Domain). Không bao giờ có reference từ Domain/Application ra Infrastructure.
+Backend tuân thủ Clean Architecture với nguyên tắc Dependency Rule: dependency chỉ đi vào trong (hướng Domain). Không có reference từ Domain/Application ra Infrastructure. API được hiện thực bằng ASP.NET Core Minimal APIs; cấu hình quan sát hệ thống gồm structured logging, correlation ID và health checks.
 
 <!-- PDF trang 50 -->
 
 |Tầng (Project)|Nội dung|
 |---|---|
-|**Domain Layer**<br>**(CulinaryBlog.Domain)**|Nhân lõi hệ thống. Chứa:<br>• Entities: Recipe, Category,<br>ApplicationUser, RecipeStep, RecipeIngredient,<br>RecipeImage.<br>• Value Objects: Slug, EmailAddress. •<br>Owned Entities: RecipeNutrition.<br>• Domain Events<br>(optional): RecipePublishedEvent.<br>• Enums:<br>RecipeDifficulty, RecipeStatus.<br>• Interfaces:<br>IRepository<T>, IRecipeRepository,<br>ICategoryRepository.<br>• Không có NuGet dependencies<br>(chỉ .NET BCL).|
-|**Application Layer**<br>**(CulinaryBlog.Application)**|Orchestration Layer. Chứa:<br>• Commands (CQRS write):<br>CreateRecipeCommand, PublishRecipeCommand,<br>LoginCommand...<br>• Queries (CQRS read):<br>GetRecipesQuery, GetRecipeBySlugQuery... •<br>Handlers (MediatR IRequestHandler): xử lý logic<br>business cho mỗi command/query.<br>• DTOs / Response<br>models: RecipeDto, UserDto, PagedResult<T>. •<br>Validators (FluentValidation): validation rules cho mỗi<br>command.<br>• Pipeline Behaviors: ValidationBehavior,<br>LoggingBehavior, CachingBehavior,<br>PerformanceBehavior.<br>• Service interfaces:<br>IEmailService, IJwtService, IFileStorageService,<br>ICurrentUser.|
-|**Infrastructure Layer**<br>**(CulinaryBlog.Infrastructure)**|Implements application interfaces. Chứa:<br>• EF Core:<br>CulinaryBlogDbContext, configurations, migrations,<br>repositories.<br>• Repository implementations:<br>RecipeRepository (LINQ + EF Core + FTS),<br>CategoryRepository.<br>• JWT Service: JwtService<br>(System.IdentityModel.Tokens.Jwt).<br>• File Storage:<br>MinioFileStorageService (AWSSDK.S3).<br>• Email:<br>MailKitEmailService.<br>• Cache: RedisCacheService<br>(StackExchange.Redis).<br>• Hangfire job registrations. •<br>EF Core Interceptors: AuditInterceptor (auto set<br>CreatedAt/UpdatedAt).|
-|**Presentation Layer**<br>**(CulinaryBlog.API)**|HTTP interface. Chứa:<br>• Minimal API Endpoint Groups:<br>AuthEndpoints, RecipesEndpoints,<br>CategoriesEndpoints.<br>• Middleware:<br>GlobalExceptionMiddleware, CorrelationIdMiddleware,<br>RateLimitingMiddleware.<br>• DI Configuration: Program.cs<br>+ Extension methods (AddApplication,<br>AddInfrastructure, AddPresentation).<br>• OpenAPI: Scalar<br>UI tại /scalar, XML documentation comments. •<br>Authentication: JWT Bearer + Google OAuth via Auth.js<br>v5 (frontend) hoặc ASP.NET Google provider.|
+|**Domain Layer**<br>**(CulinaryBlog.Domain)**|Nhân lõi hệ thống: entity nghiệp vụ (Recipe, Category, RecipeStep, RecipeIngredient, RecipeImage), owned entity RecipeNutrition, enum và quy tắc domain. Không chứa ApplicationUser và không phụ thuộc NuGet package ngoài.|
+|**Application Layer**<br>**(CulinaryBlog.Application)**|CQRS requests/handlers, DTOs, validators, `ICurrentUser`, `ICacheInvalidator`, `IFileStorage` và các abstraction nghiệp vụ. MediatR xử lý command/query; LoggingBehavior và ValidationBehavior nằm trong pipeline. Output Cache không phải MediatR behavior.|
+|**Infrastructure Layer**<br>**(CulinaryBlog.Infrastructure)**|EF Core `AppDbContext`, cấu hình/migration PostgreSQL, truy vấn recipe/category/search (`unaccent` + `pg_trgm`), ASP.NET Identity và auth services, Redis Output Cache invalidation, `IFileStorage` với S3 hoặc Local provider, Hangfire jobs và audit interceptor. `ApplicationUser` được đặt ở tầng này.|
+|**Presentation Layer**<br>**(CulinaryBlog.API)**|ASP.NET Core .NET 10 Minimal API endpoints, JWT bearer authentication, RFC 9457 problem details, CorrelationId/request logging, rate limiting, health checks, OpenAPI/Scalar và cấu hình DI. Frontend Next.js gọi backend qua Nginx/Route Handler.|
 
 ## 6.3. CQRS + MediatR Pipeline
 
@@ -1233,9 +1233,9 @@ CQRS (Command Query Responsibility Segregation) tách biệt read và write mode
 |---|---|---|---|
 |1|LoggingBehavior|Log request type,<br>parameters, elapsed<br>time. Cảnh báo nếu ><br>500ms.|Tất cả Commands và<br>Queries|
 |2|ValidationBehavior|Chạy FluentValidation<br>validators đã đăng ký.<br>Throw<br>ValidationException nếu<br>có lỗi.|Tất cả Commands và<br>Queries có Validator|
-|3|ASP.NET Core Output Cache|Cache response của GET công khai theo Redis provider và policy/tag; bỏ qua request có Authorization. Không có MediatR CachingBehavior.|Public category, recipe list/detail/search endpoints có gắn policy; thời hạn theo ADR-007.|
-|4|Handler<br>(IRequestHandler)|Thực thi business logic:<br>gọi repositories, raise<br>domain events, tạo<br>response DTO.|Tất cả (bắt buộc)|
-|5|CacheInvalidationBehavior|Xóa cache liên quan sau<br>khi Command thành<br>công. Implements<br>ICacheInvalidator.|Commands thay đổi<br>data<br>(Create/Update/Delete)|
+|3|Handler<br>(IRequestHandler)|Thực thi business logic:<br>gọi repositories, raise<br>domain events, tạo<br>response DTO.|Tất cả (bắt buộc)|
+|4|CacheInvalidationBehavior|Xóa cache liên quan sau khi Command thành công qua `ICacheInvalidator`.|Commands thay đổi data (Create/Update/Delete)|
+> ASP.NET Core Output Cache là middleware ngoài MediatR pipeline. Các GET công khai có policy sử dụng Redis, vary theo query string, gắn tag để invalidate; request có `Authorization` không được cache. TTL được chốt trong ADR-007.
 
 ## 6.4. Mô hình Quan hệ Thực thể (ERD tóm tắt)
 
@@ -1477,7 +1477,7 @@ Cả bốn route yêu cầu Bearer (Author/Admin) và kiểm tra quyền sở h�
 
 |**Method**|**Endpoint**|**Mô tả**|**Auth**|**Response**|
 |---|---|---|---|---|
-|GET|/health|Tổng hợp health<br>tất cả<br>dependencies<br>(DB, Redis,<br>MinIO)|Không|200: Healthy \| 503: Unhealthy {<br>"status":"Healthy",<br>"entries":{"database":{"status":"Healthy"},...}<br>}|
+|GET|/health|Tổng hợp health database, Redis và object storage|Không|200: Healthy/Degraded; 503: database Unhealthy. Redis/storage lỗi báo Degraded.|
 |GET|/health/live|Liveness probe<br>— chỉ kiểm tra<br>process còn<br>sống|Không|200: Healthy (luôn luôn, trừ khi process<br>crashed)|
 |GET|/health/ready|Readiness probe — xác minh kết nối PostgreSQL|Không|200: Healthy (DB up); 503: Unhealthy|
 

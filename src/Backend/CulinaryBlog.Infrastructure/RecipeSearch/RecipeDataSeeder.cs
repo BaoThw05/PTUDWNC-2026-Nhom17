@@ -424,24 +424,15 @@ internal sealed class RecipeDataSeeder(
             return;
         }
 
-        var now = timeProvider.GetUtcNow();
-        var existingRecipes = await db.Recipes.IgnoreQueryFilters()
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Recipes.IgnoreQueryFilters()
             .Where(recipe => recipe.Slug.StartsWith("sample-"))
-            .Include(recipe => recipe.Steps)
-            .Include(recipe => recipe.Ingredients)
-            .ToListAsync(cancellationToken);
-        var staleSamples = existingRecipes
-            .Where(recipe => GetSampleIndex(recipe.Slug) is not int index || index > targetCount)
-            .ToArray();
-        db.Recipes.RemoveRange(staleSamples);
-        var recipesByIndex = existingRecipes
-            .Select(recipe => (Recipe: recipe, Index: GetSampleIndex(recipe.Slug)))
-            .Where(item => item.Index.HasValue && item.Index.Value <= targetCount)
-            .GroupBy(item => item.Index!.Value)
-            .ToDictionary(group => group.Key, group => group.First().Recipe);
+            .ExecuteDeleteAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+
+        var now = timeProvider.GetUtcNow();
         var categoriesBySlug = categories.ToDictionary(category => category.Slug, StringComparer.OrdinalIgnoreCase);
         var recipes = new Recipe[targetCount];
-        var newRecipes = new List<Recipe>();
 
         for (var index = 0; index < recipes.Length; index++)
         {
@@ -450,26 +441,10 @@ internal sealed class RecipeDataSeeder(
                 ? matchingCategory
                 : categories[index % categories.Count];
 
-            if (!recipesByIndex.TryGetValue(index + 1, out var recipe))
-            {
-                recipe = CreateRecipe(index, dish, authors[index % authors.Count], category.Id, now);
-                newRecipes.Add(recipe);
-            }
-            else
-            {
-                recipe.Title = dish.Name;
-                recipe.Slug = $"sample-{index + 1:00}-{SlugHelper.GenerateSlug(dish.Name)}";
-                recipe.CategoryId = category.Id;
-                recipe.CreatedAt = now.AddDays(-index - 1);
-                recipe.PublishedAt = recipe.CreatedAt;
-                recipe.Status = RecipeStatus.Published;
-                EnsureRecipeDetails(recipe, dish, now);
-            }
-
-            recipes[index] = recipe;
+            recipes[index] = CreateRecipe(index, dish, authors[index % authors.Count], category.Id, now);
         }
 
-        await db.Recipes.AddRangeAsync(newRecipes, cancellationToken);
+        await db.Recipes.AddRangeAsync(recipes, cancellationToken);
 
         var sampleRecipeIds = recipes.Select(recipe => recipe.Id).ToArray();
         var recipesWithPrimaryImage = await db.RecipeImages.IgnoreQueryFilters()
@@ -519,6 +494,7 @@ internal sealed class RecipeDataSeeder(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         logger.LogInformation(
             "Ensured {RecipeCount} sample recipes for {AuthorCount} authors and {CategoryCount} categories",
             recipes.Length,
@@ -604,49 +580,6 @@ internal sealed class RecipeDataSeeder(
         return recipe;
     }
 
-    private static void EnsureRecipeDetails(Recipe recipe, RecipeDish dish, DateTimeOffset now)
-    {
-        var profile = Profiles[dish.Style];
-        recipe.Description = $"Công thức mẫu {dish.Name.ToLowerInvariant()} với nguyên liệu dễ tìm và hướng dẫn từng bước.";
-        recipe.PrepTimeMinutes = profile.Steps.Sum(step => step.MinimumDurationMinutes) / 3;
-        recipe.CookTimeMinutes = profile.Steps.Sum(step => step.MinimumDurationMinutes) * 2 / 3;
-        recipe.Servings = 4;
-        recipe.Difficulty = Difficulty.Easy;
-        recipe.Status = RecipeStatus.Published;
-        recipe.PublishedAt = recipe.CreatedAt;
-        recipe.Nutrition = null;
-
-        var expectedIngredients = profile.RequiredIngredients.Concat(profile.OptionalIngredients).ToArray();
-        var ingredientsMatch = recipe.Ingredients.OrderBy(item => item.OrderIndex).ToArray() is var currentIngredients
-            && currentIngredients.Length == expectedIngredients.Length
-            && currentIngredients.Select((item, index) =>
-                item.Name == expectedIngredients[index].Name
-                && item.Quantity == (expectedIngredients[index].MinimumQuantity + expectedIngredients[index].MaximumQuantity) / 2
-                && item.Unit == expectedIngredients[index].Unit).All(matches => matches);
-        var stepsMatch = recipe.Steps.OrderBy(item => item.StepNumber).ToArray() is var currentSteps
-            && currentSteps.Length == profile.Steps.Length
-            && currentSteps.Select((item, index) =>
-                item.Title == profile.Steps[index].Title
-                && item.Description == profile.Steps[index].Description
-                && item.DurationMinutes == profile.Steps[index].MinimumDurationMinutes).All(matches => matches);
-        if (ingredientsMatch && stepsMatch)
-        {
-            return;
-        }
-
-        foreach (var ingredient in recipe.Ingredients.ToArray())
-        {
-            recipe.Ingredients.Remove(ingredient);
-        }
-
-        foreach (var step in recipe.Steps.ToArray())
-        {
-            recipe.Steps.Remove(step);
-        }
-
-        AddRecipeDetails(recipe, dish, now);
-    }
-
     private static void AddRecipeDetails(Recipe recipe, RecipeDish dish, DateTimeOffset createdAt)
     {
         var profile = Profiles[dish.Style];
@@ -690,14 +623,6 @@ internal sealed class RecipeDataSeeder(
 
     private static RecipeStepSeed Step(string title, string description, int minimumDurationMinutes, int maximumDurationMinutes) =>
         new(title, description, minimumDurationMinutes, maximumDurationMinutes);
-
-    private static int? GetSampleIndex(string slug)
-    {
-        var parts = slug.Split('-', 3);
-        return parts.Length >= 2 && parts[0] == "sample" && int.TryParse(parts[1], out var number)
-            ? number
-            : null;
-    }
 
     private static string SampleImageKey(int variant) => $"seed/recipes/sample-dish-{variant + 1:00}.png";
 

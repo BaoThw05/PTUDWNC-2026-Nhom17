@@ -1,0 +1,167 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {
+            "setup": {
+                "checks": {
+                    "recipe list is available": {
+                        "fails": 0,
+                        "name": "recipe list is available",
+                        "path": "::setup::recipe list is available",
+                        "id": "d8a8ff7d7ebee1f2b6156172b72fba91",
+                        "passes": 1
+                    }
+                },
+                "name": "setup",
+                "path": "::setup",
+                "id": "5c0f8025f7e0b6654089e5b00e950f1a",
+                "groups": {}
+            }
+        },
+        "checks": {
+            "recipe list returns 200": {
+                "fails": 0,
+                "name": "recipe list returns 200",
+                "path": "::recipe list returns 200",
+                "id": "2693b6761cb92bcf22084edba7e82c10",
+                "passes": 14900
+            },
+            "recipe detail returns 200": {
+                "fails": 0,
+                "name": "recipe detail returns 200",
+                "path": "::recipe detail returns 200",
+                "id": "5024420ef39ade3a757348b0484e23ea",
+                "passes": 14900
+            },
+            "recipe search returns 200": {
+                "id": "b7697e4f071dd692ddf2125768c5aeb6",
+                "passes": 14900,
+                "fails": 0,
+                "name": "recipe search returns 200",
+                "path": "::recipe search returns 200"
+            }
+        }
+    },
+    "metrics": {
+        "checks": {
+            "fails": 0,
+            "passes": 44701,
+            "value": 1
+        },
+        "iterations": {
+            "rate": 49.54171349142046,
+            "count": 14900
+        },
+        "iteration_duration": {
+            "avg": 1008.9202070081902,
+            "min": 1001.780588,
+            "med": 1008.0197290000001,
+            "max": 1076.694961,
+            "p(90)": 1013.381895,
+            "p(95)": 1014.9884675000001
+        },
+        "http_req_connecting": {
+            "max": 1.153481,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0.0005388819936914162,
+            "min": 0,
+            "med": 0
+        },
+        "data_sent": {
+            "count": 5423718,
+            "rate": 18033.57605464832
+        },
+        "data_received": {
+            "count": 151217465,
+            "rate": 502790.0889885169
+        },
+        "http_req_sending": {
+            "p(95)": 0.031579,
+            "avg": 0.016243681573119104,
+            "min": 0.00147,
+            "med": 0.007203,
+            "max": 5.680027,
+            "p(90)": 0.020081
+        },
+        "http_req_receiving": {
+            "med": 0.028076,
+            "max": 7.325263,
+            "p(90)": 0.087662,
+            "p(95)": 0.135478,
+            "avg": 0.06298170282544037,
+            "min": 0.004368
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 1.985994,
+            "max": 52.950373,
+            "p(90)": 4.395319,
+            "p(95)": 5.298886,
+            "avg": 2.539862535648007,
+            "min": 0.128722
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 44701,
+            "thresholds": {
+                "rate<0.01": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "p(95)": 5.140656,
+            "avg": 2.4606371512494114,
+            "min": 0.106189,
+            "med": 1.921927,
+            "max": 52.902689,
+            "p(90)": 4.264193
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_req_blocked": {
+            "avg": 0.004463418089080751,
+            "min": 0.000409,
+            "med": 0.00246,
+            "max": 2.708267,
+            "p(90)": 0.006134,
+            "p(95)": 0.00796
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "vus": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_req_duration": {
+            "min": 0.128722,
+            "med": 1.985994,
+            "max": 52.950373,
+            "p(90)": 4.395319,
+            "p(95)": 5.298886,
+            "avg": 2.539862535648007,
+            "thresholds": {
+                "p(95)<500": false
+            }
+        },
+        "http_reqs": {
+            "rate": 148.62846542147557,
+            "count": 44701
+        }
+    },
+    "setup_data": {
+        "runId": "tv4-20261120-a",
+        "slug": "sample-01-dau-bap-xao-thit-bo"
+    }
+}

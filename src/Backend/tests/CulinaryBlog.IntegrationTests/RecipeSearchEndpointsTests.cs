@@ -73,9 +73,27 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
 
         var recipeSeeder = scope.ServiceProvider.GetServices<IDataSeeder>()
             .Single(seeder => seeder.GetType().Name == "RecipeDataSeeder");
+
+        var legacySamples = await sampleRecipes
+            .Include(recipe => recipe.Ingredients)
+            .Include(recipe => recipe.Steps)
+            .ToListAsync();
+        foreach (var recipe in legacySamples)
+        {
+            recipe.Description = "Legacy randomized sample description";
+            recipe.Status = RecipeStatus.Draft;
+            recipe.Nutrition = new CulinaryBlog.Domain.Entities.RecipeNutrition { Calories = 999 };
+            foreach (var ingredient in recipe.Ingredients)
+                ingredient.Quantity += 7;
+            foreach (var step in recipe.Steps)
+                step.Title += " (legacy)";
+        }
+        await db.SaveChangesAsync();
+
         await recipeSeeder.SeedAsync(CancellationToken.None);
 
         Assert.Equal(50, await sampleRecipes.CountAsync());
+        Assert.Equal(50, await sampleRecipes.CountAsync(recipe => recipe.Status == RecipeStatus.Published && recipe.Nutrition == null));
         Assert.Equal(50, await db.RecipeImages.CountAsync(image => sampleRecipeIds.Contains(image.RecipeId) && image.IsPrimary));
         Assert.Equal(200, await db.RecipeSteps.CountAsync(step => step.Recipe.Slug.StartsWith("sample-")));
         Assert.True(await db.RecipeIngredients.CountAsync(ingredient => sampleRecipeIds.Contains(ingredient.RecipeId)) >= 300);

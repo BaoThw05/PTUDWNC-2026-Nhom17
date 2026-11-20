@@ -6,7 +6,10 @@ function imagesPath(recipeId: string): string {
 }
 
 export function getRecipeImages(recipeId: string): Promise<RecipeImage[]> {
-  return apiClient.get<RecipeImage[]>(imagesPath(recipeId));
+  return apiClient.get<RecipeImage[]>(imagesPath(recipeId), {
+    accessToken: null,
+    next: { revalidate: 300 },
+  });
 }
 
 export function uploadRecipeImage(
