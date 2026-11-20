@@ -10,7 +10,7 @@ export function RecipePublicGallery({ images }: { images: RecipeImage[] }) {
   return (
     <figure className="relative aspect-video w-full overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 shadow-sm dark:border-zinc-800 dark:bg-zinc-800">
       <img
-        src={image.originalUrl}
+        src={image.thumbnailUrl ?? image.mediumUrl ?? image.originalUrl}
         alt={image.altText || "Hình ảnh món ăn"}
         fetchPriority="high"
         className="h-full w-full object-cover"

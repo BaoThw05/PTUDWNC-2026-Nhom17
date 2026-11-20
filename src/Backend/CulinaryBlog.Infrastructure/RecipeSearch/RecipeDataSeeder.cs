@@ -73,7 +73,7 @@ internal sealed class RecipeDataSeeder(
         new("Bánh bèo ngọt nước cốt dừa", "mon-che", RecipeStyle.Dessert),
         new("Bánh tráng kẹp Đà Nẵng", "banh", RecipeStyle.Baked),
         new("Cơm cháy từ cơm nguội", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Cơm âm phủ", "mon-chinh", RecipeStyle.RiceMeat),
+        new("Cơm thập cẩm", "mon-chinh", RecipeStyle.RiceMeat),
         new("Cơm trộn rong biển", "mon-chay", RecipeStyle.Vegetable)
     ];
 
@@ -425,6 +425,9 @@ internal sealed class RecipeDataSeeder(
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Recipes.IgnoreQueryFilters()
+            .Where(recipe => recipe.Title == "Cơm âm phủ" || recipe.Slug.Contains("com-am-phu"))
+            .ExecuteDeleteAsync(cancellationToken);
         await db.Recipes.IgnoreQueryFilters()
             .Where(recipe => recipe.Slug.StartsWith("sample-"))
             .ExecuteDeleteAsync(cancellationToken);

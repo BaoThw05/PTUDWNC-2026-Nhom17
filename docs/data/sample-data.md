@@ -66,5 +66,5 @@ Các tên sau lấy từ phần “Món ngon mới nhất”/các kết quả re
 | Bánh bèo ngọt nước cốt dừa | Món chè |
 | Bánh tráng kẹp Đà Nẵng | Bánh |
 | Cơm cháy từ cơm nguội | Món chính |
-| Cơm âm phủ | Món chính |
+| Cơm thập cẩm | Món chính |
 | Cơm trộn rong biển | Món chay |
