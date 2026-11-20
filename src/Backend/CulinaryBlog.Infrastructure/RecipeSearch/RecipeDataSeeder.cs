@@ -624,7 +624,7 @@ internal sealed class RecipeDataSeeder(
         return recipe;
     }
 
-    private static void EnsureRecipeDetails(Recipe recipe, RecipeDish dish, Faker faker, DateTimeOffset now)
+    private void EnsureRecipeDetails(Recipe recipe, RecipeDish dish, Faker faker, DateTimeOffset now)
     {
         if (recipe.Ingredients.Count >= 5 && recipe.Steps.Count >= 3 && recipe.Nutrition is not null)
         {
@@ -642,6 +642,12 @@ internal sealed class RecipeDataSeeder(
         }
 
         AddRecipeDetails(recipe, dish, faker, now);
+
+        // BaseEntity luôn gán sẵn Id, nên nếu chỉ gắn vào collection của Recipe đang được track,
+        // EF sẽ coi bước/nguyên liệu mới là bản ghi cũ -> UPDATE 0 dòng -> DbUpdateConcurrencyException.
+        // Đánh dấu Added tường minh để EF sinh INSERT.
+        db.AddRange(recipe.Ingredients);
+        db.AddRange(recipe.Steps);
     }
 
     private static void AddRecipeDetails(Recipe recipe, RecipeDish dish, Faker faker, DateTimeOffset createdAt)
