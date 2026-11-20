@@ -785,7 +785,7 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm**<br>**chức**<br>**năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tất cả (Guest / Author / Admin)|
 |**Mức ưu**<br>**tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Trả về danh sách phân trang các công thức. Guest và Author khác chỉ thấy Status == Published. Auth[…]<br>thêm Draft/Archived của chính mình. Admin thấy tất cả trạng thái. Hỗ trợ lọc theo CategoryId, Difficult[…]<br>thời gian nấu; sắp xếp theo createdAt, title, cookTime. Kết quả được cache với Output Cache (.NET 1[…]<br>policy "RecipeList" (TTL 15 phút, vary by query string).|
+|**Mô tả**|Endpoint công khai trả danh sách phân trang chỉ gồm recipe Published và chưa xóa. Author quản lý recipe riêng qua dashboard; quyền Admin không làm thay đổi dữ liệu trả về của endpoint công khai. Hỗ trợ lọc category, độ khó, thời gian nấu và khẩu phần; whitelist sắp xếp theo createdAt, publishedAt, title, cookTimeMinutes. Output Cache policy dùng TTL 5 phút, vary theo query string; không cache request có xác thực.|
 |**Điều kiện**<br>**tiên quyết**|1. Không yêu cầu xác thực (endpoint public cho Published recipes). 2. Tham số page >= 1, pageSize[…]<br>50].|
 |**Luồng**<br>**chính**<br>**(Happy**<br>**Path)**|1. Client gửi GET<br>/api/v1/recipes?page=1&pageSize=12&categoryId={guid}&difficulty=Easy&maxCookTime=30&sort= -c[…]<br>2. GetRecipesQuery dispatch qua MediatR.<br>3. Handler xây dựng IQueryable với filters từ query params.<br>4. Áp dụng Authorization filter: nếu Guest → chỉ Published; nếu Author → Published OR (Draft AND A[…]<br>== userId); nếu Admin → tất cả.<br>5. Apply sorting: sort="-createdAt" → ORDER BY CreatedAt DESC; sort="title" → ORDER BY Title AS[…]<br>6. COUNT total trước khi pagination.<br>7. Apply OFFSET-LIMIT pagination.<br>8. Map sang PagedResult<RecipeSummaryDto>.<br>9. Trả về HTTP 200 OK. Output Cache lưu response theo key = {path}?{queryString}.|
 |**Luồng**<br>**thay thế /**<br>**Ngoại lệ**|A1 – page hoặc pageSize không hợp lệ: HTTP 422. A2 – categoryId không tồn tại: HTTP 200 với item[…]<br>(không throw 404).|
@@ -805,7 +805,7 @@ Module cốt lõi của hệ thống. Recipe là aggregate root chứa các chil
 |**Nhóm**<br>**chức**<br>**năng**|Module Quản lý Công thức Nấu ăn (FR-RCP)|
 |**Tác nhân**|Tất cả (Guest / Author / Admin)|
 |**Mức ưu**<br>**tiên**<br>**(MoSCoW)**|M – Must Have|
-|**Mô tả**|Trả về toàn bộ thông tin chi tiết của một công thức cụ thể, bao gồm: thông tin cơ bản, danh sách ngu[…]<br>(RecipeIngredient[]) sắp xếp theo SortOrder, các bước thực hiện (RecipeStep[]) sắp xếp theo StepNu[…]<br>minh họa (RecipeImage[]), thông tin dinh dưỡng (RecipeNutrition), thông tin danh mục và tác giả. Rec[…]<br>chỉ được xem bởi tác giả sở hữu hoặc Admin. Endpoint được cache với Output Cache policy "Recipe[…]<br>(TTL 60 phút) và tagged với "recipes" để hỗ trợ tag-based invalidation.|
+|**Mô tả**|Trả về chi tiết recipe Published, chưa xóa theo slug, gồm thông tin cơ bản, nguyên liệu, các bước, ảnh, dinh dưỡng (nếu có), danh mục và tác giả. Recipe Draft/Archived chỉ xem qua dashboard theo quyền owner/Admin. Endpoint công khai dùng Output Cache TTL 5 phút, gắn tag `recipes` và `recipe:{slug}` để hỗ trợ invalidation; request có xác thực không được cache.|
 |**Điều kiện**<br>**tiên quyết**|1. Recipe với slug tương ứng tồn tại. 2. Nếu Recipe ở trạng thái Draft/Archived: người yêu cầu phải là[…]<br>hoặc Admin.|
 |**Luồng**<br>**chính**<br>**(Happy**<br>**Path)**|1. Client gửi GET /api/v1/recipes/{slug}.<br>2. GetRecipeBySlugQuery dispatch qua MediatR.<br>3. Handler query Recipe với Eager Loading:<br>Include(Steps).Include(Ingredients).Include(Images).Include(Category).Include(Author).IncludeOwned(N[…]<br>4. Kiểm tra null → NotFoundException nếu không tìm thấy.<br>5. Kiểm tra Status: nếu Draft/Archived → chỉ tác giả hoặc Admin mới được xem (Authorization check)[…]<br>6. Map sang RecipeDetailDto (bao gồm tất cả nested collections).<br>7. Trả về HTTP 200 OK. Tag output cache entry với ["recipes", $"recipe:{slug}"].|
 |**Luồng**<br>**thay thế /**<br>**Ngoại lệ**|A1 – Slug không tồn tại: HTTP 404 Not Found.<br>A2 – Recipe Draft/Archived, người dùng không có quyền: HTTP 403 Forbidden.|
@@ -1047,7 +1047,7 @@ Các chỉ số NFR Base được đo trên máy demo với cấu hình được
 |**NFR-PERF-001**<br>**Response Time API**|NFR Base: GET endpoint cached p50 ≤ 150 ms; API p95 ≤ 500 ms dưới k6 50 VU trong 5 phút trên máy demo. Ghi rõ endpoint, trạng thái cache và môi trường khi đo. Không đặt p99 cứng cho mọi loại request.|
 |**NFR-PERF-002**<br>**Throughput**|NFR Base: chạy k6 50 VU trong 5 phút cho GET danh sách, chi tiết và tìm kiếm; ghi throughput, p95, lỗi và cấu hình máy. Ngưỡng 100 VU và scale tuyến tính thuộc NFR mở rộng, không phải điều kiện nghiệm thu cơ bản.|
 |**NFR-PERF-003 Cache**<br>**Effectiveness**|Base: Output Cache policy cho category list (30 phút), recipes (5 phút), search (1 phút), chỉ GET công khai; mutation invalidate tag tương ứng. Hit-rate ≥ 80% là mục tiêu đo khi có traffic ổn định, không phải điều kiện build. Request có Authorization không được cache.|
-|**NFR-PERF-004**<br>**Database Query**|Tất cả queries đến PostgreSQL:<br>• Không có N+1 query<br>problem — bắt buộc dùng .Include()/.ThenInclude() và<br>projection.<br>• Index: đảm bảo mọi WHERE/ORDER BY column<br>đều có B-tree index tương ứng.<br>• Slow query log: cảnh báo khi<br>query > 100ms (Serilog performance behavior).<br>• EXPLAIN<br>ANALYZE: phải pass review trước khi merge.|
+|**NFR-PERF-004**<br>**Database Query**|Truy vấn PostgreSQL tránh N+1 bằng projection/eager loading phù hợp và có index theo truy vấn đã đo. `LoggingBehavior` cảnh báo MediatR request vượt 500 ms; đây là thời gian xử lý request, không phải slow-query threshold. Khi tối ưu truy vấn cần ghi lại kế hoạch `EXPLAIN ANALYZE` trước khi merge.|
 |**NFR-PERF-005**<br>**Frontend**<br>**Performance (Core**<br>**Web Vitals)**|Next.js frontend đạt chuẩn Google Core Web Vitals (đo bằng Lighthouse CI):<br>• LCP (Largest Contentful Paint) ≤ 2.5s.<br>• CLS (Cumulative Layout Shift) ≤ 0.1.<br>• INP (Interaction to Next<br>Paint) ≤ 200ms.<br>• First Load JS Bundle ≤ 200KB (gzipped). Kỹ<br>thuật: ISR (Incremental Static Regeneration), Image<br>Optimization (next/image), Code Splitting.|
 
 <!-- PDF trang 40 -->
@@ -1060,7 +1060,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |---|---|
 |**NFR-SEC-001**<br>**Password & Hashing**|Mật khẩu phải được hash bằng ASP.NET Core Identity mặc<br>định (PBKDF2-HMACSHA512, iteration count ≥ 100.000).<br>Không bao giờ lưu plaintext password. Yêu cầu độ phức tạp: ≥<br>8 ký tự, chứa ít nhất 1 chữ hoa + 1 chữ thường + 1 số + 1 ký<br>tự đặc biệt (cấu hình qua IdentityOptions.Password).|
 |**NFR-SEC-002 JWT**<br>**Token Security**|Access Token: JWT signed bằng HS256, TTL = 15 phút, claim:<br>userId, email, roles, jti. Refresh Token: 128-bit<br>cryptographically secure random bytes, hash SHA-256 trước<br>khi lưu DB, TTL = 7 ngày. Rotation: Refresh token bị revoke<br>ngay sau khi dùng, cấp token mới (Refresh Token Rotation).<br>Detection: Nếu refresh token đã bị revoke được dùng lại →<br>revoke toàn bộ family (Reuse Detection).|
-|**NFR-SEC-003 Rate**<br>**Limiting**|Giới hạn yêu cầu theo IP để ngăn brute force và DDoS:<br>• Auth<br>endpoints (/auth/*): 10 request/phút/IP.<br>• API chung: 100<br>request/phút/IP.<br>• Upload endpoints: 5 request/phút/IP.<br>Implementation: ASP.NET Core Rate Limiting middleware<br>(Fixed Window, sliding window cho auth). HTTP 429 khi vượt<br>giới hạn với Retry-After header.|
+|**NFR-SEC-003 Rate**<br>**Limiting**|Giới hạn theo cấu hình CR-09: đăng nhập/đăng ký/Google tối đa 5 request/phút/IP; refresh tối đa 30 request/phút/IP; API còn lại tối đa 100 request/phút theo user hoặc IP. Middleware Fixed Window trả HTTP 429 và `Retry-After`; IP proxy chỉ được tin cậy từ mạng proxy cấu hình. Upload dùng giới hạn chung hiện tại, chưa có quota riêng 5 request/phút.|
 |**NFR-SEC-004 Input**<br>**Validation & File**<br>**Upload Security**|Toàn bộ input được validate tại Application Layer<br>(FluentValidation) TRƯỚC khi xử lý:<br>• SQL Injection: EF Core<br>parameterized queries (không raw SQL với user input).<br>• XSS:<br>Input sanitization + Content-Security-Policy header.<br>• MIME<br>Validation: Đọc magic bytes (không tin vào Content-Type<br>header) khi upload.<br>• File size: Kiểm tra trước khi read stream<br>(không buffer toàn bộ vào memory trước).<br>• Path Traversal:<br>GUID-based filename generation (không dùng tên file của<br>user).|
 |**NFR-SEC-005 HTTPS**<br>**& CORS**|Toàn bộ traffic phải qua HTTPS (TLS 1.2+):<br>• Nginx: redirect<br>HTTP → HTTPS, HSTS header (max-age=31536000). •<br>CORS Policy: Chỉ cho phép origin được cấu hình qua<br>appsettings (không wildcard *).<br>• Allowed Origins:<br>http://localhost:3000 (dev), https://domain.com (prod). •<br>Cookie: SameSite=Strict, Secure=true (nếu dùng cookie cho<br>refresh token).|
 |**NFR-SEC-006**<br>**Authorization &**<br>**Resource Ownership**|Kiểm tra phân quyền tại Application Layer (không chỉ ở<br>Presentation Layer):<br>• Authorization Handler:<br>RecipeAuthorizationHandler xác minh ResourceOwnership<br>(Author chỉ xóa recipe của mình).<br>• Role-based policies:<br>"AuthorPolicy", "AdminPolicy" (không hardcode role string). •<br>Sensitive endpoints (DELETE, PATCH publish): double-check<br>user ID trước khi commit.<br>• Audit trail: Log mọi write operation<br>với userId + timestamp (Serilog).|
@@ -1085,7 +1085,7 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 |---|---|
 |**NFR-REL-001 Uptime**<br>**SLA**|Mục tiêu uptime tham chiếu ≥ 99,5%, tương đương tối đa khoảng 43,8 giờ downtime/năm (8760 × 0,5%). Trong phạm vi đồ án, ghi nhận khả năng khởi động và health check; monitoring liên tục và SLA production thuộc NFR mở rộng. `/health/live` kiểm tra process; `/health/ready` kiểm tra database.|
 |**NFR-REL-002 Error**<br>**Handling & Resilience**|NFR Base: unhandled exceptions trả Problem Details và được log; ứng dụng không để lộ stack trace. Nếu Redis Output Cache không cấu hình, dùng ASP.NET Core mặc định trong process. Redis failover, Hangfire retry tùy chỉnh và circuit breaker là mở rộng cần xác minh riêng.|
-|**NFR-REL-003 Data**<br>**Durability**|Dữ liệu không bị mất trong trường hợp restart hoặc crash: •<br>PostgreSQL WAL (Write-Ahead Logging): đảm bảo ACID. •<br>Backup: pg_dump tự động hàng ngày lúc 03:00 AM, lưu 30<br>ngày.<br>• MinIO: dữ liệu file trên volume persistent (không<br>ephemeral container storage).<br>• Refresh tokens: lưu DB<br>(không Redis) để survive restart.<br>• Soft delete: Recipe được<br>đánh dấu IsDeleted thay vì xóa vật lý (có thể khôi phục).|
+|**NFR-REL-003 Data**<br>**Durability**|PostgreSQL dùng WAL và MinIO lưu trên persistent volume; refresh token được lưu trong DB và recipe hỗ trợ soft delete. Bộ backup/restore `docs/backup-restore.md` được vận hành theo quy trình thủ công; lịch pg_dump tự động hằng ngày và lưu 30 ngày là phần mở rộng chưa triển khai.|
 
 ## 4.5. Khả năng Bảo trì (NFR-MAINT)
 
@@ -1110,8 +1110,8 @@ Toàn bộ yêu cầu bảo mật tuân thủ OWASP Top 10 (2021) và được k
 
 |Mã NFR|Yêu cầu chi tiết|
 |---|---|
-|**NFR-SEO-001**<br>**Structured Data**|Mỗi trang công thức nấu ăn phải có JSON-LD Schema.org<br>Recipe markup:<br>• @type: "Recipe"<br>• Thuộc tính: name,<br>description, image, author, datePublished, prepTime,<br>cookTime, totalTime, recipeYield, recipeIngredient[],<br>recipeInstructions[], nutrition.<br>• Validate: Google Rich Results<br>Test — phải pass 100%.<br>• Kết quả: Rich Snippets trên Google<br>Search (star rating, time, ingredients).|
-|**NFR-SEO-002 Meta**<br>**Tags & Open Graph**|Mỗi trang phải có đầy đủ:<br>• <title>: "{Recipe Name} \| Culinary<br>Blog" (≤ 60 ký tự).<br>• <meta name="description">: mô tả 150–<br>160 ký tự.<br>• Open Graph: og:title, og:description, og:image<br>(1200×630px), og:url, og:type.<br>• Twitter Card:<br>summary_large_image.<br>• Canonical URL: tránh duplicate<br>content (slug-based URL).<br>• Robots: index, follow (published) \|<br>noindex (draft/archived).|
+|**NFR-SEO-001**<br>**Structured Data**|Trang công thức Published có JSON-LD Schema.org `Recipe` với name, description, author, datePublished, thời gian, khẩu phần, nguyên liệu và hướng dẫn. `image` chỉ có khi công thức có ảnh; `nutrition` là tùy chọn nếu chưa có dữ liệu đã xác minh. Kiểm tra bằng Google Rich Results Test trên tối thiểu 3 recipe có ảnh. Không khai báo `aggregateRating`/đánh giá sao nếu ứng dụng không có đánh giá người dùng thật.|
+|**NFR-SEO-002 Meta**<br>**Tags & Open Graph**|Trang chủ, danh mục và recipe có title, description, canonical URL, Open Graph (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`) và Twitter Card `summary_large_image`. Ảnh Open Graph mục tiêu là 1200×630px. Recipe Published được index; nội dung Draft/Archived không được xuất bản công khai. `NEXT_PUBLIC_SITE_URL` phải trỏ tới public origin để canonical và URL chia sẻ hoạt động đúng.|
 |**NFR-SEO-003**<br>**Sitemap & Robots**|Next.js `app/sitemap.ts` sinh sitemap động với ISR 1 giờ từ Published recipes, category và trang tĩnh; mỗi URL có lastmod, changefreq, priority. `app/robots.ts` cho phép crawler và khai báo sitemap URL. Public site URL lấy từ cấu hình môi trường. Hangfire chỉ phụ trách tác vụ dọn dẹp; không gọi Google sitemap ping (endpoint đã ngừng hỗ trợ).|
 |**NFR-SEO-004 URL**<br>**Structure**|URL phải thân thiện SEO:<br>• Recipes: /recipes/{slug} — slug là<br>chữ thường, gạch nối, không dấu.<br>• Categories:<br>/categories/{slug}.<br>• Slug generation: tự động từ title, unique,<br>không thay đổi sau khi publish.<br>• Redirect: Nếu slug thay đổi<br>(draft) → 301 redirect từ slug cũ sang slug mới.<br>• Không dùng<br>query params cho nội dung chính (chỉ dùng cho<br>filter/sort/pagination).|
 
@@ -1493,15 +1493,15 @@ Bảng dưới đây liệt kê tất cả HTTP Status Codes được sử dụn
 |200|OK|GET request thành công; PATCH trả về resource đã cập nhật;<br>POST /auth/login thành công.|
 |201|Created|POST tạo resource mới thành công (Recipe, Category, Step,<br>Ingredient, Image). Response body chứa resource vừa tạo.|
 |204|No Content|DELETE thành công; POST /auth/logout thành công. Không<br>có response body.|
-|400|Bad Request|Validation lỗi (FluentValidation), request body malformed, file<br>MIME không hợp lệ, business rule vi phạm (ví dụ: publish<br>recipe thiếu ingredients).|
+|400|Bad Request|Request body không thể phân tích cú pháp hoặc HTTP request sai định dạng.|
 |401|Unauthorized|Access Token thiếu hoặc invalid; Refresh Token hết hạn / bị<br>revoke.|
 |403|Forbidden|Đã xác thực nhưng không có quyền: Author truy cập endpoint<br>Admin; Author cố xóa recipe của người khác.|
 |404|Not Found|Resource không tồn tại hoặc đã soft-delete (IsDeleted=true).|
 |409|Conflict|Trùng lặp unique field (email đã đăng ký, category slug đã tồn<br>tại); Xóa category đang có recipes.|
-|422|Unprocessable<br>Entity|Dữ liệu hợp lệ về cú pháp nhưng không thể xử lý về ngữ<br>nghĩa (ví dụ: RowVersion conflict — Optimistic Concurrency).|
+|422|Unprocessable<br>Entity|Validation lỗi (FluentValidation), tham số lọc/sắp xếp không hợp lệ, MIME không hợp lệ, business rule vi phạm hoặc dữ liệu hợp lệ về cú pháp nhưng không thể xử lý về ngữ nghĩa.|
 |429|Too Many<br>Requests|Rate limit bị vượt. Response kèm header Retry-After (giây).|
 |500|Internal Server<br>Error|Lỗi không xử lý được (unhandled exception). Trả RFC 9457,<br>log đầy đủ qua Serilog. Không lộ stack trace.|
-|503|Service<br>Unavailable|Health check failed (DB/Redis down); hoặc server overloaded.|
+|503|Service<br>Unavailable|Health check DB failed hoặc server overloaded; Redis/storage được báo Degraded ở `/health` và không làm readiness phụ thuộc vào chúng.|
 
 # Phụ lục B – Application Error Codes
 
@@ -1544,7 +1544,7 @@ Hệ thống sử dụng Application Error Codes (mã lỗi tùy chỉnh) trong 
 |IMAGE_ALT_TEXT_INVALID|422|Alt text quá 500 ký tự.|Image|
 |IMAGE_ORDER_INVALID|422|`orderIndex` âm.|Image|
 |IMAGE_PRIMARY_REQUIRED|422|Bỏ ảnh chính mà chưa chọn ảnh thay thế.|Image|
-|VALIDATION_ERROR|400|Một hoặc nhiều field<br>không hợp lệ. Xem<br>"errors" object.|Common|
+|VALIDATION_ERROR|422|Một hoặc nhiều field<br>không hợp lệ. Xem<br>"errors" object.|Common|
 |RATE_LIMIT_EXCEEDED|429|Quá giới hạn request.<br>Xem Retry-After<br>header.|Common|
 
 <!-- PDF trang 68 -->

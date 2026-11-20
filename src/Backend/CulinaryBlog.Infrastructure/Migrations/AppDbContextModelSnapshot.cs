@@ -264,6 +264,106 @@ namespace CulinaryBlog.Infrastructure.Migrations
                             OrderIndex = 8,
                             Slug = "banh",
                             Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("8d89ac27-e8d0-4ee2-9e4b-1c0f1a52c009"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món được làm chín bằng hơi nước.",
+                            Name = "Món hấp",
+                            OrderIndex = 9,
+                            Slug = "mon-hap",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("9e89ac27-e8d0-4ee2-9e4b-1c0f1a52c010"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món nướng thơm ngon.",
+                            Name = "Món nướng",
+                            OrderIndex = 10,
+                            Slug = "mon-nuong",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("a089ac27-e8d0-4ee2-9e4b-1c0f1a52c011"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món xào nhanh cho bữa ăn hằng ngày.",
+                            Name = "Món xào",
+                            OrderIndex = 11,
+                            Slug = "mon-xao",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("b189ac27-e8d0-4ee2-9e4b-1c0f1a52c012"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món kho đậm đà.",
+                            Name = "Món kho",
+                            OrderIndex = 12,
+                            Slug = "mon-kho",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("c289ac27-e8d0-4ee2-9e4b-1c0f1a52c013"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món chiên giòn và áp chảo.",
+                            Name = "Món chiên",
+                            OrderIndex = 13,
+                            Slug = "mon-chien",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("d389ac27-e8d0-4ee2-9e4b-1c0f1a52c014"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món lẩu dùng chung.",
+                            Name = "Món lẩu",
+                            OrderIndex = 14,
+                            Slug = "mon-lau",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("e489ac27-e8d0-4ee2-9e4b-1c0f1a52c015"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món cháo nóng.",
+                            Name = "Món cháo",
+                            OrderIndex = 15,
+                            Slug = "mon-chao",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("f589ac27-e8d0-4ee2-9e4b-1c0f1a52c016"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món chè ngọt.",
+                            Name = "Món chè",
+                            OrderIndex = 16,
+                            Slug = "mon-che",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("a689ac27-e8d0-4ee2-9e4b-1c0f1a52c017"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món gỏi và salad.",
+                            Name = "Gỏi - salad",
+                            OrderIndex = 17,
+                            Slug = "goi-salad",
+                            Version = 0u
+                        },
+                        new
+                        {
+                            Id = new Guid("b789ac27-e8d0-4ee2-9e4b-1c0f1a52c018"),
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 9, 25, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Các món cuốn và trộn.",
+                            Name = "Món cuốn - trộn",
+                            OrderIndex = 18,
+                            Slug = "mon-cuon-tron",
+                            Version = 0u
                         });
                 });
 

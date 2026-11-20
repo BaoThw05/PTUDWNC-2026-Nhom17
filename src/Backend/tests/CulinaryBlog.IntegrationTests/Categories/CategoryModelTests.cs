@@ -25,7 +25,7 @@ public sealed class CategoryModelTests
     }
 
     [Fact]
-    public void Model_SeedsEightCategoriesAndRestrictsCategoryDeletion()
+    public void Model_SeedsEighteenCategoriesAndRestrictsCategoryDeletion()
     {
         using var db = CreateDbContext();
         var model = db.GetService<IDesignTimeModel>().Model;
@@ -34,7 +34,7 @@ public sealed class CategoryModelTests
 
         Assert.NotNull(category);
         Assert.NotNull(recipe);
-        Assert.Equal(8, category.GetSeedData().Count());
+        Assert.Equal(18, category.GetSeedData().Count());
         Assert.Contains(category.GetSeedData(), seed => seed[nameof(Category.Slug)] as string == "mon-chinh");
         Assert.Contains(recipe.GetForeignKeys(), foreignKey =>
             foreignKey.PrincipalEntityType == category

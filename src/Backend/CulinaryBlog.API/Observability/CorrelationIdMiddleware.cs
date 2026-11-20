@@ -18,6 +18,16 @@ internal sealed class CorrelationIdMiddleware(RequestDelegate next)
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         using (LogContext.PushProperty("RequestPath", context.Request.Path.Value ?? "/"))
+        {
+            await next(context);
+        }
+    }
+}
+
+internal sealed class UserIdLogContextMiddleware(RequestDelegate next)
+{
+    public async Task InvokeAsync(HttpContext context)
+    {
         using (LogContext.PushProperty("UserId", context.User.FindFirst("sub")?.Value ?? "anonymous"))
         {
             await next(context);

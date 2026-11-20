@@ -64,6 +64,7 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       ConnectionStrings__Redis: redis:6379,password=${REDIS_PASSWORD}
+      Seq__ServerUrl: http://seq:5341
       FileStorage__Provider: S3
       FileStorage__PublicBaseUrl: /media
       FileStorage__S3__ServiceUrl: http://minio:9000

@@ -71,7 +71,7 @@
 |---|---|---|---|---|---|
 | 4.07 | `GET /recipes` công khai: lọc, sắp xếp whitelist, phân trang; projection sang `RecipeSummaryDto` (có URL thumbnail của ảnh chính); index `(Status, PublishedAt DESC)`, `CategoryId`, `CookTimeMinutes` | Test: Draft/đã xóa không xuất hiện; `sort` sai → 422; `pageSize` 100 → 422 | TV2 entity Recipe (20/09), TV3 RecipeImage (30/09 — trước đó để URL null) | T2 28/09 | M |
 | 4.08 | Migration tìm kiếm: `CREATE EXTENSION unaccent, pg_trgm`, hàm `f_unaccent`, cột `SearchText`, GIN trigram index | Migration chạy lại được trên DB sạch; `EXPLAIN` cho thấy dùng index | TV2 migration Recipe (20/09) | T4 30/09 | M |
-| 4.09 | Dữ liệu seed bằng Bogus: 50 recipe (nhiều trạng thái, tên món tiếng Việt thật), 5 tác giả, gán danh mục, vài recipe có ảnh mẫu | **Bàn giao cho nhóm:** lệnh seed chạy một lần ra dữ liệu demo và đo hiệu năng | TV1 user seed, TV3 Category + ảnh | T7 03/10 | M |
+| 4.09 | Dữ liệu seed cố định: 50 recipe tiếng Việt, ít nhất 10 danh mục, 5 tác giả; từng recipe có nguyên liệu, định lượng, bước chế biến và ảnh minh họa; nutrition chỉ thêm khi có số liệu đáng tin cậy; không sinh dữ liệu recipe ngẫu nhiên | **Bàn giao cho nhóm:** seed lặp an toàn; 50 recipe có ảnh chính, ít nhất 3 bước và 5 nguyên liệu | TV1 user seed, TV3 Category + ảnh | T7 03/10 | M |
 | 4.10 | `GET /recipes/search?q=`: chuẩn hóa từ khóa, `ILIKE` + trigram, sắp theo độ tương đồng, bộ lọc, chỉ Published; **bộ test tiếng Việt**: "phở bò" / "pho bo" / "Pho Bo" / "phơ bo" (gõ sai dấu) / "bò" chỉ 2 ký tự / "a" → 422 | Các test tiếng Việt xanh; từ khóa chứa `%`, `_`, `'` không gây lỗi | 4.08 | CN 04/10 | M |
 
 ### G2b — Frontend base (T2 05/10 → CN 11/10)
@@ -146,11 +146,13 @@
 **Checklist tự kiểm tra trước CN 25/10:**
 - [ ] CI chạy trên mọi PR; kiểu TypeScript sinh từ OpenAPI
 - [ ] Log trong Seq có `CorrelationId`, `UserId`; không có mật khẩu/token
-- [ ] `/health/ready` chỉ phụ thuộc DB
-- [ ] Danh sách và tìm kiếm chỉ trả Published, chưa xóa
-- [ ] "pho bo", "Phở Bò", "phơ bo" đều tìm ra "Phở bò"
+- [x] `/health/ready` chỉ phụ thuộc DB; `/health` tổng hợp DB, Redis, storage (Redis/storage lỗi báo Degraded)
+- [x] Danh sách và tìm kiếm chỉ trả Published, chưa xóa
+- [x] "pho bo", "Phở Bò", "phơ bo" đều tìm ra "Phở bò"
 - [ ] Tham số lọc/sắp xếp sai → 422
 - [ ] Response công khai được cache; sửa dữ liệu thì cache bị xóa đúng tag
 - [ ] Trang chi tiết có metadata, Open Graph, JSON-LD hợp lệ; `sitemap.xml` và `robots.txt` hoạt động
 - [ ] Có báo cáo đo k6 + Lighthouse + Rich Results
 - [ ] SRS v1.1 phần 3.4, 3.7, Chương 4, 8.7 khớp thực tế
+
+**Còn phụ thuộc môi trường demo/nhóm:** 4.18 chưa có số đo k6/Lighthouse/Rich Results vì URL demo hiện trả 502; 4.21 cần tổng duyệt trên stack thật và thiết bị/mạng độc lập; 4.22 cần thống nhất với nhóm trước khi tạo tag release. Kịch bản k6 đã đặt tại `tests/performance/recipes.js`, báo cáo và trạng thái đo tại `docs/bao-cao-do-nfr.md`.

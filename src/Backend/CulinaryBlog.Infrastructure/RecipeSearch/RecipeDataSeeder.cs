@@ -1,4 +1,3 @@
-using Bogus;
 using CulinaryBlog.Application.Abstractions;
 using CulinaryBlog.Application.Features.Recipes;
 using CulinaryBlog.Domain.Auth;
@@ -18,82 +17,64 @@ internal sealed class RecipeDataSeeder(
     IFileStorage fileStorage,
     UserManager<ApplicationUser> userManager,
     IOptions<AuthSeedOptions> authSeedOptions,
-    IOptions<RecipeSeedOptions> recipeSeedOptions,
     TimeProvider timeProvider,
     ILogger<RecipeDataSeeder> logger) : IDataSeeder
 {
-    private const int MaximumRecipeCount = 10_000;
-
-    private static readonly string[] DescriptionOpenings =
-    [
-        "Công thức dễ làm cho bữa cơm gia đình",
-        "Món ngon đậm đà hương vị Việt",
-        "Gợi ý hấp dẫn cho thực đơn cuối tuần",
-        "Cách nấu tròn vị với nguyên liệu quen thuộc",
-        "Món ăn thơm ngon, phù hợp để thưởng thức cùng gia đình"
-    ];
-
-    private static readonly string[] DescriptionDetails =
-    [
-        "có thể gia giảm gia vị theo khẩu vị",
-        "nên chọn nguyên liệu tươi để món ăn giữ được hương vị tự nhiên",
-        "thưởng thức ngay khi còn nóng để cảm nhận trọn vị",
-        "chuẩn bị sẵn các nguyên liệu để quá trình chế biến thuận tiện hơn",
-        "dùng kèm rau thơm và nước chấm phù hợp"
-    ];
 
     private static readonly RecipeDish[] Dishes =
     [
-        new("Phở bò", "mon-chinh", RecipeStyle.PhoBo),
-        new("Phở gà", "mon-chinh", RecipeStyle.PhoGa),
-        new("Bún bò Huế", "mon-chinh", RecipeStyle.BunBo),
-        new("Bún riêu cua", "mon-chinh", RecipeStyle.BunRieu),
-        new("Bún chả Hà Nội", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Bún thịt nướng", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Mì Quảng", "mon-chinh", RecipeStyle.SeafoodNoodles),
-        new("Hủ tiếu Nam Vang", "mon-chinh", RecipeStyle.SeafoodNoodles),
-        new("Bánh canh cua", "mon-chinh", RecipeStyle.BunRieu),
-        new("Miến gà", "mon-chinh", RecipeStyle.PhoGa),
-        new("Cơm tấm sườn nướng", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Cơm gà Hội An", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Cá kho tộ", "mon-chinh", RecipeStyle.Fish),
-        new("Thịt kho trứng", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Bò lúc lắc", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Gà kho gừng", "mon-chinh", RecipeStyle.Chicken),
-        new("Gà nướng mật ong", "mon-chinh", RecipeStyle.Chicken),
-        new("Sườn xào chua ngọt", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Bò kho", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Cá basa kho tiêu", "mon-chinh", RecipeStyle.Fish),
+        // Recipe titles are representative sample data inspired by the public Vào Bếp index.
+        // Ingredient lists and cooking instructions below are independently authored demo content.
+        new("Đậu bắp xào thịt bò", "mon-xao", RecipeStyle.RiceMeat),
+        new("Chuối nếp nướng lá dứa", "mon-nuong", RecipeStyle.Baked),
+        new("Súp Tom Yum Thái Lan hải sản", "mon-lau", RecipeStyle.SeafoodNoodles),
+        new("Chim câu xúc bánh đa", "mon-khai-vi", RecipeStyle.Appetizer),
+        new("Sinh tố dâu chuối", "do-uong", RecipeStyle.Drink),
+        new("Gỏi gà măng cụt", "goi-salad", RecipeStyle.Appetizer),
+        new("Cá hấp nước tương", "mon-hap", RecipeStyle.Fish),
+        new("Chả tôm thịt chiên", "mon-chien", RecipeStyle.Appetizer),
+        new("Canh chua cá ngừ", "canh-va-sup", RecipeStyle.Soup),
+        new("Sinh tố xoài chuối", "do-uong", RecipeStyle.Drink),
+        new("Cơm chiên muối ớt xanh", "mon-chinh", RecipeStyle.RiceMeat),
+        new("Cơm chiên phô mai", "mon-chinh", RecipeStyle.RiceMeat),
+        new("Bánh ram ít Huế", "banh", RecipeStyle.Baked),
+        new("Chè đậu xanh nha đam", "mon-che", RecipeStyle.Dessert),
+        new("Dừa tắc", "do-uong", RecipeStyle.Drink),
+        new("Trà măng cụt chanh dây", "do-uong", RecipeStyle.Drink),
+        new("Canh cá nấu rau cần", "canh-va-sup", RecipeStyle.Soup),
+        new("Canh rong biển nấu trứng", "canh-va-sup", RecipeStyle.Soup),
+        new("Bánh từ sữa bột", "banh", RecipeStyle.Baked),
+        new("Bánh đậu xanh trà xanh", "banh", RecipeStyle.Baked),
+        new("Cánh gà chiên giòn", "mon-chien", RecipeStyle.Chicken),
+        new("Bánh vừng bằng nồi chiên không dầu", "banh", RecipeStyle.Baked),
+        new("Mì xào giòn chay rau cải", "mon-xao", RecipeStyle.Vegetable),
+        new("Thịt kho trám xanh", "mon-kho", RecipeStyle.RiceMeat),
+        new("Thịt băm kho trứng cút", "mon-kho", RecipeStyle.RiceMeat),
+        new("Cá trắm kho khế", "mon-kho", RecipeStyle.Fish),
+        new("Cá kho dưa chua", "mon-kho", RecipeStyle.Fish),
+        new("Bò kho truyền thống", "mon-kho", RecipeStyle.RiceMeat),
+        new("Cá chim kho nghệ", "mon-kho", RecipeStyle.Fish),
+        new("Thịt kho nước dừa trứng cút", "mon-kho", RecipeStyle.RiceMeat),
+        new("Nấm kho nước tương", "mon-kho", RecipeStyle.Vegetable),
+        new("Salad ngũ sắc", "goi-salad", RecipeStyle.Vegetable),
+        new("Salad táo với tôm", "goi-salad", RecipeStyle.SeafoodNoodles),
+        new("Salad rau củ trộn sốt mayonnaise", "goi-salad", RecipeStyle.Vegetable),
+        new("Salad xà lách trộn mayonnaise", "goi-salad", RecipeStyle.Vegetable),
+        new("Salad trứng", "goi-salad", RecipeStyle.Vegetable),
+        new("Cá ngân nấu canh chua", "canh-va-sup", RecipeStyle.Soup),
         new("Canh chua cá lóc", "canh-va-sup", RecipeStyle.Soup),
-        new("Canh bí đỏ nấu tôm", "canh-va-sup", RecipeStyle.Soup),
-        new("Canh rau ngót thịt bằm", "canh-va-sup", RecipeStyle.Soup),
-        new("Cháo gà", "canh-va-sup", RecipeStyle.PhoGa),
-        new("Lẩu Thái", "canh-va-sup", RecipeStyle.SeafoodNoodles),
-        new("Gỏi cuốn tôm thịt", "mon-khai-vi", RecipeStyle.Appetizer),
-        new("Nem rán", "mon-khai-vi", RecipeStyle.Appetizer),
-        new("Gỏi ngó sen tôm thịt", "mon-khai-vi", RecipeStyle.Appetizer),
-        new("Gỏi xoài xanh", "mon-khai-vi", RecipeStyle.Appetizer),
-        new("Bánh xèo miền Tây", "mon-khai-vi", RecipeStyle.Appetizer),
-        new("Rau muống xào tỏi", "mon-phu", RecipeStyle.Vegetable),
-        new("Đậu hũ sốt cà chua", "mon-chay", RecipeStyle.Vegetable),
-        new("Nấm kho tiêu", "mon-chay", RecipeStyle.Vegetable),
-        new("Cà tím nướng mỡ hành", "mon-phu", RecipeStyle.Vegetable),
-        new("Đậu que xào tỏi", "mon-chay", RecipeStyle.Vegetable),
-        new("Chè ba màu", "mon-trang-mieng", RecipeStyle.Dessert),
-        new("Chè đậu xanh", "mon-trang-mieng", RecipeStyle.Dessert),
-        new("Sữa chua nếp cẩm", "mon-trang-mieng", RecipeStyle.Dessert),
-        new("Bánh flan", "mon-trang-mieng", RecipeStyle.Dessert),
-        new("Chè khúc bạch", "mon-trang-mieng", RecipeStyle.Dessert),
-        new("Trà tắc", "do-uong", RecipeStyle.Drink),
-        new("Sinh tố bơ", "do-uong", RecipeStyle.Drink),
-        new("Nước sâm", "do-uong", RecipeStyle.Drink),
-        new("Bánh mì Việt Nam", "banh", RecipeStyle.Baked),
-        new("Bánh da lợn", "banh", RecipeStyle.Baked),
-        new("Bánh bò nướng", "banh", RecipeStyle.Baked),
-        new("Bánh chuối hấp", "banh", RecipeStyle.Baked),
-        new("Xôi gà", "mon-chinh", RecipeStyle.RiceMeat),
-        new("Trứng chiên thịt", "mon-phu", RecipeStyle.RiceMeat),
-        new("Bắp xào tép", "mon-phu", RecipeStyle.Vegetable)
+        new("Phở bò", "mon-chinh", RecipeStyle.PhoBo),
+        new("Bánh cuốn", "mon-cuon-tron", RecipeStyle.Appetizer),
+        new("Bún thang", "mon-chinh", RecipeStyle.PhoGa),
+        new("Bánh tráng nước dừa", "banh", RecipeStyle.Baked),
+        new("Bánh tráng dừa mè nướng", "banh", RecipeStyle.Baked),
+        new("Bánh đúc nước cốt dừa", "banh", RecipeStyle.Baked),
+        new("Bánh trôi nước", "mon-che", RecipeStyle.Dessert),
+        new("Bánh bèo ngọt nước cốt dừa", "mon-che", RecipeStyle.Dessert),
+        new("Bánh tráng kẹp Đà Nẵng", "banh", RecipeStyle.Baked),
+        new("Cơm cháy từ cơm nguội", "mon-chinh", RecipeStyle.RiceMeat),
+        new("Cơm âm phủ", "mon-chinh", RecipeStyle.RiceMeat),
+        new("Cơm trộn rong biển", "mon-chay", RecipeStyle.Vegetable)
     ];
 
     private static readonly IReadOnlyDictionary<RecipeStyle, RecipeProfile> Profiles =
@@ -426,13 +407,7 @@ internal sealed class RecipeDataSeeder(
 
     public async Task SeedAsync(CancellationToken cancellationToken)
     {
-        var targetCount = recipeSeedOptions.Value.Count;
-        if (targetCount is < 1 or > MaximumRecipeCount)
-        {
-            throw new InvalidOperationException(
-                $"Seed:Recipes:Count must be between 1 and {MaximumRecipeCount}.");
-        }
-
+        const int targetCount = 50;
         var authors = await EnsureSampleAuthorsAsync(cancellationToken);
         if (authors.Count == 0)
         {
@@ -449,13 +424,16 @@ internal sealed class RecipeDataSeeder(
             return;
         }
 
-        var faker = new Faker();
         var now = timeProvider.GetUtcNow();
         var existingRecipes = await db.Recipes.IgnoreQueryFilters()
             .Where(recipe => recipe.Slug.StartsWith("sample-"))
             .Include(recipe => recipe.Steps)
             .Include(recipe => recipe.Ingredients)
             .ToListAsync(cancellationToken);
+        var staleSamples = existingRecipes
+            .Where(recipe => GetSampleIndex(recipe.Slug) is not int index || index > targetCount)
+            .ToArray();
+        db.Recipes.RemoveRange(staleSamples);
         var recipesByIndex = existingRecipes
             .Select(recipe => (Recipe: recipe, Index: GetSampleIndex(recipe.Slug)))
             .Where(item => item.Index.HasValue && item.Index.Value <= targetCount)
@@ -474,7 +452,7 @@ internal sealed class RecipeDataSeeder(
 
             if (!recipesByIndex.TryGetValue(index + 1, out var recipe))
             {
-                recipe = CreateRecipe(index, dish, authors[index % authors.Count], category.Id, faker, now);
+                recipe = CreateRecipe(index, dish, authors[index % authors.Count], category.Id, now);
                 newRecipes.Add(recipe);
             }
             else
@@ -482,7 +460,10 @@ internal sealed class RecipeDataSeeder(
                 recipe.Title = dish.Name;
                 recipe.Slug = $"sample-{index + 1:00}-{SlugHelper.GenerateSlug(dish.Name)}";
                 recipe.CategoryId = category.Id;
-                EnsureRecipeDetails(recipe, dish, faker, now);
+                recipe.CreatedAt = now.AddDays(-index - 1);
+                recipe.PublishedAt = recipe.CreatedAt;
+                recipe.Status = RecipeStatus.Published;
+                EnsureRecipeDetails(recipe, dish, now);
             }
 
             recipes[index] = recipe;
@@ -597,36 +578,58 @@ internal sealed class RecipeDataSeeder(
         RecipeDish dish,
         ApplicationUser author,
         Guid categoryId,
-        Faker faker,
         DateTimeOffset now)
     {
-        var createdAt = now.AddDays(-faker.Random.Int(1, 180)).AddMinutes(-index);
-        var status = GetStatus(index);
+        var createdAt = now.AddDays(-index - 1);
+        const RecipeStatus status = RecipeStatus.Published;
         var recipe = new Recipe
         {
             Id = Guid.CreateVersion7(),
             Title = dish.Name,
             Slug = $"sample-{index + 1:00}-{SlugHelper.GenerateSlug(dish.Name)}",
-            Description = $"{faker.PickRandom(DescriptionOpenings)}: {dish.Name.ToLowerInvariant()}, {faker.PickRandom(DescriptionDetails)}.",
-            PrepTimeMinutes = faker.Random.Int(5, 60),
-            CookTimeMinutes = faker.Random.Int(10, 150),
-            Servings = faker.Random.Int(1, 8),
-            Difficulty = (Difficulty)faker.Random.Int(0, 2),
+            Description = $"Công thức mẫu {dish.Name.ToLowerInvariant()} với nguyên liệu dễ tìm và hướng dẫn từng bước.",
+            PrepTimeMinutes = Profiles[dish.Style].Steps.Sum(step => step.MinimumDurationMinutes) / 3,
+            CookTimeMinutes = Profiles[dish.Style].Steps.Sum(step => step.MinimumDurationMinutes) * 2 / 3,
+            Servings = 4,
+            Difficulty = Difficulty.Easy,
             Status = status,
-            PublishedAt = status == RecipeStatus.Published ? createdAt.AddHours(faker.Random.Int(1, 24)) : null,
+            PublishedAt = createdAt,
             AuthorId = author.Id.ToString(),
             CategoryId = categoryId,
             IsDeleted = false,
             CreatedAt = createdAt
         };
 
-        AddRecipeDetails(recipe, dish, faker, createdAt);
+        AddRecipeDetails(recipe, dish, createdAt);
         return recipe;
     }
 
-    private static void EnsureRecipeDetails(Recipe recipe, RecipeDish dish, Faker faker, DateTimeOffset now)
+    private static void EnsureRecipeDetails(Recipe recipe, RecipeDish dish, DateTimeOffset now)
     {
-        if (recipe.Ingredients.Count >= 5 && recipe.Steps.Count >= 3 && recipe.Nutrition is not null)
+        var profile = Profiles[dish.Style];
+        recipe.Description = $"Công thức mẫu {dish.Name.ToLowerInvariant()} với nguyên liệu dễ tìm và hướng dẫn từng bước.";
+        recipe.PrepTimeMinutes = profile.Steps.Sum(step => step.MinimumDurationMinutes) / 3;
+        recipe.CookTimeMinutes = profile.Steps.Sum(step => step.MinimumDurationMinutes) * 2 / 3;
+        recipe.Servings = 4;
+        recipe.Difficulty = Difficulty.Easy;
+        recipe.Status = RecipeStatus.Published;
+        recipe.PublishedAt = recipe.CreatedAt;
+        recipe.Nutrition = null;
+
+        var expectedIngredients = profile.RequiredIngredients.Concat(profile.OptionalIngredients).ToArray();
+        var ingredientsMatch = recipe.Ingredients.OrderBy(item => item.OrderIndex).ToArray() is var currentIngredients
+            && currentIngredients.Length == expectedIngredients.Length
+            && currentIngredients.Select((item, index) =>
+                item.Name == expectedIngredients[index].Name
+                && item.Quantity == (expectedIngredients[index].MinimumQuantity + expectedIngredients[index].MaximumQuantity) / 2
+                && item.Unit == expectedIngredients[index].Unit).All(matches => matches);
+        var stepsMatch = recipe.Steps.OrderBy(item => item.StepNumber).ToArray() is var currentSteps
+            && currentSteps.Length == profile.Steps.Length
+            && currentSteps.Select((item, index) =>
+                item.Title == profile.Steps[index].Title
+                && item.Description == profile.Steps[index].Description
+                && item.DurationMinutes == profile.Steps[index].MinimumDurationMinutes).All(matches => matches);
+        if (ingredientsMatch && stepsMatch)
         {
             return;
         }
@@ -641,28 +644,20 @@ internal sealed class RecipeDataSeeder(
             recipe.Steps.Remove(step);
         }
 
-        AddRecipeDetails(recipe, dish, faker, now);
+        AddRecipeDetails(recipe, dish, now);
     }
 
-    private static void AddRecipeDetails(Recipe recipe, RecipeDish dish, Faker faker, DateTimeOffset createdAt)
+    private static void AddRecipeDetails(Recipe recipe, RecipeDish dish, DateTimeOffset createdAt)
     {
         var profile = Profiles[dish.Style];
         var ingredients = profile.RequiredIngredients.ToList();
-        var optionalCount = faker.Random.Int(1, Math.Min(3, profile.OptionalIngredients.Length));
-        while (ingredients.Count < profile.RequiredIngredients.Length + optionalCount)
-        {
-            var candidate = faker.PickRandom(profile.OptionalIngredients);
-            if (!ingredients.Contains(candidate))
-            {
-                ingredients.Add(candidate);
-            }
-        }
+        ingredients.AddRange(profile.OptionalIngredients);
 
         recipe.Ingredients = ingredients.Select((ingredient, orderIndex) => new RecipeIngredient
         {
             Id = Guid.CreateVersion7(),
             Name = ingredient.Name,
-            Quantity = faker.Random.Int(ingredient.MinimumQuantity, ingredient.MaximumQuantity),
+            Quantity = (ingredient.MinimumQuantity + ingredient.MaximumQuantity) / 2,
             Unit = ingredient.Unit,
             OrderIndex = orderIndex,
             CreatedAt = createdAt
@@ -674,25 +669,11 @@ internal sealed class RecipeDataSeeder(
             StepNumber = index + 1,
             Title = step.Title,
             Description = step.Description,
-            DurationMinutes = faker.Random.Int(step.MinimumDurationMinutes, step.MaximumDurationMinutes),
+            DurationMinutes = step.MinimumDurationMinutes,
             CreatedAt = createdAt
         }).ToList();
 
-        recipe.Nutrition ??= new RecipeNutrition();
-        recipe.Nutrition.Calories = faker.Random.Int(profile.MinimumCalories, profile.MaximumCalories);
-        recipe.Nutrition.ProteinGrams = faker.Random.Int(profile.MinimumProtein, profile.MaximumProtein);
-        recipe.Nutrition.FatGrams = faker.Random.Int(3, 40);
-        recipe.Nutrition.CarbsGrams = faker.Random.Int(10, 100);
-        recipe.Nutrition.FiberGrams = faker.Random.Int(1, 15);
-        recipe.Nutrition.SugarGrams = faker.Random.Int(1, 30);
     }
-
-    private static RecipeStatus GetStatus(int index) => (index % 10) switch
-    {
-        < 7 => RecipeStatus.Published,
-        < 9 => RecipeStatus.Draft,
-        _ => RecipeStatus.Archived
-    };
 
     private static RecipeProfile Profile(
         IngredientSeed[] requiredIngredients,
