@@ -57,7 +57,8 @@ test.describe("Luồng công thức nấu ăn (TV2 - Task 2.23)", () => {
 
     // Công thức vừa xuất bản phải xuất hiện trong khu vực Mới đăng ở trang chủ.
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "Mới đăng" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: title })).toBeVisible();
+    const recentRecipes = page.getByRole("region", { name: "Mới đăng" });
+    await expect(recentRecipes.getByRole("heading", { name: "Mới đăng" })).toBeVisible();
+    await expect(recentRecipes.getByRole("heading", { name: title })).toBeVisible();
   });
 });
