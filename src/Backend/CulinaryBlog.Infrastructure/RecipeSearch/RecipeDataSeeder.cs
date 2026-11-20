@@ -455,26 +455,24 @@ internal sealed class RecipeDataSeeder(
             .Where(index => !recipesWithPrimaryImage.Contains(recipes[index].Id))
             .ToArray();
         var availableArtwork = new HashSet<int>();
-
-        foreach (var variant in imageIndexes.Select(index => index % 3).Distinct())
+        foreach (var index in imageIndexes)
         {
-            var key = SampleImageKey(variant);
+            var key = SampleImageKey(index);
             try
             {
-                await using var stream = new MemoryStream(SampleRecipeArtwork.CreatePng(variant));
-                await fileStorage.UploadAsync(stream, key, "image/png", cancellationToken);
-                availableArtwork.Add(variant);
+                await using var stream = new MemoryStream(ReadSampleRecipeImage(index));
+                await fileStorage.UploadAsync(stream, key, "image/jpeg", cancellationToken);
+                availableArtwork.Add(index);
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
-                logger.LogWarning(exception, "Could not upload sample recipe artwork {StorageKey}", key);
+                logger.LogWarning(exception, "Could not upload sample recipe photo {StorageKey}", key);
             }
         }
 
         foreach (var index in imageIndexes)
         {
-            var variant = index % 3;
-            if (!availableArtwork.Contains(variant))
+            if (!availableArtwork.Contains(index))
             {
                 continue;
             }
@@ -484,8 +482,8 @@ internal sealed class RecipeDataSeeder(
             {
                 Id = Guid.CreateVersion7(),
                 RecipeId = recipe.Id,
-                OriginalKey = SampleImageKey(variant),
-                ThumbnailKey = SampleImageKey(variant),
+                OriginalKey = SampleImageKey(index),
+                ThumbnailKey = SampleImageKey(index),
                 AltText = $"Ảnh minh họa món {recipe.Title}",
                 IsPrimary = true,
                 OrderIndex = 0,
@@ -624,7 +622,17 @@ internal sealed class RecipeDataSeeder(
     private static RecipeStepSeed Step(string title, string description, int minimumDurationMinutes, int maximumDurationMinutes) =>
         new(title, description, minimumDurationMinutes, maximumDurationMinutes);
 
-    private static string SampleImageKey(int variant) => $"seed/recipes/sample-dish-{variant + 1:00}.png";
+    private static byte[] ReadSampleRecipeImage(int index)
+    {
+        var resourceName = $"CulinaryBlog.Infrastructure.RecipeSearch.seed-images.recipe-{index + 1:00}.jpg";
+        using var stream = typeof(RecipeDataSeeder).Assembly.GetManifestResourceStream(resourceName)
+            ?? throw new FileNotFoundException($"Missing sample recipe photo resource '{resourceName}'.");
+        using var buffer = new MemoryStream();
+        stream.CopyTo(buffer);
+        return buffer.ToArray();
+    }
+
+    private static string SampleImageKey(int index) => $"seed/recipes/sample-dish-{index + 1:00}.jpg";
 
     private static void EnsureSucceeded(IdentityResult result, string subject)
     {

@@ -28,15 +28,15 @@ const category = {
 
 let createdRecipe = null;
 
-function paged(items, page = 1, pageSize = 12) {
+function paged(items, page = 1, pageSize = 12, totalCount = items.length) {
   return {
     items,
     page,
     pageNumber: page,
     pageSize,
-    totalCount: items.length,
-    totalPages: items.length ? 1 : 0,
-    hasNextPage: false,
+    totalCount,
+    totalPages: totalCount ? Math.ceil(totalCount / pageSize) : 0,
+    hasNextPage: page * pageSize < totalCount,
     hasPreviousPage: page > 1,
   };
 }
@@ -96,7 +96,13 @@ const server = createServer(async (request, response) => {
 
   if (request.method === "GET" && url.pathname === "/api/v1/recipes") {
     const page = Number(url.searchParams.get("page") ?? 1);
-    response.writeHead(200).end(JSON.stringify(paged([recipe], page)));
+    const pageSize = Number(url.searchParams.get("pageSize") ?? 12);
+    const publishedRecipes = [recipe, ...(createdRecipe?.status === "Published" ? [createdRecipe] : [])]
+      .sort((left, right) => Date.parse(right.publishedAt ?? "") - Date.parse(left.publishedAt ?? ""));
+    const start = (page - 1) * pageSize;
+    response.writeHead(200).end(JSON.stringify(
+      paged(publishedRecipes.slice(start, start + pageSize), page, pageSize, publishedRecipes.length),
+    ));
     return;
   }
 
@@ -116,8 +122,8 @@ const server = createServer(async (request, response) => {
       authorId: "33333333-3333-4333-8333-333333333333",
       categoryId: body.categoryId ?? category.id,
       version: 1,
-      createdAt: "2026-01-01T00:00:00Z",
-      updatedAt: "2026-01-01T00:00:00Z",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       nutrition: body.nutrition,
       ingredients: (body.ingredients ?? []).map((ingredient, index) => ({
         id: `55555555-5555-4555-8555-${String(index + 1).padStart(12, "0")}`,
@@ -141,7 +147,8 @@ const server = createServer(async (request, response) => {
   if (request.method === "POST" && /^\/api\/v1\/recipes\/[^/]+\/publish$/.test(url.pathname)) {
     if (createdRecipe) {
       createdRecipe.status = "Published";
-      createdRecipe.publishedAt = "2026-01-01T00:00:00Z";
+      createdRecipe.publishedAt = new Date().toISOString();
+      createdRecipe.updatedAt = createdRecipe.publishedAt;
     }
     response.writeHead(204).end();
     return;
