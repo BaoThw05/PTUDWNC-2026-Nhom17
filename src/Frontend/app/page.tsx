@@ -7,7 +7,7 @@ export const metadata = buildPageMetadata({
   path: "/",
 });
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default function HomePage() {
   return <HomeScreen />;

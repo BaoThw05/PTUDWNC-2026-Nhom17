@@ -15,7 +15,7 @@ function errorLabel(error: unknown): string {
 }
 
 export async function HomeScreen() {
-  const options = { accessToken: null, cache: "force-cache" as const, revalidate: 3600 };
+  const options = { accessToken: null, cache: "no-store" as const };
   const [recipeResult, categoryResult] = await Promise.allSettled([
     getRecipes({ page: "1", pageSize: "50", sort: "-publishedAt" }, options),
     getCategories(options),
@@ -24,7 +24,7 @@ export async function HomeScreen() {
   const recipes: RecipeSummary[] = recipeResult.status === "fulfilled" ? recipeResult.value.items : [];
   const categories: RecipeCategory[] = categoryResult.status === "fulfilled" ? categoryResult.value : [];
   const featured = recipes.find((recipe) => recipe.thumbnailUrl) ?? recipes[0];
-  const recent = recipes.filter((recipe) => recipe.id !== featured?.id).slice(0, 6);
+  const recent = recipes.slice(0, 6);
 
   return (
     <div className={`${styles.screen} space-y-14`}>
@@ -101,7 +101,7 @@ export async function HomeScreen() {
             <p className="border-y border-white/10 py-4 text-sm text-[var(--muted)]">Chưa có danh mục.</p>
           ) : (
             <ul className="divide-y divide-white/10">
-              {categories.map((category) => (
+              {categories.slice(0, 5).map((category) => (
                 <li key={category.id} className="py-3">
                   <Link className="font-sans font-semibold hover:text-[var(--color-leaf)]" href={`/categories/${encodeURIComponent(category.slug)}`}>
                     {category.name}
@@ -111,6 +111,12 @@ export async function HomeScreen() {
               ))}
             </ul>
           )}
+          <Link
+            className="mt-4 inline-flex min-h-10 items-center justify-center border border-white/20 px-4 text-sm font-semibold transition-colors hover:border-[var(--color-leaf)] hover:text-[var(--color-leaf)]"
+            href="/categories"
+          >
+            Xem tất cả danh mục
+          </Link>
         </aside>
       </div>
 
