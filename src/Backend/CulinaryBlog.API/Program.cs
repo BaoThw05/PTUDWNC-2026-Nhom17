@@ -12,13 +12,15 @@ using Serilog;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using CulinaryBlog.Infrastructure.Persistence;
+using Serilog.Formatting.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, logger) => logger
     .ReadFrom.Configuration(context.Configuration)
     .Enrich.FromLogContext()
-    .WriteTo.Console());
+    .WriteTo.Console(new JsonFormatter())
+    .WriteTo.Seq(context.Configuration["Seq:ServerUrl"] ?? "http://localhost:5341"));
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
@@ -26,11 +28,23 @@ builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 builder.Services.AddApiProblemDetails();
 builder.Services.AddApiOpenApi();
 builder.Services.AddHealthChecks()
-    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"]);
+    .AddCheck<DatabaseHealthCheck>("database", tags: ["ready"])
+    .AddCheck<StorageHealthCheck>("storage");
 builder.Services.AddEndpointModules();
 builder.Services.AddAuthApi(builder.Configuration);
 
 var redisConnection = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(
+        _ => StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnection));
+    builder.Services.AddHealthChecks().AddCheck<RedisHealthCheck>("redis");
+}
+else
+{
+    builder.Services.AddHealthChecks().AddCheck("redis", () =>
+        Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Degraded("Redis is not configured."));
+}
 builder.Services.AddOutputCache(options =>
 {
     options.AddPolicy("public-recipes", policy => policy
@@ -80,6 +94,7 @@ else
 }
 
 app.UseAuthApi();
+app.UseMiddleware<UserIdLogContextMiddleware>();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });

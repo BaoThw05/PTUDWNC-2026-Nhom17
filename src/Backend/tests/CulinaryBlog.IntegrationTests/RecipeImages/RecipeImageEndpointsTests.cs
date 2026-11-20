@@ -67,6 +67,37 @@ public sealed class RecipeImageEndpointsTests(PostgresApiFactory factory)
     }
 
     [Fact]
+    public async Task Guest_CanViewImagesOfPublishedRecipe_ButNotDraft()
+    {
+        using var owner = CreateClient(Roles.Author);
+        using var guest = factory.CreateClient();
+        var recipeId = await CreateRecipeAsync(owner);
+
+        using var uploaded = await UploadAsync(owner, recipeId, Png, "image/png", "Ảnh món ăn");
+        Assert.Equal(HttpStatusCode.Created, uploaded.StatusCode);
+
+        using var draftResponse = await guest.GetAsync($"/api/v1/recipes/{recipeId}/images");
+        Assert.Equal(HttpStatusCode.NotFound, draftResponse.StatusCode);
+
+        using var addedStep = await owner.PostAsJsonAsync($"/api/v1/recipes/{recipeId}/steps", new
+        {
+            title = "Hoàn thành",
+            description = "Hoàn thành món ăn và dọn ra dùng.",
+            durationMinutes = 5,
+        });
+        Assert.Equal(HttpStatusCode.Created, addedStep.StatusCode);
+
+        using var published = await owner.PostAsync($"/api/v1/recipes/{recipeId}/publish", null);
+        Assert.Equal(HttpStatusCode.NoContent, published.StatusCode);
+
+        var images = await guest.GetFromJsonAsync<List<ImageResponse>>($"/api/v1/recipes/{recipeId}/images");
+        Assert.NotNull(images);
+        var image = Assert.Single(images);
+        Assert.True(image.IsPrimary);
+        Assert.Equal("Ảnh món ăn", image.AltText);
+    }
+
+    [Fact]
     public async Task Upload_InvalidSignatureOrOversizedFile_ReturnsProblemDetailsWithoutImage()
     {
         using var owner = CreateClient(Roles.Author);

@@ -28,6 +28,18 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         var appliedMigrations = await db.Database.GetAppliedMigrationsAsync();
         Assert.Contains("20260929163617_RecipeVietnameseSearch", appliedMigrations);
         Assert.Contains("20260930104159_RecipeSearch_GeneratedSearchText", appliedMigrations);
+        Assert.Contains("20261120035550_TV4SampleCategories", appliedMigrations);
+        var categorySlugs = await db.Categories.Select(category => category.Slug).ToListAsync();
+        Assert.Contains("mon-hap", categorySlugs);
+        Assert.Contains("mon-nuong", categorySlugs);
+        Assert.Contains("mon-xao", categorySlugs);
+        Assert.Contains("mon-kho", categorySlugs);
+        Assert.Contains("mon-chien", categorySlugs);
+        Assert.Contains("mon-lau", categorySlugs);
+        Assert.Contains("mon-chao", categorySlugs);
+        Assert.Contains("mon-che", categorySlugs);
+        Assert.Contains("goi-salad", categorySlugs);
+        Assert.Contains("mon-cuon-tron", categorySlugs);
 
         var generatedColumn = await db.Database.SqlQueryRaw<string>("""
             SELECT is_generated AS "Value"
@@ -45,6 +57,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         var sampleRecipes = db.Recipes.IgnoreQueryFilters().Where(recipe => recipe.Slug.StartsWith("sample-"));
 
         Assert.Equal(50, await sampleRecipes.CountAsync());
+        Assert.Equal(50, await sampleRecipes.Select(recipe => recipe.Title).Distinct().CountAsync());
         Assert.Equal(5, await sampleRecipes.Select(recipe => recipe.AuthorId).Distinct().CountAsync());
         Assert.Equal(50, await sampleRecipes.CountAsync(recipe => recipe.CategoryId.HasValue));
         var sampleRecipeIds = sampleRecipes.Select(recipe => recipe.Id);
@@ -53,13 +66,34 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
             200,
             await db.RecipeSteps.CountAsync(step => step.Recipe.Slug.StartsWith("sample-")));
         Assert.True(await db.RecipeIngredients.CountAsync(ingredient => sampleRecipeIds.Contains(ingredient.RecipeId)) >= 300);
-        Assert.Equal(50, await sampleRecipes.CountAsync(recipe => recipe.Nutrition != null));
+        Assert.True(await db.Recipes.IgnoreQueryFilters().Where(recipe => recipe.Slug.StartsWith("sample-")).Select(recipe => recipe.CategoryId).Distinct().CountAsync() >= 10);
+        Assert.True(await db.RecipeIngredients.Where(ingredient => sampleRecipeIds.Contains(ingredient.RecipeId)).GroupBy(ingredient => ingredient.RecipeId).AllAsync(group => group.Count() >= 5));
+        Assert.True(await db.RecipeSteps.Where(step => sampleRecipeIds.Contains(step.RecipeId)).GroupBy(step => step.RecipeId).AllAsync(group => group.Count() >= 3));
+        Assert.Equal(0, await sampleRecipes.CountAsync(recipe => recipe.Nutrition != null));
 
         var recipeSeeder = scope.ServiceProvider.GetServices<IDataSeeder>()
             .Single(seeder => seeder.GetType().Name == "RecipeDataSeeder");
+
+        var legacySamples = await sampleRecipes
+            .Include(recipe => recipe.Ingredients)
+            .Include(recipe => recipe.Steps)
+            .ToListAsync();
+        foreach (var recipe in legacySamples)
+        {
+            recipe.Description = "Legacy randomized sample description";
+            recipe.Status = RecipeStatus.Draft;
+            recipe.Nutrition = new CulinaryBlog.Domain.Entities.RecipeNutrition { Calories = 999 };
+            foreach (var ingredient in recipe.Ingredients)
+                ingredient.Quantity += 7;
+            foreach (var step in recipe.Steps)
+                step.Title += " (legacy)";
+        }
+        await db.SaveChangesAsync();
+
         await recipeSeeder.SeedAsync(CancellationToken.None);
 
         Assert.Equal(50, await sampleRecipes.CountAsync());
+        Assert.Equal(50, await sampleRecipes.CountAsync(recipe => recipe.Status == RecipeStatus.Published && recipe.Nutrition == null));
         Assert.Equal(50, await db.RecipeImages.CountAsync(image => sampleRecipeIds.Contains(image.RecipeId) && image.IsPrimary));
         Assert.Equal(200, await db.RecipeSteps.CountAsync(step => step.Recipe.Slug.StartsWith("sample-")));
         Assert.True(await db.RecipeIngredients.CountAsync(ingredient => sampleRecipeIds.Contains(ingredient.RecipeId)) >= 300);
@@ -115,7 +149,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
         Assert.NotNull(result);
-        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl == "/media/seed/recipes/sample-dish-01.png");
+        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl?.StartsWith("/media/seed/recipes/sample-dish-", StringComparison.Ordinal) == true);
     }
 
     [Fact]
@@ -295,7 +329,7 @@ public sealed class RecipeSearchEndpointsTests(PostgresApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<PagedResult<RecipeSummaryDto>>();
         Assert.NotNull(result);
-        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl == "/media/seed/recipes/sample-dish-01.png");
+        Assert.Contains(result.Items, recipe => recipe.ThumbnailUrl?.StartsWith("/media/seed/recipes/sample-dish-", StringComparison.Ordinal) == true);
     }
 
     [Fact]

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getRecipeBySlug } from "@/features/recipes/api/client";
+import { getRecipeImages } from "@/features/images/api/client";
 import { RecipeDetailView } from "@/features/recipes/components/RecipeDetailView";
-import { RecipeJsonLd, buildPageMetadata } from "@/features/search/seo/metadata";
+import { RecipeJsonLd, buildPageMetadata, siteUrl } from "@/features/search/seo/metadata";
 import { SocialSharePanel } from "@/features/search/components/SocialSharePanel";
 import { ApiError } from "@/lib/api/client";
 
@@ -23,11 +24,13 @@ export async function generateMetadata({ params }: RecipeDetailPageProps): Promi
     if (!isPublished(recipe.status)) {
       return { title: "Không tìm thấy công thức", robots: { index: false, follow: false } };
     }
+    const images = await getRecipeImages(recipe.id).catch(() => []);
+    const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
     return buildPageMetadata({
       title: recipe.title,
       description: recipe.description || `Xem cách làm món ${recipe.title}`,
       path: `/recipes/${encodeURIComponent(recipe.slug)}`,
-      image: `/recipes/${encodeURIComponent(recipe.slug)}/opengraph-image`,
+      image: primaryImage?.originalUrl ?? `/recipes/${encodeURIComponent(recipe.slug)}/opengraph-image`,
     });
   } catch {
     return { title: "Không tìm thấy công thức", robots: { index: false, follow: false } };
@@ -46,11 +49,19 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
 
   if (!isPublished(recipe.status)) notFound();
 
+  const images = await getRecipeImages(recipe.id).catch(() => []);
+  const primaryImage = images.find((image) => image.isPrimary) ?? images[0];
+  const recipeImage = primaryImage?.originalUrl
+    ? new URL(primaryImage.originalUrl, siteUrl).href
+    : undefined;
+
   return (
     <>
+      {recipeImage && <link rel="preload" as="image" href={recipeImage} fetchPriority="high" />}
       <RecipeJsonLd recipe={{
         name: recipe.title,
         description: recipe.description,
+        image: recipeImage,
         author: { name: "Culinary Blog" },
         datePublished: recipe.publishedAt,
         prepTimeMinutes: recipe.prepTimeMinutes,
@@ -65,7 +76,7 @@ export default async function RecipeDetailPage({ params }: RecipeDetailPageProps
           ? undefined
           : { calories: `${recipe.nutrition.calories} calories` },
       }} />
-      <RecipeDetailView recipe={recipe} />
+      <RecipeDetailView recipe={recipe} images={images} />
       <SocialSharePanel
         path={`/recipes/${encodeURIComponent(recipe.slug)}`}
         title={recipe.title}

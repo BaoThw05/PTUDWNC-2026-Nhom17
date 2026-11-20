@@ -216,12 +216,12 @@ public sealed class RecipeImageCommandTests
     }
 
     [Fact]
-    public async Task GetImages_WhenCallerIsNotOwner_ThrowsForbidden()
+    public async Task GetImages_WhenCallerIsNotOwner_ThrowsNotFoundToHidePrivateRecipe()
     {
         var fixture = new Fixture();
         fixture.CurrentUser.UserId = Guid.NewGuid();
 
-        await Assert.ThrowsAsync<ForbiddenException>(() => fixture.Get.Handle(
+        await Assert.ThrowsAsync<NotFoundException>(() => fixture.Get.Handle(
             new GetRecipeImagesQuery(fixture.Recipe.Id), CancellationToken.None));
     }
 

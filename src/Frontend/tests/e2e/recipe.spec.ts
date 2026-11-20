@@ -54,5 +54,11 @@ test.describe("Luồng công thức nấu ăn (TV2 - Task 2.23)", () => {
     await expect(page.getByText(description)).toBeVisible();
     await expect(page.getByText("Bắp bò hoa")).toBeVisible();
     await expect(page.getByText("Hầm xương bò và bắp bò cùng sả trong 2 tiếng cho ngọt nước.")).toBeVisible();
+
+    // Công thức vừa xuất bản phải xuất hiện trong khu vực Mới đăng ở trang chủ.
+    await page.goto("/");
+    const recentRecipes = page.getByRole("region", { name: "Mới đăng" });
+    await expect(recentRecipes.getByRole("heading", { name: "Mới đăng" })).toBeVisible();
+    await expect(recentRecipes.getByRole("heading", { name: title })).toBeVisible();
   });
 });

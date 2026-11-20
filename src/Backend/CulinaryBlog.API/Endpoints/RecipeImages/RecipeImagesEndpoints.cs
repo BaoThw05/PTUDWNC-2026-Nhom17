@@ -25,7 +25,7 @@ internal sealed class RecipeImagesEndpoints : IEndpointModule
         {
             var images = await mediator.Send(new GetRecipeImagesQuery(recipeId), cancellationToken);
             return Results.Ok(images);
-        }).WithName("GetRecipeImages");
+        }).WithName("GetRecipeImages").AllowAnonymous();
 
         recipeImages.MapPost("/", async (
             Guid recipeId,

@@ -37,7 +37,10 @@ export async function getRecipeById(id: string): Promise<RecipeSummary> {
 }
 
 export async function getRecipeBySlug(slug: string): Promise<RecipeSummary> {
-  return apiClient.get<RecipeSummary>(`${RECIPES_PATH}/${encodeURIComponent(slug)}`);
+  return apiClient.get<RecipeSummary>(`${RECIPES_PATH}/${encodeURIComponent(slug)}`, {
+    accessToken: null,
+    next: { revalidate: 300 },
+  });
 }
 
 export async function createRecipe(data: CreateRecipeRequest): Promise<{ id: string }> {
