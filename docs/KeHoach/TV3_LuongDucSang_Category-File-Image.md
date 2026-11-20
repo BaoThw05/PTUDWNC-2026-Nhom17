@@ -101,6 +101,16 @@
 
 ## 5. Bàn giao và nhận
 
+### Trạng thái đối chiếu ngày 20/11/2026
+
+- 3.01–3.22 đã bàn giao theo báo cáo trước; PR #77 sửa phiên Nginx đã merge.
+- Trên main `819d129`: 209 unit, 7 architecture, 120 integration và 5 E2E đạt;
+  36 smoke local và 36 qua Quick Tunnel đạt, cookie/Bearer đều đạt.
+- 3.23 còn xác nhận của nhóm từ thiết bị/mạng độc lập.
+- 3.24 đang xử lý issue #79: reload Nginx sau backup; cần owner review/merge
+  và thống nhất tag mới (remote `v1.0` vẫn là bản 27/10).
+- Bằng chứng: [báo cáo kiểm tra cuối](../handoff/TV3-final-verification-2026-11-20.md).
+
 | Hướng | Nội dung | Với ai | Hạn |
 |---|---|---|---|
 | **Nhận** | Khung solution 4 tầng | TV2 | T4 16/09 |

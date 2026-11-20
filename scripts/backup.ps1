@@ -26,6 +26,11 @@ function InvokeDockerCli([string[]]$Arguments) {
 $started = @()
 $dumpInContainer = '/tmp/culinary-backup-' + [guid]::NewGuid().ToString('N') + '.dump'
 try {
+    $services = @(Compose @('config', '--services'))
+    $nginxWasRunning = $false
+    if ($services -contains 'nginx') {
+        $nginxWasRunning = [bool](Compose @('ps', '--status', 'running', '-q', 'nginx'))
+    }
     foreach ($service in @('web', 'api', 'minio')) {
         $id = (& docker compose --project-directory $repo --project-name $ProjectName --env-file $envPath -f $composePath ps --status running -q $service)
         if ($LASTEXITCODE -ne 0) { throw "Không kiểm tra được $service" }
@@ -70,5 +75,7 @@ finally {
         foreach ($service in @('minio', 'api', 'web')) {
             if ($started -contains $service) { Compose @('start', $service) | Out-Null }
         }
+        # Docker có thể cấp IP mới khi start lại; Nginx cần resolve lại upstream.
+        if ($nginxWasRunning) { Compose @('exec', '-T', 'nginx', 'nginx', '-s', 'reload') | Out-Null }
     }
 }

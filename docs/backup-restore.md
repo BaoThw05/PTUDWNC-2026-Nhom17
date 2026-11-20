@@ -21,7 +21,9 @@ Có thể chọn nơi lưu và project Compose:
 ```
 
 Script tạm dừng web, API và MinIO để database và ảnh thuộc cùng một thời điểm,
-sau đó tự bật lại những service vốn đang chạy. PostgreSQL tiếp tục chạy để
+sau đó tự bật lại những service vốn đang chạy. Nếu Nginx đang chạy, script
+reload Nginx để resolve lại địa chỉ upstream vì Docker có thể cấp IP mới khi
+khởi động lại các container. PostgreSQL tiếp tục chạy để
 `pg_dump` thực hiện bản sao lưu nhất quán. Không tắt máy hoặc xóa volume trong
 lúc script đang chạy. Chỉ dùng bản backup có đủ ba file và thông báo thành công.
 
@@ -38,7 +40,8 @@ ba file backup vào một thư mục trên máy nhận rồi chạy:
 docker compose up -d
 ```
 
-Script kiểm tra SHA-256 và đọc thử hai archive trước khi thay đổi dữ liệu. Nó
+Đối chiếu SHA-256 của hai file với `manifest.json` trước khi chạy; script chưa
+tự xác minh manifest. Script đọc thử hai archive trước khi thay đổi dữ liệu. Nó
 khôi phục database bằng `pg_restore` và giải nén ảnh vào volume MinIO. Mặc định
 volume ảnh phải trống. Nếu khôi phục đè lên stack đã có ảnh, trước tiên giữ một
 bản backup riêng của stack đó, rồi chạy thêm `-ReplaceExisting -Force`:

@@ -1,5 +1,8 @@
 # Tổng duyệt TV3 — 17/11/2026
 
+> Báo cáo lịch sử. Kết quả trên main mới và tiến độ 3.23–3.24 xem
+> [kiểm tra ngày 20/11](TV3-final-verification-2026-11-20.md).
+
 ## Bản kiểm tra
 
 - Nhánh: `fix/nginx-session-api`, tạo từ `upstream/main`.
