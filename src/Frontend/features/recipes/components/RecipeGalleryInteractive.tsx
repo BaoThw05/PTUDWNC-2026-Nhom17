@@ -13,7 +13,7 @@ export function RecipeGalleryInteractive({ images }: { images: RecipeImage[] }) 
     <div className="space-y-4">
       <figure className="relative aspect-video w-full overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-100 shadow-sm dark:border-zinc-800 dark:bg-zinc-800">
         <img
-          src={activeImage.originalUrl}
+          src={activeImage.thumbnailUrl ?? activeImage.mediumUrl ?? activeImage.originalUrl}
           alt={activeImage.altText || "Hình ảnh món ăn"}
           fetchPriority={activeImage.isPrimary ? "high" : "auto"}
           className="h-full w-full object-cover"
@@ -39,7 +39,7 @@ export function RecipeGalleryInteractive({ images }: { images: RecipeImage[] }) 
             }`}
           >
             <img
-              src={image.originalUrl}
+              src={image.thumbnailUrl ?? image.mediumUrl ?? image.originalUrl}
               alt={image.altText || `Ảnh ${index + 1}`}
               loading="lazy"
               className="h-full w-full object-cover"
